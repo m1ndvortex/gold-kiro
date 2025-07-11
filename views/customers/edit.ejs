@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - سیستم مدیریت طلافروشی</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-jalaali/0.9.6/moment-jalaali.min.js"></script>
+    <style>
+        body {
+            font-family: 'Tahoma', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            direction: rtl;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(184, 134, 11, 0.3);
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .form-section {
+            margin-bottom: 35px;
+            border: 2px solid #f8f9fa;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .form-section:hover {
+            border-color: #b8860b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(184, 134, 11, 0.1);
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            color: white;
+            padding: 15px 25px;
+            margin: 0;
+        }
+        
+        .section-header h3 {
+            margin: 0;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-body {
+            padding: 25px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2em;
+            color: #b8860b;
+            z-index: 10;
+        }
+        
+        .form-control.with-icon {
+            padding-right: 45px;
+        }
+        
+        .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+        
+        .form-control:focus {
+            border-color: #b8860b;
+            box-shadow: 0 0 0 0.2rem rgba(184, 134, 11, 0.25);
+            background: white;
+        }
+        
+        .form-control.error {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+        }
+        
+        .form-control.success {
+            border-color: #28a745;
+            background-color: #f8fff8;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .success-message {
+            color: #28a745;
+            font-size: 0.875em;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .form-help {
+            font-size: 0.875em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .radio-item {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .radio-item:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+        
+        .radio-item input[type="radio"] {
+            margin-left: 8px;
+            transform: scale(1.2);
+        }
+        
+        .radio-item input[type="radio"]:checked + span {
+            color: #b8860b;
+            font-weight: bold;
+        }
+        
+        .radio-item:has(input:checked) {
+            background: #fff8dc;
+            border-color: #b8860b;
+        }
+        
+        .select-enhanced {
+            position: relative;
+        }
+        
+        .select-enhanced select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: left 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px 12px;
+            padding-left: 40px;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding: 30px 0;
+        }
+        
+        .btn-enhanced {
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        
+        .btn-primary-enhanced {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+        }
+        
+        .btn-primary-enhanced:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+            color: white;
+        }
+        
+        .btn-secondary-enhanced {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+        
+        .btn-secondary-enhanced:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+            color: white;
+        }
+        
+        .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert-enhanced {
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: none;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+        }
+        
+        .validation-summary {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border: 2px solid #dc3545;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .validation-summary h4 {
+            color: #721c24;
+            margin-bottom: 15px;
+        }
+        
+        .validation-summary ul {
+            margin: 0;
+            padding-right: 20px;
+        }
+        
+        .validation-summary li {
+            color: #721c24;
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+            }
+            
+            .form-buttons {
+                flex-direction: column;
+            }
+            
+            .page-header {
+                padding: 20px;
+                text-align: center;
+            }
+            
+            .section-body {
+                padding: 20px;
+            }
+        }
+
+        /* Birth Date Input Styles */
+        .birth-date-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            width: 100%;
+        }
+
+        .date-input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .date-input-group:first-child {
+            flex: 0 0 80px; /* Day field - smaller */
+        }
+
+        .date-input-group:nth-child(2) {
+            flex: 2; /* Month field - larger */
+        }
+
+        .date-input-group:last-child {
+            flex: 0 0 100px; /* Year field - medium */
+        }
+
+        .date-label {
+            font-size: 0.9em;
+            color: #6c757d;
+            font-weight: 600;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .date-input {
+            text-align: center;
+            font-weight: bold;
+            height: 45px; /* Same height as other form controls */
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: #fafbfc;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #b8860b;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
+        }
+
+        .date-input::-webkit-outer-spin-button,
+        .date-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .date-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        @media (max-width: 768px) {
+            .birth-date-inputs {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .date-input-group:first-child,
+            .date-input-group:nth-child(2),
+            .date-input-group:last-child {
+                flex: 1;
+            }
+            
+            .date-label {
+                text-align: right;
+            }
+        }
+
+        /* Jalali Date Picker Styles */
+        .jalali-picker {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #b8860b;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 1000;
+            margin-top: 5px;
+            font-family: 'Tahoma', sans-serif;
+        }
+
+        .picker-header {
+            background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 13px 13px 0 0;
+        }
+
+        .picker-header button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .picker-header button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .picker-header .close-btn {
+            background: rgba(220,53,69,0.8);
+            margin-right: auto;
+        }
+
+        .picker-body {
+            padding: 15px;
+        }
+
+        .jalali-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-top: 10px;
+        }
+
+        .jalali-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 5px;
+        }
+
+        .jalali-weekday {
+            text-align: center;
+            padding: 8px 4px;
+            font-weight: bold;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .jalali-day {
+            text-align: center;
+            padding: 10px 4px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+            font-size: 0.9em;
+        }
+
+        .jalali-day:hover {
+            background: #f0f8ff;
+            color: #b8860b;
+        }
+
+        .jalali-day.today {
+            background: #b8860b;
+            color: white;
+            font-weight: bold;
+        }
+
+        .jalali-day.selected {
+            background: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+
+        .jalali-day.other-month {
+            color: #ccc;
+        }
+
+        .picker-footer {
+            padding: 10px 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .picker-footer button {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .picker-footer button:hover {
+            background: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand text-warning" href="/dashboard">
+                <i class="fas fa-gem"></i> طلافروشی
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link text-light" href="/customers">مشتریان</a>
+                <a class="nav-link text-light" href="/customers/view/<%= customer.id %>">مشاهده مشتری</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="mb-2">
+                        <i class="fas fa-user-edit"></i>
+                        ویرایش اطلاعات مشتری
+                    </h1>
+                    <p class="mb-0 opacity-75">
+                        <i class="fas fa-user"></i> <%= customer.full_name %> | 
+                        کد: <%= customer.customer_code %>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <% if (successMessage) { %>
+        <div class="alert alert-success alert-enhanced">
+            <i class="fas fa-check-circle"></i> <%= successMessage %>
+        </div>
+        <% } %>
+
+        <% if (errorMessage) { %>
+        <div class="alert alert-danger alert-enhanced">
+            <i class="fas fa-exclamation-triangle"></i> <%= errorMessage %>
+        </div>
+        <% } %>
+
+        <!-- Validation Summary -->
+        <div class="validation-summary" id="validationSummary">
+            <h4><i class="fas fa-exclamation-triangle"></i> خطاهای اعتبارسنجی:</h4>
+            <ul id="validationList"></ul>
+        </div>
+
+        <div class="form-container">
+            <form id="customerForm" method="POST" action="/customers/edit/<%= customer.id %>">
+                <!-- اطلاعات اصلی -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <h3>
+                            <span>👤</span>
+                            اطلاعات اصلی
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="full_name" class="form-label">نام و نام خانوادگی *</label>
+                                <div class="input-group">
+                                    <span class="input-icon">👤</span>
+                                    <input type="text" id="full_name" name="full_name" 
+                                           class="form-control with-icon" 
+                                           placeholder="نام و نام خانوادگی کامل" 
+                                           value="<%= customer.full_name %>"
+                                           required maxlength="100">
+                                </div>
+                                <div class="error-message" id="full_name_error"></div>
+                                <div class="form-help">حداقل 3 و حداکثر 100 کاراکتر</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="national_id" class="form-label">کد ملی</label>
+                                <div class="input-group">
+                                    <span class="input-icon">🆔</span>
+                                    <input type="text" id="national_id" name="national_id" 
+                                           class="form-control with-icon" 
+                                           placeholder="کد ملی 10 رقمی" 
+                                           value="<%= customer.national_id || '' %>"
+                                           maxlength="10" pattern="[0-9]{10}">
+                                </div>
+                                <div class="error-message" id="national_id_error"></div>
+                                <div class="success-message" id="national_id_success"></div>
+                                <div class="form-help">
+                                    کد ملی 10 رقمی معتبر (اختیاری)
+                                    <br><small style="color: #28a745;">نمونه کدهای معتبر: 0013542419، 0123456789</small>
+                                    <br><button type="button" class="btn btn-sm btn-outline-warning mt-1" onclick="skipNationalIdValidation()" style="font-size: 11px;">
+                                        🧪 رد کردن اعتبارسنجی (حالت تست)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone" class="form-label">شماره تماس اصلی</label>
+                                <div class="input-group">
+                                    <span class="input-icon">📱</span>
+                                    <input type="tel" id="phone" name="phone" 
+                                           class="form-control with-icon" 
+                                           placeholder="09xxxxxxxxx"
+                                           value="<%= customer.phone || '' %>"
+                                           pattern="09[0-9]{9}" maxlength="11">
+                                </div>
+                                <div class="error-message" id="phone_error"></div>
+                                <div class="form-help">شماره موبایل (09xxxxxxxxx)</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="address" class="form-label">آدرس کامل</label>
+                                <textarea id="address" name="address" class="form-control" 
+                                          rows="3" placeholder="آدرس کامل مشتری"
+                                          maxlength="500"><%= customer.address || '' %></textarea>
+                                <div class="form-help">آدرس دقیق محل سکونت یا کار</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- اطلاعات شخصی -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <h3>
+                            <span>ℹ️</span>
+                            اطلاعات شخصی
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="birth_date" class="form-label">تاریخ تولد (شمسی)</label>
+                                <div class="birth-date-inputs">
+                                    <div class="date-input-group">
+                                        <label class="date-label">روز</label>
+                                        <input type="number" id="birth_day" min="1" max="31" 
+                                               class="form-control date-input" placeholder="01"
+                                               value="<%= customer.birth_date ? new Date(customer.birth_date).getDate() : '' %>">
+                                    </div>
+                                    <div class="date-input-group">
+                                        <label class="date-label">ماه</label>
+                                        <select id="birth_month" class="form-control date-input">
+                                            <option value="">انتخاب ماه</option>
+                                            <option value="1" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 1 ? 'selected' : '' %>>1 - فروردین</option>
+                                            <option value="2" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 2 ? 'selected' : '' %>>2 - اردیبهشت</option>
+                                            <option value="3" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 3 ? 'selected' : '' %>>3 - خرداد</option>
+                                            <option value="4" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 4 ? 'selected' : '' %>>4 - تیر</option>
+                                            <option value="5" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 5 ? 'selected' : '' %>>5 - مرداد</option>
+                                            <option value="6" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 6 ? 'selected' : '' %>>6 - شهریور</option>
+                                            <option value="7" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 7 ? 'selected' : '' %>>7 - مهر</option>
+                                            <option value="8" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 8 ? 'selected' : '' %>>8 - آبان</option>
+                                            <option value="9" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 9 ? 'selected' : '' %>>9 - آذر</option>
+                                            <option value="10" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 10 ? 'selected' : '' %>>10 - دی</option>
+                                            <option value="11" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 11 ? 'selected' : '' %>>11 - بهمن</option>
+                                            <option value="12" <%= customer.birth_date && new Date(customer.birth_date).getMonth() + 1 === 12 ? 'selected' : '' %>>12 - اسفند</option>
+                                        </select>
+                                    </div>
+                                    <div class="date-input-group">
+                                        <label class="date-label">سال</label>
+                                        <input type="number" id="birth_year" min="1300" max="1410" 
+                                               class="form-control date-input" placeholder="1380"
+                                               value="<%= customer.birth_date ? new Date(customer.birth_date).getFullYear() : '' %>">
+                                    </div>
+                                </div>
+                                <input type="hidden" id="birth_date" name="birth_date"
+                                       value="<%= customer.birth_date ? customer.birth_date.toISOString().split('T')[0] : '' %>">
+                                <div class="form-help">تاریخ تولد شمسی - مثال: 15 فروردین 1380</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">جنسیت</label>
+                                <div class="radio-group">
+                                    <label class="radio-item">
+                                        <input type="radio" name="gender" value="male" 
+                                               <%= customer.gender === 'male' ? 'checked' : '' %>>
+                                        <span>👨 آقا</span>
+                                    </label>
+                                    <label class="radio-item">
+                                        <input type="radio" name="gender" value="female"
+                                               <%= customer.gender === 'female' ? 'checked' : '' %>>
+                                        <span>👩 خانم</span>
+                                    </label>
+                                    <label class="radio-item">
+                                        <input type="radio" name="gender" value="other"
+                                               <%= customer.gender === 'other' ? 'checked' : '' %>>
+                                        <span>👤 سایر</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="job_title" class="form-label">شغل</label>
+                                <div class="input-group">
+                                    <span class="input-icon">💼</span>
+                                    <input type="text" id="job_title" name="job_title" 
+                                           class="form-control with-icon" 
+                                           placeholder="شغل مشتری"
+                                           value="<%= customer.job_title || '' %>"
+                                           maxlength="100">
+                                </div>
+                                <div class="form-help">شغل یا حرفه مشتری</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- اطلاعات تماس -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <h3>
+                            <span>📞</span>
+                            اطلاعات تماس
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="emergency_phone" class="form-label">تماس اضطراری</label>
+                                <div class="input-group">
+                                    <span class="input-icon">🆘</span>
+                                    <input type="tel" id="emergency_phone" name="emergency_phone" 
+                                           class="form-control with-icon" 
+                                           placeholder="09xxxxxxxxx"
+                                           value="<%= customer.emergency_phone || '' %>"
+                                           pattern="09[0-9]{9}" maxlength="11">
+                                </div>
+                                <div class="error-message" id="emergency_phone_error"></div>
+                                <div class="form-help">شماره تماس در مواقع ضروری</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email" class="form-label">ایمیل</label>
+                                <div class="input-group">
+                                    <span class="input-icon">📧</span>
+                                    <input type="email" id="email" name="email" 
+                                           class="form-control with-icon" 
+                                           placeholder="example@email.com"
+                                           value="<%= customer.email || '' %>"
+                                           maxlength="100">
+                                </div>
+                                <div class="error-message" id="email_error"></div>
+                                <div class="form-help">آدرس ایمیل معتبر</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- اطلاعات تکمیلی -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <h3>
+                            <span>📋</span>
+                            اطلاعات تکمیلی
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="customer_type" class="form-label">نوع مشتری</label>
+                                <div class="select-enhanced">
+                                    <select id="customer_type" name="customer_type" class="form-control">
+                                        <option value="normal" <%= customer.customer_type === 'normal' ? 'selected' : '' %>>👤 عادی</option>
+                                        <option value="vip" <%= customer.customer_type === 'vip' ? 'selected' : '' %>>⭐ VIP</option>
+                                        <option value="wholesale" <%= customer.customer_type === 'wholesale' ? 'selected' : '' %>>📦 عمده فروش</option>
+                                        <option value="regular" <%= customer.customer_type === 'regular' ? 'selected' : '' %>>🔄 مشتری ثابت</option>
+                                    </select>
+                                </div>
+                                <div class="form-help">طبقه‌بندی نوع مشتری</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reference_name" class="form-label">نام معرف</label>
+                                <div class="input-group">
+                                    <span class="input-icon">🤝</span>
+                                    <input type="text" id="reference_name" name="reference_name" 
+                                           class="form-control with-icon" 
+                                           placeholder="نام شخص معرف"
+                                           value="<%= customer.reference_name || '' %>"
+                                           maxlength="100">
+                                </div>
+                                <div class="form-help">شخصی که مشتری را معرفی کرده</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">وضعیت حساب</label>
+                                <div class="radio-group">
+                                    <label class="radio-item">
+                                        <input type="checkbox" name="is_active" 
+                                               <%= customer.is_active ? 'checked' : '' %>>
+                                        <span>✅ حساب فعال است</span>
+                                    </label>
+                                </div>
+                                <div class="form-help">در صورت غیرفعال بودن، مشتری در لیست‌ها نمایش داده نمی‌شود</div>
+                            </div>
+
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="notes" class="form-label">یادداشت‌ها</label>
+                                <textarea id="notes" name="notes" class="form-control" 
+                                          rows="4" placeholder="یادداشت‌ها و توضیحات اضافی در مورد مشتری"
+                                          maxlength="1000"><%= customer.notes || '' %></textarea>
+                                <div class="form-help">اطلاعات اضافی، ترجیحات، یا نکات مهم</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- دکمه‌های عملیات -->
+                <div class="form-buttons">
+                    <button type="submit" class="btn-enhanced btn-primary-enhanced" id="submitBtn">
+                        <span class="loading-spinner" id="loadingSpinner"></span>
+                        <span id="submitText">💾 بروزرسانی اطلاعات</span>
+                    </button>
+                    <a href="/customers/view/<%= customer.id %>" class="btn-enhanced btn-secondary-enhanced">
+                        👁️ مشاهده مشتری
+                    </a>
+                    <a href="/customers" class="btn-enhanced btn-secondary-enhanced">
+                        ❌ انصراف
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // اعتبارسنجی کد ملی ایرانی
+        function validateIranianNationalId(nationalId) {
+            if (!nationalId || nationalId.length !== 10) {
+                return false;
+            }
+            
+            // بررسی اینکه همه ارقام یکسان نباشند
+            if (/^(\d)\1{9}$/.test(nationalId)) {
+                return false;
+            }
+            
+            var sum = 0;
+            for (var i = 0; i < 9; i++) {
+                sum += parseInt(nationalId[i]) * (10 - i);
+            }
+            
+            var remainder = sum % 11;
+            var checkDigit = parseInt(nationalId[9]);
+            
+            return (remainder < 2 && checkDigit === remainder) || 
+                   (remainder >= 2 && checkDigit === 11 - remainder);
+        }
+
+        // محاسبه رقم کنترل صحیح
+        function calculateCorrectCheckDigit(nationalId) {
+            if (!nationalId || nationalId.length < 9) {
+                return '?';
+            }
+            
+            var sum = 0;
+            for (var i = 0; i < 9; i++) {
+                sum += parseInt(nationalId[i]) * (10 - i);
+            }
+            
+            var remainder = sum % 11;
+            return remainder < 2 ? remainder : 11 - remainder;
+        }
+
+        // رد کردن اعتبارسنجی کد ملی (برای تست)
+        function skipNationalIdValidation() {
+            window.skipNationalIdValidationFlag = true;
+            var nationalIdField = document.getElementById('national_id');
+            
+            if (nationalIdField.value.trim()) {
+                showSuccess('national_id', '🧪 اعتبارسنجی رد شد - حالت تست فعال');
+            }
+            
+            // نمایش پیام هشدار
+            alert('⚠️ هشدار: اعتبارسنجی کد ملی غیرفعال شد!\n\nاین حالت فقط برای تست در نظر گرفته شده است.\nلطفاً در محیط تولید از کد ملی معتبر استفاده کنید.');
+        }
+
+        // اعتبارسنجی شماره موبایل
+        function validatePhoneNumber(phone) {
+            return /^09[0-9]{9}$/.test(phone);
+        }
+
+        // اعتبارسنجی ایمیل
+        function validateEmail(email) {
+            return /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email);
+        }
+
+        // نمایش خطا
+        function showError(fieldId, message) {
+            var field = document.getElementById(fieldId);
+            var errorElement = document.getElementById(fieldId + '_error');
+            var successElement = document.getElementById(fieldId + '_success');
+            
+            field.classList.add('error');
+            field.classList.remove('success');
+            
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+            
+            if (successElement) {
+                successElement.style.display = 'none';
+            }
+        }
+
+        // نمایش موفقیت
+        function showSuccess(fieldId, message) {
+            var field = document.getElementById(fieldId);
+            var errorElement = document.getElementById(fieldId + '_error');
+            var successElement = document.getElementById(fieldId + '_success');
+            
+            field.classList.remove('error');
+            field.classList.add('success');
+            
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+            
+            if (successElement && message) {
+                successElement.textContent = message;
+                successElement.style.display = 'block';
+            }
+        }
+
+        // پاک کردن خطا
+        function clearError(fieldId) {
+            var field = document.getElementById(fieldId);
+            var errorElement = document.getElementById(fieldId + '_error');
+            var successElement = document.getElementById(fieldId + '_success');
+            
+            field.classList.remove('error', 'success');
+            
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+            
+            if (successElement) {
+                successElement.style.display = 'none';
+            }
+        }
+
+        // اعتبارسنجی فرم
+        function validateForm() {
+            var isValid = true;
+            var errors = [];
+            
+            // نام کامل (اجباری)
+            var fullName = document.getElementById('full_name').value.trim();
+            if (!fullName) {
+                showError('full_name', 'نام و نام خانوادگی الزامی است');
+                errors.push('نام و نام خانوادگی را وارد کنید');
+                isValid = false;
+            } else if (fullName.length < 3) {
+                showError('full_name', 'نام باید حداقل 3 کاراکتر باشد');
+                errors.push('نام باید حداقل 3 کاراکتر باشد');
+                isValid = false;
+            } else {
+                clearError('full_name');
+            }
+            
+            // کد ملی (اختیاری اما اگر وارد شد باید معتبر باشد)
+            var nationalId = document.getElementById('national_id').value.trim();
+            var skipValidation = window.skipNationalIdValidationFlag || false;
+            
+            if (nationalId && !skipValidation) {
+                if (!validateIranianNationalId(nationalId)) {
+                    var correctDigit = calculateCorrectCheckDigit(nationalId);
+                    showError('national_id', `کد ملی وارد شده معتبر نیست. کد صحیح احتمالی: ${nationalId.substr(0, 9)}${correctDigit}`);
+                    errors.push('کد ملی معتبر نیست یا از نمونه‌های معتبر استفاده کنید');
+                    isValid = false;
+                } else {
+                    showSuccess('national_id', '✓ کد ملی معتبر است');
+                }
+            } else if (nationalId && skipValidation) {
+                showSuccess('national_id', '🧪 اعتبارسنجی رد شد (حالت تست)');
+            } else {
+                clearError('national_id');
+            }
+            
+            // شماره تماس
+            var phone = document.getElementById('phone').value.trim();
+            if (phone && !validatePhoneNumber(phone)) {
+                showError('phone', 'شماره تماس معتبر نیست (09xxxxxxxxx)');
+                errors.push('شماره تماس معتبر نیست');
+                isValid = false;
+            } else {
+                clearError('phone');
+            }
+            
+            // شماره اضطراری
+            var emergencyPhone = document.getElementById('emergency_phone').value.trim();
+            if (emergencyPhone && !validatePhoneNumber(emergencyPhone)) {
+                showError('emergency_phone', 'شماره اضطراری معتبر نیست (09xxxxxxxxx)');
+                errors.push('شماره اضطراری معتبر نیست');
+                isValid = false;
+            } else {
+                clearError('emergency_phone');
+            }
+            
+            // ایمیل
+            var email = document.getElementById('email').value.trim();
+            if (email && !validateEmail(email)) {
+                showError('email', 'آدرس ایمیل معتبر نیست');
+                errors.push('آدرس ایمیل معتبر نیست');
+                isValid = false;
+            } else {
+                clearError('email');
+            }
+            
+            // نمایش خلاصه خطاها
+            var validationSummary = document.getElementById('validationSummary');
+            var validationList = document.getElementById('validationList');
+            
+            if (errors.length > 0) {
+                validationList.innerHTML = errors.map(function(error) {
+                    return '<li>' + error + '</li>';
+                }).join('');
+                validationSummary.style.display = 'block';
+                validationSummary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                validationSummary.style.display = 'none';
+            }
+            
+            return isValid;
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.getElementById('customerForm');
+            var submitBtn = document.getElementById('submitBtn');
+            var loadingSpinner = document.getElementById('loadingSpinner');
+            var submitText = document.getElementById('submitText');
+            
+            // اعتبارسنجی real-time کد ملی
+            document.getElementById('national_id').addEventListener('input', function() {
+                var value = this.value.trim();
+                var skipValidation = window.skipNationalIdValidationFlag || false;
+                
+                if (value && !skipValidation) {
+                    if (validateIranianNationalId(value)) {
+                        showSuccess('national_id', '✓ کد ملی معتبر است');
+                    } else if (value.length === 10) {
+                        var correctDigit = calculateCorrectCheckDigit(value);
+                        showError('national_id', `کد ملی معتبر نیست. احتمالاً باید ${value.substr(0, 9)}${correctDigit} باشد`);
+                    } else if (value.length === 9) {
+                        var correctDigit = calculateCorrectCheckDigit(value + '0');
+                        this.setAttribute('placeholder', `کد ملی - رقم آخر احتمالی: ${correctDigit}`);
+                        clearError('national_id');
+                    } else {
+                        this.setAttribute('placeholder', 'کد ملی 10 رقمی');
+                        clearError('national_id');
+                    }
+                } else if (value && skipValidation) {
+                    showSuccess('national_id', '🧪 حالت تست - اعتبارسنجی رد شده');
+                } else {
+                    this.setAttribute('placeholder', 'کد ملی 10 رقمی');
+                    clearError('national_id');
+                }
+            });
+            
+            // فقط عدد برای کد ملی
+            document.getElementById('national_id').addEventListener('keypress', function(e) {
+                if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                    e.preventDefault();
+                }
+            });
+            
+            // اعتبارسنجی شماره تماس real-time
+            document.getElementById('phone').addEventListener('input', function() {
+                var value = this.value.trim();
+                if (value && value.length === 11) {
+                    if (validatePhoneNumber(value)) {
+                        showSuccess('phone', '✓ شماره معتبر است');
+                    } else {
+                        showError('phone', 'شماره تماس معتبر نیست');
+                    }
+                } else if (value) {
+                    clearError('phone');
+                }
+            });
+            
+            // اعتبارسنجی شماره اضطراری real-time
+            document.getElementById('emergency_phone').addEventListener('input', function() {
+                var value = this.value.trim();
+                if (value && value.length === 11) {
+                    if (validatePhoneNumber(value)) {
+                        showSuccess('emergency_phone', '✓ شماره معتبر است');
+                    } else {
+                        showError('emergency_phone', 'شماره تماس معتبر نیست');
+                    }
+                } else if (value) {
+                    clearError('emergency_phone');
+                }
+            });
+            
+            // اعتبارسنجی ایمیل real-time
+            document.getElementById('email').addEventListener('input', function() {
+                var value = this.value.trim();
+                if (value && value.includes('@')) {
+                    if (validateEmail(value)) {
+                        showSuccess('email', '✓ ایمیل معتبر است');
+                    } else {
+                        showError('email', 'آدرس ایمیل معتبر نیست');
+                    }
+                } else if (value) {
+                    clearError('email');
+                }
+            });
+            
+            // Manual Birth Date Input Handler
+            function updateBirthDate() {
+                var day = document.getElementById('birth_day').value;
+                var month = document.getElementById('birth_month').value;
+                var year = document.getElementById('birth_year').value;
+                
+                if (day && month && year) {
+                    try {
+                        // تبدیل تاریخ شمسی به میلادی
+                        var gregorianDate = moment(year + '/' + month + '/' + day, 'jYYYY/jM/jD');
+                        
+                        if (gregorianDate.isValid()) {
+                            document.getElementById('birth_date').value = gregorianDate.format('YYYY-MM-DD');
+                        } else {
+                            document.getElementById('birth_date').value = '';
+                        }
+                    } catch (error) {
+                        document.getElementById('birth_date').value = '';
+                    }
+                } else {
+                    document.getElementById('birth_date').value = '';
+                }
+            }
+
+            // Add event listeners for birth date inputs
+            document.getElementById('birth_day').addEventListener('input', updateBirthDate);
+            document.getElementById('birth_month').addEventListener('change', updateBirthDate);
+            document.getElementById('birth_year').addEventListener('input', updateBirthDate);
+            
+            // ارسال فرم
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (!validateForm()) {
+                    return;
+                }
+                
+                submitBtn.disabled = true;
+                loadingSpinner.style.display = 'inline-block';
+                submitText.textContent = 'در حال بروزرسانی...';
+                
+                // ارسال فرم
+                this.submit();
+            });
+        });
+    </script>
+</body>
+</html> 

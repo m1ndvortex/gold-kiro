@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فاکتور شماره <%= invoice.invoice_number %></title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            background: white;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .invoice-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 20mm;
+            background: white;
+            border: 2px solid #000;
+            position: relative;
+        }
+
+        .invoice-header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .shop-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000;
+        }
+
+        .invoice-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 15px;
+        }
+
+        .customer-info {
+            flex: 1;
+        }
+
+        .invoice-details {
+            flex: 1;
+            text-align: left;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .info-label {
+            font-weight: bold;
+            margin-left: 10px;
+            min-width: 80px;
+        }
+
+        .info-value {
+            border-bottom: 1px solid #333;
+            padding-bottom: 2px;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border: 2px solid #000;
+        }
+
+        .items-table th,
+        .items-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .items-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .items-table td {
+            min-height: 30px;
+        }
+
+        .description-cell {
+            text-align: right;
+            padding-right: 10px;
+            max-width: 200px;
+        }
+
+        .totals-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-top: 20px;
+            border-top: 2px solid #000;
+            padding-top: 15px;
+        }
+
+        .totals-left {
+            flex: 1;
+        }
+
+        .totals-right {
+            flex: 1;
+            text-align: left;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+
+        .total-label {
+            font-weight: bold;
+            margin-left: 20px;
+        }
+
+        .total-value {
+            border-bottom: 1px solid #333;
+            padding-bottom: 2px;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .final-total {
+            border: 2px solid #000;
+            padding: 8px;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .footer-info {
+            position: absolute;
+            bottom: 20mm;
+            right: 20mm;
+            left: 20mm;
+            text-align: center;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+            font-size: 10px;
+        }
+
+        @media print {
+            body {
+                print-color-adjust: exact;
+            }
+            
+            .invoice-container {
+                margin: 0;
+                padding: 15mm;
+                border: none;
+                box-shadow: none;
+            }
+            
+            @page {
+                size: A4;
+                margin: 0;
+            }
+        }
+
+        .row-number {
+            width: 40px;
+        }
+
+        .item-description {
+            min-width: 200px;
+        }
+
+        .quantity-col {
+            width: 60px;
+        }
+
+        .weight-col {
+            width: 80px;
+        }
+
+        .price-col {
+            width: 100px;
+        }
+
+        .total-col {
+            width: 120px;
+        }
+
+        .empty-rows {
+            height: 200px;
+        }
+
+        .no-border-bottom {
+            border-bottom: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="invoice-header">
+            <div class="shop-name">طلافروشی موسی پور</div>
+        </div>
+
+        <!-- Invoice Info -->
+        <div class="invoice-info">
+            <div class="customer-info">
+                <div class="info-row">
+                    <span class="info-label">آدرس:</span>
+                    <span class="info-value">حمام گپ ـ ابتدای خیابان حافظ</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">شماره تماس:</span>
+                    <span class="info-value">09106307746</span>
+                </div>
+            </div>
+            
+            <div class="invoice-details">
+                <div class="info-row">
+                    <span class="info-label">تلفن مشتری:</span>
+                    <span class="info-value"><%= invoice.customer_phone || '' %></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">نوع فاکتور:</span>
+                    <span class="info-value"><%= invoice.invoice_type === 'purchase' ? 'خرید' : 'فروش' %></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">تاریخ:</span>
+                    <span class="info-value"><%= moment(invoice.invoice_date).format('YYYY/MM/DD') %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Details -->
+        <div style="margin-bottom: 20px; border-bottom: 1px solid #000; padding-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between;">
+                <div style="flex: 1;">
+                    <div class="info-row">
+                        <span class="info-label">شهر:</span>
+                        <span class="info-value"><%= invoice.customer_city || '' %></span>
+                    </div>
+                </div>
+                <div style="flex: 1; text-align: center;">
+                    <strong>صورتحساب آقای فروش نور محمد <%=invoice.customer_code%></strong>
+                </div>
+                <div style="flex: 1; text-align: left;">
+                    <div class="info-row">
+                        <span class="info-label">شماره سند:</span>
+                        <span class="info-value"><%= invoice.invoice_number %></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 10px;">
+                <div class="info-row">
+                    <span class="info-label">توسط:</span>
+                    <span class="info-value">نوع سند: فروش</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th class="row-number">ردیف</th>
+                    <th class="item-description">شرح</th>
+                    <th class="quantity-col">تعداد</th>
+                    <th class="weight-col">وزن</th>
+                    <th class="price-col">فی</th>
+                    <th class="total-col">فی کل</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% 
+                let rowCount = 0;
+                items.forEach((item, index) => { 
+                    rowCount++;
+                %>
+                    <tr>
+                        <td><%= index + 1 %></td>
+                        <td class="description-cell">
+                            <%= item.description || item.item_name %> 
+                            <%= item.carat %> عیار
+                        </td>
+                        <td><%= item.quantity %></td>
+                        <td><%= formatNumber(item.weight) %></td>
+                        <td><%= formatNumber(item.unit_price) %></td>
+                        <td><%= formatNumber(item.total_price) %></td>
+                    </tr>
+                <% }) %>
+                
+                <!-- Add empty rows to fill space -->
+                <% for(let i = rowCount; i < 10; i++) { %>
+                    <tr>
+                        <td style="height: 30px;"></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+
+        <!-- Totals Section -->
+        <div class="totals-section">
+            <div class="totals-left">
+                <div class="total-row">
+                    <span class="total-label">جمع سند:</span>
+                    <span class="total-value"><%= formatNumber(invoice.subtotal) %></span>
+                </div>
+                <div class="total-row">
+                    <span class="total-label">حساب قبلی:</span>
+                    <span class="total-value"><%= formatNumber(invoice.customer_balance || 0) %></span>
+                </div>
+                <div class="total-row">
+                    <span class="total-label">حساب نهایی:</span>
+                    <span class="total-value"><%= formatNumber(invoice.grand_total + (invoice.customer_balance || 0)) %></span>
+                </div>
+            </div>
+            
+            <div class="totals-right">
+                <div class="total-row">
+                    <span class="total-label">مجموع:</span>
+                    <span class="total-value">
+                        <%= formatNumber(invoice.subtotal) %> 
+                        <span style="font-size: 10px;">(<%= Math.round(invoice.subtotal/1000) %> هزار تومان)</span>
+                    </span>
+                </div>
+                <div class="total-row">
+                    <span class="total-label">جمع وزن کل:</span>
+                    <span class="total-value"><%= formatNumber(invoice.total_weight) %></span>
+                </div>
+                <div class="total-row">
+                    <span class="total-label">وزن پولاستیک:</span>
+                    <span class="total-value"><%= formatNumber(invoice.plastic_weight || 0) %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-info">
+            <div style="margin-bottom: 10px;">
+                شماره ملی فروشنده: ۲۳۸_۷۰۳_۱۷۲۶
+            </div>
+            <div>
+                www.zarbesah.com &nbsp;&nbsp;&nbsp; تولید: ۰۹۱۶۱۲۴۷۸ طراحی و چاپ
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto print when page loads
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html> 

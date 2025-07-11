@@ -1,0 +1,162 @@
+<div class="page-header">
+    <h1 class="page-title">تاریخچه بک‌آپ</h1>
+    <p>مدیریت فایل‌های بک‌آپ سیستم</p>
+</div>
+
+<!-- Statistics -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <div class="stat-card">
+        <div class="stat-number"><%= backups.length %></div>
+        <div class="stat-label">کل بک‌آپ‌ها</div>
+        <div class="stat-icon" style="color: #007bff;">💾</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">
+            <%= backups.filter(b => b.status === 'success').length %>
+        </div>
+        <div class="stat-label">موفق</div>
+        <div class="stat-icon" style="color: #28a745;">✅</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">
+            <%= backups.filter(b => b.status === 'failed').length %>
+        </div>
+        <div class="stat-label">ناموفق</div>
+        <div class="stat-icon" style="color: #dc3545;">❌</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">
+            <%= Math.round(backups.reduce((sum, b) => sum + (b.file_size || 0), 0) / (1024 * 1024)) %> MB
+        </div>
+        <div class="stat-label">حجم کل</div>
+        <div class="stat-icon" style="color: #6f42c1;">📦</div>
+    </div>
+</div>
+
+<!-- Backup Files Table -->
+<div class="card">
+    <div class="card-header">
+        فایل‌های بک‌آپ
+        <a href="/settings" class="btn btn-secondary btn-sm float-left">بازگشت به تنظیمات</a>
+    </div>
+    <div class="card-body">
+        <% if (backups.length === 0) { %>
+            <div style="text-align: center; padding: 50px; color: #666;">
+                <i class="fas fa-archive fa-3x"></i><br><br>
+                <h5>هنوز بک‌آپی ایجاد نشده</h5>
+                <p>برای شروع، اولین بک‌آپ خود را ایجاد کنید</p>
+                <a href="/settings" class="btn btn-primary">رفتن به تنظیمات</a>
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th>نام فایل</th>
+                            <th>نوع</th>
+                            <th>توضیحات</th>
+                            <th>تاریخ ایجاد</th>
+                            <th>وضعیت</th>
+                            <th>حجم</th>
+                            <th>ایجادکننده</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% backups.forEach(backup => { %>
+                            <tr>
+                                <td>
+                                    <code style="font-size: 12px;"><%= backup.filename %></code>
+                                </td>
+                                <td>
+                                    <% if (backup.backup_type === 'full') { %>
+                                        <span class="badge badge-primary">کامل</span>
+                                    <% } else if (backup.backup_type === 'data') { %>
+                                        <span class="badge badge-success">اطلاعات</span>
+                                    <% } else if (backup.backup_type === 'schema') { %>
+                                        <span class="badge badge-info">ساختار</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <%= backup.description || '-' %>
+                                </td>
+                                <td>
+                                    <%= new Date(backup.created_at).toLocaleDateString('fa-IR') %><br>
+                                    <small class="text-muted">
+                                        <%= new Date(backup.created_at).toLocaleTimeString('fa-IR', {hour: '2-digit', minute: '2-digit'}) %>
+                                    </small>
+                                </td>
+                                <td>
+                                    <% if (backup.status === 'success') { %>
+                                        <span class="badge badge-success">موفق</span>
+                                    <% } else if (backup.status === 'failed') { %>
+                                        <span class="badge badge-danger" title="<%= backup.error_message || '' %>">ناموفق</span>
+                                    <% } else { %>
+                                        <span class="badge badge-warning">در حال پردازش</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (backup.file_size) { %>
+                                        <%= Math.round(backup.file_size / 1024) %> KB
+                                    <% } else { %>
+                                        -
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <%= backup.created_by_name || 'نامشخص' %>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <% if (backup.status === 'success') { %>
+                                            <a href="/backup/download/<%= backup.id %>" 
+                                               class="btn btn-outline-primary btn-sm" 
+                                               title="دانلود">
+                                                دانلود
+                                            </a>
+                                        <% } %>
+                                        <button onclick="deleteBackup(<%= backup.id %>)" 
+                                                class="btn btn-outline-danger btn-sm" 
+                                                title="حذف">
+                                            حذف
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+function deleteBackup(backupId) {
+    if (confirm('آیا از حذف این فایل بک‌آپ مطمئن هستید؟')) {
+        fetch(`/backup/delete/${backupId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('خطا در حذف فایل: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('خطا در حذف فایل');
+        });
+    }
+}
+
+// Auto refresh for processing backups
+if (document.querySelector('.badge-warning')) {
+    setTimeout(() => {
+        location.reload();
+    }, 5000); // Refresh every 5 seconds if there are processing backups
+}
+</script> 

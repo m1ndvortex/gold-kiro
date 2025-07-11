@@ -1,0 +1,208 @@
+<div class="page-header">
+    <h1 class="page-title">افزودن دسته‌بندی جدید</h1>
+    <p>تعریف دسته‌بندی جدید یا زیرمجموعه</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        اطلاعات دسته‌بندی
+    </div>
+    <div class="card-body">
+        <form action="/inventory/categories/create" method="POST">
+            <div class="row">
+                <!-- Category Type Selection -->
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="form-label">نوع دسته‌بندی *</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="category_type" 
+                                   id="main_category" value="main" 
+                                   <%= (!parentCategories || !req.query.parent) ? 'checked' : '' %>
+                                   onchange="toggleParentSelection()">
+                            <label class="form-check-label" for="main_category">
+                                📁 دسته‌بندی اصلی (سطح اول)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="category_type" 
+                                   id="sub_category" value="sub"
+                                   <%= (req.query.parent) ? 'checked' : '' %>
+                                   onchange="toggleParentSelection()">
+                            <label class="form-check-label" for="sub_category">
+                                📂 زیرمجموعه (سطح دوم)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Parent Category (for subcategories) -->
+                <div class="col-md-12" id="parent_selection" 
+                     style="display: <%= (req.query.parent) ? 'block' : 'none' %>;">
+                    <div class="form-group">
+                        <label for="parent_id" class="form-label">دسته‌بندی والد *</label>
+                        <select name="parent_id" id="parent_id" class="form-control">
+                            <option value="">انتخاب دسته‌بندی اصلی...</option>
+                            <% parentCategories.forEach(parent => { %>
+                                <option value="<%= parent.id %>" 
+                                        <%= (req.query.parent == parent.id) ? 'selected' : '' %>>
+                                    <%= parent.name_persian %> (<%= parent.name %>)
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Persian Name -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="name_persian" class="form-label">نام فارسی *</label>
+                        <input type="text" name="name_persian" id="name_persian" 
+                               class="form-control" required
+                               placeholder="مثال: انگشتر، گردنبند، سکه تمام">
+                        <small class="form-text text-muted">
+                            نام نمایشی دسته‌بندی به فارسی
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- English Name -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="name" class="form-label">نام انگلیسی *</label>
+                        <input type="text" name="name" id="name" 
+                               class="form-control" required
+                               placeholder="rings, necklaces, full_coins"
+                               pattern="[a-z_]+" 
+                               title="فقط حروف کوچک انگلیسی و underscore">
+                        <small class="form-text text-muted">
+                            نام تکنیکی (فقط حروف کوچک انگلیسی و _)
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Description -->
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="description" class="form-label">توضیحات</label>
+                        <textarea name="description" id="description" 
+                                  class="form-control" rows="3"
+                                  placeholder="توضیح مختصری در مورد این دسته‌بندی..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Sort Order -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="sort_order" class="form-label">ترتیب نمایش</label>
+                        <input type="number" name="sort_order" id="sort_order" 
+                               class="form-control" value="0" min="0" max="999">
+                        <small class="form-text text-muted">
+                            عدد کمتر = نمایش در ابتدای لیست
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Status -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">وضعیت</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="is_active" id="is_active" checked>
+                            <label class="form-check-label" for="is_active">
+                                فعال (قابل استفاده در افزودن کالا)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="border-top: 1px solid #dee2e6; padding-top: 20px; margin-top: 20px;">
+                <button type="submit" class="btn btn-success">
+                    ✅ ذخیره دسته‌بندی
+                </button>
+                <a href="/inventory/categories" class="btn btn-secondary">
+                    انصراف
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Help Section -->
+<div class="card">
+    <div class="card-header">
+        راهنما
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>📁 دسته‌بندی اصلی</h6>
+                <ul>
+                    <li>گروه‌های اصلی کالا (مثل جواهرات، سکه، اکسسوری)</li>
+                    <li>می‌تواند شامل زیرمجموعه‌های متعدد باشد</li>
+                    <li>قابل حذف تنها در صورت عدم وجود زیرمجموعه و کالا</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>📂 زیرمجموعه</h6>
+                <ul>
+                    <li>دسته‌بندی‌های جزئی‌تر (مثل انگشتر، دستبند)</li>
+                    <li>باید به یک دسته‌بندی اصلی متصل باشد</li>
+                    <li>کالاها مستقیماً به زیرمجموعه‌ها اختصاص می‌یابند</li>
+                </ul>
+            </div>
+        </div>
+        
+        <hr>
+        
+        <div class="alert alert-info">
+            <strong>💡 نکته:</strong> 
+            بعد از ایجاد دسته‌بندی‌ها، در قسمت "افزودن کالای جدید" می‌توانید کالاها را به این دسته‌بندی‌ها اختصاص دهید.
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleParentSelection() {
+    const mainRadio = document.getElementById('main_category');
+    const subRadio = document.getElementById('sub_category');
+    const parentSelection = document.getElementById('parent_selection');
+    const parentSelect = document.getElementById('parent_id');
+    
+    if (subRadio.checked) {
+        parentSelection.style.display = 'block';
+        parentSelect.required = true;
+    } else {
+        parentSelection.style.display = 'none';
+        parentSelect.required = false;
+        parentSelect.value = '';
+    }
+}
+
+// Auto-generate English name from Persian
+document.getElementById('name_persian').addEventListener('input', function() {
+    const persianName = this.value;
+    const englishInput = document.getElementById('name');
+    
+    if (!englishInput.value && persianName) {
+        // Simple transliteration mapping
+        const mapping = {
+            'انگشتر': 'rings',
+            'گردنبند': 'necklaces', 
+            'دستبند': 'bracelets',
+            'گوشواره': 'earrings',
+            'سکه': 'coins',
+            'طلا': 'gold',
+            'جواهرات': 'jewelry',
+            'اکسسوری': 'accessories',
+            'ساعت': 'watches',
+            'زنجیر': 'chains'
+        };
+        
+        let suggestion = mapping[persianName] || persianName.replace(/\s+/g, '_').toLowerCase();
+        englishInput.value = suggestion;
+    }
+});
+</script> 

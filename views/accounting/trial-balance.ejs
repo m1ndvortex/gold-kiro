@@ -1,0 +1,102 @@
+<div class="page-header">
+    <h1 class="page-title">تراز آزمایشی</h1>
+    <p>تراز حساب‌های حسابداری تا تاریخ</p>
+</div>
+
+<!-- Summary Cards -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <div class="stat-card">
+        <div class="stat-number" style="color: #28a745;">0</div>
+        <div class="stat-label">مجموع دارایی‌ها (ریال)</div>
+        <div class="stat-icon" style="color: #28a745;">💰</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number" style="color: #dc3545;">0</div>
+        <div class="stat-label">مجموع بدهی‌ها (ریال)</div>
+        <div class="stat-icon" style="color: #dc3545;">📋</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number" style="color: #17a2b8;">0</div>
+        <div class="stat-label">حقوق صاحبان سهام (ریال)</div>
+        <div class="stat-icon" style="color: #17a2b8;">🏛️</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number" style="color: #6f42c1;">0</div>
+        <div class="stat-label">درآمدها (ریال)</div>
+        <div class="stat-icon" style="color: #6f42c1;">📈</div>
+    </div>
+</div>
+
+<!-- Trial Balance Table -->
+<div class="card">
+    <div class="card-header">
+        تراز آزمایشی
+        <span class="badge badge-info float-left">حساب‌های فعال</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead style="background: #f8f9fa;">
+                    <tr>
+                        <th>کد حساب</th>
+                        <th>نام حساب</th>
+                        <th>نوع حساب</th>
+                        <th style="text-align: left;">بدهکار (ریال)</th>
+                        <th style="text-align: left;">بستانکار (ریال)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Sample account rows will be populated here -->
+                    <tr>
+                        <td><code>1001</code></td>
+                        <td>صندوق</td>
+                        <td><span class="badge badge-success">دارایی</span></td>
+                        <td style="text-align: left; font-weight: bold; color: #28a745;">-</td>
+                        <td style="text-align: left; font-weight: bold; color: #dc3545;">-</td>
+                    </tr>
+                    
+                    <!-- Grand Total -->
+                    <tr style="background: #007bff; color: white; font-weight: bold; font-size: 1.1em;">
+                        <td colspan="3" class="text-center">
+                            <strong>مجموع کل</strong>
+                        </td>
+                        <td style="text-align: left;">
+                            <strong>0</strong>
+                        </td>
+                        <td style="text-align: left;">
+                            <strong>0</strong>
+                        </td>
+                    </tr>
+                    
+                    <!-- Balance Check -->
+                    <tr style="background: #d4edda;">
+                        <td colspan="3" class="text-center">
+                            <strong>✅ تراز متعادل است</strong>
+                        </td>
+                        <td colspan="2" style="text-align: center;">
+                            <strong>اختلاف: 0</strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        عملیات
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/accounting" class="btn btn-secondary">بازگشت به حسابداری</a>
+            <a href="/accounting/journal-entries" class="btn btn-primary">دفتر روزنامه</a>
+            <a href="/accounting/chart-of-accounts" class="btn btn-info">بهار حساب‌ها</a>
+            <button onclick="window.print()" class="btn btn-outline-primary">چاپ</button>
+        </div>
+    </div>
+</div> 

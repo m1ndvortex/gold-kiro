@@ -1,0 +1,330 @@
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">جزئیات تراکنش</h1>
+            <p>شماره تراکنش: <strong><%= transaction.transaction_number %></strong></p>
+        </div>
+        <div>
+            <a href="/accounting/transactions/<%= transaction.id %>/edit" class="btn btn-warning">
+                <i class="fas fa-edit"></i> ویرایش
+            </a>
+            <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                <i class="fas fa-trash"></i> حذف
+            </button>
+            <a href="/accounting/journal-entries" class="btn btn-secondary">
+                <i class="fas fa-arrow-right"></i> بازگشت
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction Details -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-invoice"></i>
+                    اطلاعات تراکنش
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-group">
+                            <label>تاریخ تراکنش:</label>
+                            <span><%= new Date(transaction.transaction_date).toLocaleDateString('fa-IR') %></span>
+                        </div>
+                        <div class="info-group">
+                            <label>نوع تراکنش:</label>
+                            <span class="badge badge-primary"><%= getTypeLabel(transaction.transaction_type) %></span>
+                        </div>
+                        <div class="info-group">
+                            <label>مبلغ:</label>
+                            <span class="amount"><%= formatNumber(transaction.amount) %> ریال</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <% if (transaction.party_name) { %>
+                        <div class="info-group">
+                            <label>طرف تراکنش:</label>
+                            <span><%= transaction.party_name %></span>
+                        </div>
+                        <% } %>
+                        <% if (transaction.payment_method) { %>
+                        <div class="info-group">
+                            <label>روش پرداخت:</label>
+                            <span><%= getPaymentMethodLabel(transaction.payment_method) %></span>
+                        </div>
+                        <% } %>
+                        <% if (transaction.reference_number) { %>
+                        <div class="info-group">
+                            <label>شماره مرجع:</label>
+                            <span><%= transaction.reference_number %></span>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+                
+                <div class="info-group">
+                    <label>شرح:</label>
+                    <p><%= transaction.description %></p>
+                </div>
+                
+                <% if (transaction.notes) { %>
+                <div class="info-group">
+                    <label>یادداشت:</label>
+                    <p><%= transaction.notes %></p>
+                </div>
+                <% } %>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="info-group">
+                            <label>ایجاد شده توسط:</label>
+                            <span><%= transaction.created_by_name %></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-group">
+                            <label>تاریخ ایجاد:</label>
+                            <span><%= new Date(transaction.created_at).toLocaleDateString('fa-IR') %></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Status Card -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle"></i>
+                    وضعیت تراکنش
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="status-badge">
+                    <% if (transaction.status === 'completed') { %>
+                        <i class="fas fa-check-circle text-success fa-3x"></i>
+                        <h6 class="mt-2 text-success">تکمیل شده</h6>
+                    <% } else if (transaction.status === 'pending') { %>
+                        <i class="fas fa-clock text-warning fa-3x"></i>
+                        <h6 class="mt-2 text-warning">در انتظار</h6>
+                    <% } else if (transaction.status === 'cancelled') { %>
+                        <i class="fas fa-times-circle text-danger fa-3x"></i>
+                        <h6 class="mt-2 text-danger">لغو شده</h6>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt"></i>
+                    عملیات سریع
+                </h6>
+            </div>
+            <div class="card-body">
+                <button type="button" class="btn btn-outline-primary btn-sm btn-block" onclick="printTransaction()">
+                    <i class="fas fa-print"></i> چاپ تراکنش
+                </button>
+                <button type="button" class="btn btn-outline-info btn-sm btn-block" onclick="duplicateTransaction()">
+                    <i class="fas fa-copy"></i> کپی تراکنش
+                </button>
+                <a href="/accounting/manual-transaction" class="btn btn-outline-success btn-sm btn-block">
+                    <i class="fas fa-plus"></i> تراکنش جدید
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Journal Entries -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-book"></i>
+            قیود حسابداری مرتبط
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>حساب</th>
+                        <th>شرح</th>
+                        <th class="text-right">بدهکار (ریال)</th>
+                        <th class="text-right">بستانکار (ریال)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% journalEntries.forEach(entry => { %>
+                    <tr>
+                        <td><%= entry.account_name_persian %></td>
+                        <td><%= entry.description %></td>
+                        <td class="text-right <%= entry.debit_amount > 0 ? 'text-danger' : '' %>">
+                            <%= entry.debit_amount > 0 ? formatNumber(entry.debit_amount) : '-' %>
+                        </td>
+                        <td class="text-right <%= entry.credit_amount > 0 ? 'text-success' : '' %>">
+                            <%= entry.credit_amount > 0 ? formatNumber(entry.credit_amount) : '-' %>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+                <tfoot>
+                    <tr class="table-info">
+                        <th colspan="2">مجموع:</th>
+                        <th class="text-right text-danger">
+                            <%= formatNumber(transaction.amount) %>
+                        </th>
+                        <th class="text-right text-success">
+                            <%= formatNumber(transaction.amount) %>
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Form -->
+<form id="deleteForm" method="POST" action="/accounting/transactions/<%= transaction.id %>/delete" style="display: none;">
+</form>
+
+<style>
+.info-group {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.info-group label {
+    font-weight: 600;
+    color: #495057;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.info-group span, .info-group p {
+    color: #6c757d;
+}
+
+.amount {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #28a745 !important;
+}
+
+.status-badge {
+    padding: 20px 0;
+}
+
+.table th {
+    background: #f8f9fa;
+    border-top: none;
+}
+
+.page-header {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+@media print {
+    .btn, .page-header .btn, .card:last-child {
+        display: none !important;
+    }
+    
+    .page-header h1 {
+        color: #000 !important;
+    }
+}
+</style>
+
+<script>
+function confirmDelete() {
+    if (confirm('آیا از حذف این تراکنش اطمینان دارید؟\n\nاین عمل قابل بازگشت نیست و تمام قیود مرتبط نیز حذف خواهند شد.')) {
+        document.getElementById('deleteForm').submit();
+    }
+}
+
+function printTransaction() {
+    window.print();
+}
+
+function duplicateTransaction() {
+    // Redirect to new transaction form with pre-filled data
+    const params = new URLSearchParams({
+        duplicate: '<%= transaction.id %>',
+        type: '<%= transaction.transaction_type %>',
+        amount: '<%= transaction.amount %>',
+        description: '<%= transaction.description %>'
+    });
+    
+    window.location.href = '/accounting/manual-transaction?' + params.toString();
+}
+
+function getTypeLabel(type) {
+    const labels = {
+        'payment': 'دریافت وجه',
+        'receipt': 'پرداخت وجه', 
+        'purchase': 'خرید',
+        'sale': 'فروش',
+        'transfer': 'انتقال',
+        'adjustment': 'تعدیل حساب'
+    };
+    return labels[type] || type;
+}
+
+function getPaymentMethodLabel(method) {
+    const labels = {
+        'cash': 'نقد',
+        'check': 'چک',
+        'bank_transfer': 'انتقال بانکی',
+        'card': 'کارت',
+        'online': 'آنلاین'
+    };
+    return labels[method] || method;
+}
+
+function formatNumber(num) {
+    return new Intl.NumberFormat('fa-IR').format(num);
+}
+</script>
+
+<%- include('../layout') %>
+
+<% 
+function getTypeLabel(type) {
+    const labels = {
+        'payment': 'دریافت وجه',
+        'receipt': 'پرداخت وجه',
+        'purchase': 'خرید', 
+        'sale': 'فروش',
+        'transfer': 'انتقال',
+        'adjustment': 'تعدیل حساب'
+    };
+    return labels[type] || type;
+}
+
+function getPaymentMethodLabel(method) {
+    const labels = {
+        'cash': 'نقد',
+        'check': 'چک',
+        'bank_transfer': 'انتقال بانکی',
+        'card': 'کارت',
+        'online': 'آنلاین'
+    };
+    return labels[method] || method;
+}
+
+function formatNumber(num) {
+    return new Intl.NumberFormat('fa-IR').format(num);
+}
+%> 

@@ -1,0 +1,156 @@
+<div class="page-header">
+    <h1 class="page-title">دفتر کل</h1>
+    <p>مشاهده کلیه تراکنش‌های مالی</p>
+</div>
+
+<!-- Filter Section -->
+<div class="card">
+    <div class="card-header">
+        فیلتر تراکنش‌ها
+    </div>
+    <div class="card-body">
+        <form method="GET" action="/accounting/general-ledger">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+                <div class="form-group">
+                    <label>از تاریخ:</label>
+                    <input type="date" name="startDate" class="form-control" value="<%= filters.startDate || '' %>">
+                </div>
+                
+                <div class="form-group">
+                    <label>تا تاریخ:</label>
+                    <input type="date" name="endDate" class="form-control" value="<%= filters.endDate || '' %>">
+                </div>
+                
+                <div class="form-group">
+                    <label>نوع تراکنش:</label>
+                    <select name="type" class="form-control">
+                        <option value="all" <%= (filters.type === 'all' || !filters.type) ? 'selected' : '' %>>همه</option>
+                        <option value="sale" <%= filters.type === 'sale' ? 'selected' : '' %>>فروش</option>
+                        <option value="payment" <%= filters.type === 'payment' ? 'selected' : '' %>>پرداخت</option>
+                        <option value="expense" <%= filters.type === 'expense' ? 'selected' : '' %>>هزینه</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                    <a href="/accounting/general-ledger" class="btn btn-secondary">پاک کردن</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="card">
+    <div class="card-header">
+        تراکنش‌های مالی
+        <span class="badge badge-info float-left"><%= formatNumber(transactions.length) %> تراکنش</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead style="background: #f8f9fa;">
+                    <tr>
+                        <th>تاریخ</th>
+                        <th>شناسه تراکنش</th>
+                        <th>نوع</th>
+                        <th>شرح</th>
+                        <th>مشتری</th>
+                        <th>مبلغ (ریال)</th>
+                        <th>وضعیت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (transactions.length === 0) { %>
+                        <tr>
+                            <td colspan="7" class="text-center" style="padding: 40px; color: #666;">
+                                هیچ تراکنش مالی یافت نشد
+                            </td>
+                        </tr>
+                    <% } else { %>
+                        <% let totalAmount = 0; %>
+                        <% transactions.forEach(transaction => { %>
+                            <% totalAmount += parseFloat(transaction.amount); %>
+                            <tr>
+                                <td>
+                                    <%= moment(transaction.transaction_date).format('jYYYY/jM/jD') %>
+                                    <br>
+                                    <small class="text-muted">
+                                        <%= moment(transaction.created_at).format('HH:mm') %>
+                                    </small>
+                                </td>
+                                <td>
+                                    <code style="font-size: 12px;"><%= transaction.transaction_id %></code>
+                                </td>
+                                <td>
+                                    <% if (transaction.transaction_type === 'sale') { %>
+                                        <span class="badge badge-success">فروش</span>
+                                    <% } else if (transaction.transaction_type === 'payment') { %>
+                                        <span class="badge badge-info">پرداخت</span>
+                                    <% } else if (transaction.transaction_type === 'expense') { %>
+                                        <span class="badge badge-warning">هزینه</span>
+                                    <% } else { %>
+                                        <span class="badge badge-secondary"><%= transaction.transaction_type %></span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <%= transaction.description %>
+                                    <% if (transaction.invoice_number) { %>
+                                        <br>
+                                        <small class="text-muted">
+                                            فاکتور: <%= transaction.invoice_number %>
+                                        </small>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (transaction.customer_name) { %>
+                                        <a href="/accounting/customer/<%= transaction.related_customer_id %>" class="text-decoration-none">
+                                            <%= transaction.customer_name %>
+                                        </a>
+                                    <% } else { %>
+                                        <span class="text-muted">-</span>
+                                    <% } %>
+                                </td>
+                                <td style="text-align: left; font-weight: bold;">
+                                    <% if (transaction.transaction_type === 'payment') { %>
+                                        <span style="color: #28a745;">+</span>
+                                    <% } else if (transaction.transaction_type === 'expense') { %>
+                                        <span style="color: #dc3545;">-</span>
+                                    <% } %>
+                                    <%= formatNumber(transaction.amount) %>
+                                </td>
+                                <td>
+                                    <span class="badge badge-success">تایید شده</span>
+                                </td>
+                            </tr>
+                        <% }); %>
+                        
+                        <!-- Total Row -->
+                        <tr style="background: #f8f9fa; font-weight: bold;">
+                            <td colspan="5" class="text-center">مجموع کل</td>
+                            <td style="text-align: left;">
+                                <%= formatNumber(totalAmount) %> ریال
+                            </td>
+                            <td></td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        عملیات
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/accounting" class="btn btn-secondary">بازگشت به حسابداری</a>
+            <a href="/accounting/customer-accounts" class="btn btn-info">حساب مشتریان</a>
+            <a href="/accounting/reports" class="btn btn-success">گزارشات مالی</a>
+            <button onclick="window.print()" class="btn btn-outline-primary">چاپ</button>
+        </div>
+    </div>
+</div> 

@@ -1,0 +1,484 @@
+<style>
+.customer-details-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Tahoma', sans-serif;
+    direction: rtl;
+}
+
+.page-header-enhanced {
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(184, 134, 11, 0.3);
+}
+
+.page-header-enhanced h1 {
+    margin: 0 0 10px 0;
+    font-size: 2.2em;
+    font-weight: bold;
+}
+
+.page-header-enhanced p {
+    margin: 0;
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+.customer-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.info-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    border: 2px solid #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border-color: #b8860b;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.3em;
+    color: #2c2c2c;
+    margin-right: 10px;
+}
+
+.card-header .icon {
+    font-size: 1.5em;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #6c757d;
+    min-width: 120px;
+}
+
+.info-value {
+    color: #2c2c2c;
+    font-weight: 500;
+    text-align: left;
+}
+
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.status-active { background: #d4edda; color: #155724; }
+.status-inactive { background: #f8d7da; color: #721c24; }
+.status-semi-active { background: #fff3cd; color: #856404; }
+.status-no-purchase { background: #e2e3e5; color: #383d41; }
+
+.customer-type-badge {
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.type-normal { background: #e9ecef; color: #495057; }
+.type-vip { background: #fff3cd; color: #856404; }
+.type-wholesale { background: #d1ecf1; color: #0c5460; }
+.type-regular { background: #d4edda; color: #155724; }
+
+.actions-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1em;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.action-btn-edit {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+
+.action-btn-edit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(23, 162, 184, 0.4);
+    color: white;
+}
+
+.action-btn-finance {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.action-btn-finance:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+    color: white;
+}
+
+.action-btn-invoice {
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+    color: #2c2c2c;
+}
+
+.action-btn-invoice:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(184, 134, 11, 0.4);
+    color: #2c2c2c;
+}
+
+.action-btn-back {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+}
+
+.action-btn-back:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(108, 117, 125, 0.4);
+    color: white;
+}
+
+.purchases-section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.purchases-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.purchases-table th,
+.purchases-table td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.purchases-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #2c2c2c;
+}
+
+.purchases-table tr:hover {
+    background: #f8f9fa;
+}
+
+.no-purchases {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .customer-info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .info-value {
+        text-align: right;
+    }
+}
+</style>
+
+<div class="customer-details-container">
+    <div class="page-header-enhanced">
+        <h1>👤 جزئیات مشتری</h1>
+        <p>اطلاعات کامل و جزئیات مشتری</p>
+    </div>
+
+    <!-- اطلاعات مشتری -->
+    <div class="customer-info-grid">
+        <!-- اطلاعات شخصی -->
+        <div class="info-card">
+            <div class="card-header">
+                <span class="icon">👤</span>
+                <h3>اطلاعات شخصی</h3>
+            </div>
+            <div class="info-item">
+                <span class="info-label">نام و نام خانوادگی:</span>
+                <span class="info-value"><%= customer.full_name %></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">کد مشتری:</span>
+                <span class="info-value"><%= customer.customer_code %></span>
+            </div>
+            <% if (customer.national_id) { %>
+            <div class="info-item">
+                <span class="info-label">کد ملی:</span>
+                <span class="info-value"><%= customer.national_id %></span>
+            </div>
+            <% } %>
+            <% if (customer.birth_date) { %>
+            <div class="info-item">
+                <span class="info-label">تاریخ تولد:</span>
+                <span class="info-value"><%= new Date(customer.birth_date).toLocaleDateString('fa-IR') %></span>
+            </div>
+            <% } %>
+            <% if (customer.age) { %>
+            <div class="info-item">
+                <span class="info-label">سن:</span>
+                <span class="info-value"><%= customer.age %> سال</span>
+            </div>
+            <% } %>
+            <% if (customer.gender) { %>
+            <div class="info-item">
+                <span class="info-label">جنسیت:</span>
+                <span class="info-value">
+                    <%= customer.gender === 'male' ? '👨 آقا' : customer.gender === 'female' ? '👩 خانم' : '👤 سایر' %>
+                </span>
+            </div>
+            <% } %>
+            <% if (customer.job_title) { %>
+            <div class="info-item">
+                <span class="info-label">شغل:</span>
+                <span class="info-value"><%= customer.job_title %></span>
+            </div>
+            <% } %>
+        </div>
+
+        <!-- اطلاعات تماس -->
+        <div class="info-card">
+            <div class="card-header">
+                <span class="icon">📞</span>
+                <h3>اطلاعات تماس</h3>
+            </div>
+            <% if (customer.phone) { %>
+            <div class="info-item">
+                <span class="info-label">شماره تماس:</span>
+                <span class="info-value"><%= customer.phone %></span>
+            </div>
+            <% } %>
+            <% if (customer.emergency_phone) { %>
+            <div class="info-item">
+                <span class="info-label">تماس اضطراری:</span>
+                <span class="info-value"><%= customer.emergency_phone %></span>
+            </div>
+            <% } %>
+            <% if (customer.email) { %>
+            <div class="info-item">
+                <span class="info-label">ایمیل:</span>
+                <span class="info-value"><%= customer.email %></span>
+            </div>
+            <% } %>
+            <% if (customer.address) { %>
+            <div class="info-item">
+                <span class="info-label">آدرس:</span>
+                <span class="info-value"><%= customer.address %></span>
+            </div>
+            <% } %>
+        </div>
+
+        <!-- اطلاعات مالی و فعالیت -->
+        <div class="info-card">
+            <div class="card-header">
+                <span class="icon">💰</span>
+                <h3>اطلاعات مالی</h3>
+            </div>
+            <div class="info-item">
+                <span class="info-label">نوع مشتری:</span>
+                <span class="info-value">
+                    <span class="customer-type-badge type-<%= customer.customer_type %>">
+                        <%= customer.customer_type === 'vip' ? '⭐ VIP' : 
+                            customer.customer_type === 'wholesale' ? '📦 عمده فروش' : 
+                            customer.customer_type === 'regular' ? '🔄 مشتری ثابت' : 
+                            '👤 عادی' %>
+                    </span>
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">کل خریدها:</span>
+                <span class="info-value"><%= Number(customer.total_purchases || 0).toLocaleString('fa-IR') %> تومان</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">کل پرداخت‌ها:</span>
+                <span class="info-value"><%= Number(customer.total_payments || 0).toLocaleString('fa-IR') %> تومان</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">موجودی حساب:</span>
+                <span class="info-value">
+                    <% const balance = Number(customer.current_balance || 0); %>
+                    <span style="color: <%= balance >= 0 ? '#28a745' : '#dc3545' %>;">
+                        <%= balance.toLocaleString('fa-IR') %> تومان
+                    </span>
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">وضعیت فعالیت:</span>
+                <span class="info-value">
+                    <span class="status-badge status-<%= customer.activity_status === 'فعال' ? 'active' : 
+                                                          customer.activity_status === 'نیمه فعال' ? 'semi-active' : 
+                                                          customer.activity_status === 'بدون خرید' ? 'no-purchase' : 'inactive' %>">
+                        <%= customer.activity_status %>
+                    </span>
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">وضعیت حساب:</span>
+                <span class="info-value">
+                    <span class="status-badge <%= customer.is_active ? 'status-active' : 'status-inactive' %>">
+                        <%= customer.is_active ? 'فعال' : 'غیرفعال' %>
+                    </span>
+                </span>
+            </div>
+        </div>
+
+        <!-- اطلاعات تکمیلی -->
+        <div class="info-card">
+            <div class="card-header">
+                <span class="icon">📋</span>
+                <h3>اطلاعات تکمیلی</h3>
+            </div>
+            <% if (customer.reference_name) { %>
+            <div class="info-item">
+                <span class="info-label">نام معرف:</span>
+                <span class="info-value"><%= customer.reference_name %></span>
+            </div>
+            <% } %>
+            <div class="info-item">
+                <span class="info-label">تاریخ ثبت:</span>
+                <span class="info-value"><%= new Date(customer.created_at).toLocaleDateString('fa-IR') %></span>
+            </div>
+            <% if (customer.updated_at && customer.updated_at !== customer.created_at) { %>
+            <div class="info-item">
+                <span class="info-label">آخرین بروزرسانی:</span>
+                <span class="info-value"><%= new Date(customer.updated_at).toLocaleDateString('fa-IR') %></span>
+            </div>
+            <% } %>
+            <% if (customer.notes) { %>
+            <div class="info-item" style="flex-direction: column; align-items: flex-start;">
+                <span class="info-label" style="margin-bottom: 10px;">یادداشت‌ها:</span>
+                <span class="info-value" style="background: #f8f9fa; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box;">
+                    <%= customer.notes %>
+                </span>
+            </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- دکمه‌های عملیات -->
+    <div class="actions-section">
+        <div class="card-header">
+            <span class="icon">⚡</span>
+            <h3>عملیات</h3>
+        </div>
+        <div class="actions-grid">
+            <a href="/customers/edit/<%= customer.id %>" class="action-btn action-btn-edit">
+                ✏️ ویرایش مشتری
+            </a>
+            <a href="/accounting/customer-detail/<%= customer.id %>" class="action-btn action-btn-finance">
+                💰 حساب مالی
+            </a>
+            <a href="/sales/new?customer_id=<%= customer.id %>" class="action-btn action-btn-invoice">
+                🧾 فاکتور جدید
+            </a>
+            <a href="/customers" class="action-btn action-btn-back">
+                🔙 بازگشت به لیست
+            </a>
+        </div>
+    </div>
+
+    <!-- آخرین خریدها -->
+    <div class="purchases-section">
+        <div class="card-header">
+            <span class="icon">🛒</span>
+            <h3>آخرین خریدها</h3>
+        </div>
+        <% if (purchases && purchases.length > 0) { %>
+        <table class="purchases-table">
+            <thead>
+                <tr>
+                    <th>تاریخ فاکتور</th>
+                    <th>مبلغ کل</th>
+                    <th>وضعیت</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% purchases.forEach(purchase => { %>
+                <tr>
+                    <td><%= new Date(purchase.invoice_date).toLocaleDateString('fa-IR') %></td>
+                    <td><%= Number(purchase.grand_total).toLocaleString('fa-IR') %> تومان</td>
+                    <td>
+                        <span class="status-badge status-active">
+                            <%= purchase.status || 'تکمیل شده' %>
+                        </span>
+                    </td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+        <% } else { %>
+        <div class="no-purchases">
+            🛒 هنوز خریدی ثبت نشده است
+        </div>
+        <% } %>
+    </div>
+</div> 

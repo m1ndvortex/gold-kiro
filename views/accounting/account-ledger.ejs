@@ -1,0 +1,214 @@
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">دفتر معین</h1>
+            <p>حساب: <strong>[<%= account.account_code %>] <%= account.account_name_persian %></strong></p>
+        </div>
+        <div>
+            <a href="/accounting/chart-of-accounts" class="btn btn-secondary">
+                <i class="fas fa-arrow-right"></i> بازگشت به بهار حساب‌ها
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Account Summary -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <div class="stat-card">
+        <div class="stat-number" style="color: #007bff;"><%= account.account_code %></div>
+        <div class="stat-label">کد حساب</div>
+        <div class="stat-icon" style="color: #007bff;">🔢</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number" style="color: #28a745;">
+            <%= Math.abs(parseFloat(account.balance || 0)).toLocaleString('fa-IR') %>
+        </div>
+        <div class="stat-label">مانده فعلی (ریال)</div>
+        <div class="stat-icon" style="color: #28a745;">💰</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number" style="color: #17a2b8;"><%= transactions.length %></div>
+        <div class="stat-label">تعداد تراکنش‌ها</div>
+        <div class="stat-icon" style="color: #17a2b8;">📊</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number" style="color: #6f42c1;">
+            <% if (account.account_type === 'asset') { %>
+                دارایی
+            <% } else if (account.account_type === 'liability') { %>
+                بدهی
+            <% } else if (account.account_type === 'equity') { %>
+                حقوق مالکانه
+            <% } else if (account.account_type === 'revenue') { %>
+                درآمد
+            <% } else if (account.account_type === 'expense') { %>
+                هزینه
+            <% } %>
+        </div>
+        <div class="stat-label">نوع حساب</div>
+        <div class="stat-icon" style="color: #6f42c1;">📋</div>
+    </div>
+</div>
+
+<!-- Date Filter -->
+<div class="card">
+    <div class="card-header">
+        فیلتر تاریخ
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row">
+            <div class="col-md-4">
+                <label>از تاریخ:</label>
+                <input type="date" name="startDate" class="form-control" value="<%= filters.startDate || '' %>">
+            </div>
+            <div class="col-md-4">
+                <label>تا تاریخ:</label>
+                <input type="date" name="endDate" class="form-control" value="<%= filters.endDate || '' %>">
+            </div>
+            <div class="col-md-4">
+                <label>&nbsp;</label><br>
+                <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                <a href="/accounting/account-ledger/<%= account.id %>" class="btn btn-secondary">حذف فیلتر</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="card">
+    <div class="card-header">
+        تراکنش‌های حساب
+    </div>
+    <div class="card-body">
+        <% if (transactions.length === 0) { %>
+            <div class="text-center text-muted" style="padding: 50px;">
+                <i class="fas fa-inbox fa-3x"></i><br><br>
+                <h5>هیچ تراکنشی یافت نشد</h5>
+                <p>برای این حساب در بازه زمانی انتخاب شده تراکنشی موجود نیست</p>
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th>تاریخ</th>
+                            <th>شماره تراکنش</th>
+                            <th>شرح</th>
+                            <th>حساب مقابل</th>
+                            <th>طرف تراکنش</th>
+                            <th style="text-align: left;">بدهکار</th>
+                            <th style="text-align: left;">بستانکار</th>
+                            <th style="text-align: left;">مانده</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% transactions.forEach(transaction => { %>
+                            <tr>
+                                <td>
+                                    <%= new Date(transaction.transaction_date).toLocaleDateString('fa-IR') %><br>
+                                    <small class="text-muted">
+                                        <%= new Date(transaction.created_at).toLocaleTimeString('fa-IR') %>
+                                    </small>
+                                </td>
+                                <td>
+                                    <a href="/accounting/transactions/<%= transaction.id %>" class="text-primary">
+                                        <%= transaction.transaction_number %>
+                                    </a>
+                                </td>
+                                <td>
+                                    <%= transaction.description %>
+                                    <% if (transaction.reference_number) { %>
+                                        <br><small class="text-muted">مرجع: <%= transaction.reference_number %></small>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <span class="badge badge-secondary">
+                                        <%= transaction.opposite_account %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (transaction.party_name) { %>
+                                        <%= transaction.party_name %>
+                                    <% } else { %>
+                                        <span class="text-muted">-</span>
+                                    <% } %>
+                                </td>
+                                <td style="text-align: left; font-weight: bold;">
+                                    <% if (transaction.debit_amount > 0) { %>
+                                        <span style="color: #28a745;">
+                                            <%= transaction.debit_amount.toLocaleString('fa-IR') %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="text-muted">-</span>
+                                    <% } %>
+                                </td>
+                                <td style="text-align: left; font-weight: bold;">
+                                    <% if (transaction.credit_amount > 0) { %>
+                                        <span style="color: #dc3545;">
+                                            <%= transaction.credit_amount.toLocaleString('fa-IR') %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="text-muted">-</span>
+                                    <% } %>
+                                </td>
+                                <td style="text-align: left; font-weight: bold;">
+                                    <% const balance = parseFloat(transaction.running_balance); %>
+                                    <span style="color: <%= balance > 0 ? '#28a745' : (balance < 0 ? '#dc3545' : '#6c757d') %>;">
+                                        <%= Math.abs(balance).toLocaleString('fa-IR') %>
+                                        <% if (balance !== 0) { %>
+                                            <small>(<%= balance > 0 ? 'بدهکار' : 'بستانکار' %>)</small>
+                                        <% } %>
+                                    </span>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                    <tfoot style="background: #f8f9fa;">
+                        <tr>
+                            <th colspan="5">مجموع:</th>
+                            <th style="text-align: left; color: #28a745;">
+                                <%= transactions.reduce((sum, t) => sum + parseFloat(t.debit_amount || 0), 0).toLocaleString('fa-IR') %>
+                            </th>
+                            <th style="text-align: left; color: #dc3545;">
+                                <%= transactions.reduce((sum, t) => sum + parseFloat(t.credit_amount || 0), 0).toLocaleString('fa-IR') %>
+                            </th>
+                            <th style="text-align: left; font-weight: bold;">
+                                <% const finalBalance = parseFloat(account.balance || 0); %>
+                                <span style="color: <%= finalBalance > 0 ? '#28a745' : (finalBalance < 0 ? '#dc3545' : '#6c757d') %>;">
+                                    <%= Math.abs(finalBalance).toLocaleString('fa-IR') %>
+                                    <% if (finalBalance !== 0) { %>
+                                        (<%= finalBalance > 0 ? 'بدهکار' : 'بستانکار' %>)
+                                    <% } %>
+                                </span>
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="card">
+    <div class="card-header">
+        عملیات
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/accounting/chart-of-accounts" class="btn btn-secondary">بازگشت به بهار حساب‌ها</a>
+            <a href="/accounting/manual-transaction" class="btn btn-success">ثبت تراکنش جدید</a>
+            <button onclick="window.print()" class="btn btn-outline-primary">چاپ</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Helper function for number formatting
+function formatNumber(num) {
+    return new Intl.NumberFormat('fa-IR').format(num);
+}
+</script> 

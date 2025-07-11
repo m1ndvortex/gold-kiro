@@ -1,0 +1,270 @@
+<div class="page-header">
+    <h1 class="page-title">مدیریت هزینه‌ها</h1>
+    <p>ثبت، کنترل و تحلیل هزینه‌های طلافروشی</p>
+</div>
+
+<!-- Expense Summary -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <div class="stat-card">
+        <div class="stat-number"><%= expenses.length %></div>
+        <div class="stat-label">کل هزینه‌ها</div>
+        <div class="stat-icon" style="color: #6f42c1;">📋</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number"><%= formatNumber(summary.totalAmount) %></div>
+        <div class="stat-label">مجموع مبلغ (ریال)</div>
+        <div class="stat-icon" style="color: #dc3545;">💸</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number"><%= formatNumber(summary.paidAmount) %></div>
+        <div class="stat-label">پرداخت شده (ریال)</div>
+        <div class="stat-icon" style="color: #28a745;">✅</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number"><%= formatNumber(summary.pendingAmount) %></div>
+        <div class="stat-label">در انتظار پرداخت (ریال)</div>
+        <div class="stat-icon" style="color: #ffc107;">⏳</div>
+    </div>
+</div>
+
+<!-- Filter and Add Section -->
+<div class="card">
+    <div class="card-header">
+        فیلتر و مدیریت هزینه‌ها
+        <button class="btn btn-success btn-sm float-left" onclick="showAddExpenseModal()">
+            ➕ ثبت هزینه جدید
+        </button>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="/accounting/expenses">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+                <div class="form-group">
+                    <label>وضعیت:</label>
+                    <select name="status" class="form-control">
+                        <option value="all">همه</option>
+                        <option value="pending">در انتظار</option>
+                        <option value="approved">تایید شده</option>
+                        <option value="paid">پرداخت شده</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>دسته‌بندی:</label>
+                    <select name="category" class="form-control">
+                        <option value="all">همه دسته‌ها</option>
+                        <% categories.forEach(category => { %>
+                            <option value="<%= category.id %>">
+                                <%= category.category_name_persian %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                    <a href="/accounting/expenses" class="btn btn-secondary">پاک کردن</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Expenses List -->
+<div class="card">
+    <div class="card-header">
+        لیست هزینه‌ها
+        <span class="badge badge-info float-left"><%= expenses.length %> هزینه</span>
+    </div>
+    <div class="card-body">
+        <% if (expenses.length === 0) { %>
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <h4>هیچ هزینه‌ای یافت نشد</h4>
+                <p>با فیلترهای انتخاب شده هیچ هزینه‌ای موجود نیست</p>
+                <button class="btn btn-primary" onclick="showAddExpenseModal()">
+                    ثبت اولین هزینه
+                </button>
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th>شماره هزینه</th>
+                            <th>تاریخ</th>
+                            <th>دسته‌بندی</th>
+                            <th>شرح</th>
+                            <th>مبلغ (ریال)</th>
+                            <th>روش پرداخت</th>
+                            <th>وضعیت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% expenses.forEach(expense => { %>
+                            <tr>
+                                <td>
+                                    <code><%= expense.expense_number %></code>
+                                </td>
+                                <td>
+                                    <%= moment(expense.expense_date).format('jYYYY/jM/jD') %>
+                                </td>
+                                <td>
+                                    <span class="badge badge-secondary">
+                                        <%= expense.category_name_persian %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong><%= expense.description %></strong>
+                                    <% if (expense.vendor_name) { %>
+                                        <br>
+                                        <small class="text-muted">فروشنده: <%= expense.vendor_name %></small>
+                                    <% } %>
+                                </td>
+                                <td style="text-align: left; font-weight: bold; color: #dc3545;">
+                                    <%= formatNumber(expense.amount) %>
+                                </td>
+                                <td>
+                                    <% if (expense.payment_method === 'cash') { %>
+                                        <span class="badge badge-success">نقد</span>
+                                    <% } else if (expense.payment_method === 'bank_transfer') { %>
+                                        <span class="badge badge-info">انتقال بانکی</span>
+                                    <% } else { %>
+                                        <span class="badge badge-secondary"><%= expense.payment_method %></span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (expense.status === 'pending') { %>
+                                        <span class="badge badge-warning">در انتظار</span>
+                                    <% } else if (expense.status === 'approved') { %>
+                                        <span class="badge badge-info">تایید شده</span>
+                                    <% } else if (expense.status === 'paid') { %>
+                                        <span class="badge badge-success">پرداخت شده</span>
+                                    <% } else { %>
+                                        <span class="badge badge-secondary"><%= expense.status %></span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        عملیات سریع
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/accounting" class="btn btn-secondary">بازگشت به حسابداری</a>
+            <a href="/accounting/bank-accounts" class="btn btn-info">حساب‌های بانکی</a>
+            <a href="/accounting/journal-entries" class="btn btn-primary">دفتر روزنامه</a>
+            <button onclick="window.print()" class="btn btn-outline-primary">چاپ</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #28a745; color: white;">
+                <h5 class="modal-title">ثبت هزینه جدید</h5>
+                <button type="button" class="close" data-dismiss="modal" style="color: white;">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/accounting/expenses/add">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>تاریخ هزینه: *</label>
+                                <input type="date" name="expense_date" class="form-control" required 
+                                       value="<%= new Date().toISOString().split('T')[0] %>">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>دسته‌بندی: *</label>
+                                <select name="category_id" class="form-control" required>
+                                    <option value="">انتخاب دسته‌بندی</option>
+                                    <% categories.forEach(category => { %>
+                                        <option value="<%= category.id %>">
+                                            <%= category.category_name_persian %>
+                                        </option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>شرح هزینه: *</label>
+                        <input type="text" name="description" class="form-control" required 
+                               placeholder="توضیح کامل از هزینه">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>مبلغ (ریال): *</label>
+                                <input type="number" name="amount" class="form-control" required min="1"
+                                       placeholder="مبلغ به ریال">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>روش پرداخت:</label>
+                                <select name="payment_method" class="form-control">
+                                    <option value="cash">نقد</option>
+                                    <option value="bank_transfer">انتقال بانکی</option>
+                                    <option value="check">چک</option>
+                                    <option value="card">کارت</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>نام فروشنده/تامین‌کننده:</label>
+                                <input type="text" name="vendor_name" class="form-control" 
+                                       placeholder="نام شخص یا شرکت">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>شماره فاکتور/رسید:</label>
+                                <input type="text" name="invoice_number" class="form-control" 
+                                       placeholder="شماره سند">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>یادداشت اضافی:</label>
+                        <textarea name="notes" class="form-control" rows="3" 
+                                  placeholder="توضیحات اضافی..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-success">ثبت هزینه</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAddExpenseModal() {
+    $('#addExpenseModal').modal('show');
+}
+</script> 

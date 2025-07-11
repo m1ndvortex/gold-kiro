@@ -1,0 +1,235 @@
+<div class="page-header">
+    <h1 class="page-title">ویرایش دسته‌بندی</h1>
+    <p>ویرایش اطلاعات دسته‌بندی "<%= category.name_persian %>"</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        اطلاعات دسته‌بندی
+    </div>
+    <div class="card-body">
+        <form action="/inventory/categories/update/<%= category.id %>" method="POST">
+            <div class="row">
+                <!-- Category Info -->
+                <div class="col-md-12">
+                    <div class="alert alert-info">
+                        <strong>نوع دسته‌بندی:</strong>
+                        <% if (category.parent_id) { %>
+                            📂 زیرمجموعه از "<%= parentCategories.find(p => p.id == category.parent_id)?.name_persian || 'نامشخص' %>"
+                        <% } else { %>
+                            📁 دسته‌بندی اصلی
+                        <% } %>
+                    </div>
+                </div>
+                
+                <!-- Parent Category (for subcategories only) -->
+                <% if (!category.parent_id) { %>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="parent_id" class="form-label">تبدیل به زیرمجموعه</label>
+                            <select name="parent_id" id="parent_id" class="form-control">
+                                <option value="">نگه داشتن به عنوان دسته‌بندی اصلی</option>
+                                <% parentCategories.forEach(parent => { %>
+                                    <option value="<%= parent.id %>">
+                                        تبدیل به زیرمجموعه "<%= parent.name_persian %>"
+                                    </option>
+                                <% }); %>
+                            </select>
+                            <small class="form-text text-muted">
+                                فقط در صورت عدم وجود زیرمجموعه قابل انجام است
+                            </small>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="parent_id" class="form-label">دسته‌بندی والد</label>
+                            <select name="parent_id" id="parent_id" class="form-control">
+                                <option value="">تبدیل به دسته‌بندی اصلی</option>
+                                <% parentCategories.forEach(parent => { %>
+                                    <option value="<%= parent.id %>" 
+                                            <%= (category.parent_id == parent.id) ? 'selected' : '' %>>
+                                        <%= parent.name_persian %> (<%= parent.name %>)
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                    </div>
+                <% } %>
+                
+                <!-- Persian Name -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="name_persian" class="form-label">نام فارسی *</label>
+                        <input type="text" name="name_persian" id="name_persian" 
+                               class="form-control" required
+                               value="<%= category.name_persian %>"
+                               placeholder="مثال: انگشتر، گردنبند، سکه تمام">
+                        <small class="form-text text-muted">
+                            نام نمایشی دسته‌بندی به فارسی
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- English Name -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="name" class="form-label">نام انگلیسی *</label>
+                        <input type="text" name="name" id="name" 
+                               class="form-control" required
+                               value="<%= category.name %>"
+                               placeholder="rings, necklaces, full_coins"
+                               pattern="[a-z_]+" 
+                               title="فقط حروف کوچک انگلیسی و underscore">
+                        <small class="form-text text-muted">
+                            نام تکنیکی (فقط حروف کوچک انگلیسی و _)
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Description -->
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="description" class="form-label">توضیحات</label>
+                        <textarea name="description" id="description" 
+                                  class="form-control" rows="3"
+                                  placeholder="توضیح مختصری در مورد این دسته‌بندی..."><%= category.description || '' %></textarea>
+                    </div>
+                </div>
+                
+                <!-- Sort Order -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="sort_order" class="form-label">ترتیب نمایش</label>
+                        <input type="number" name="sort_order" id="sort_order" 
+                               class="form-control" value="<%= category.sort_order || 0 %>" 
+                               min="0" max="999">
+                        <small class="form-text text-muted">
+                            عدد کمتر = نمایش در ابتدای لیست
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Status -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">وضعیت</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="is_active" id="is_active" 
+                                   <%= category.is_active ? 'checked' : '' %>>
+                            <label class="form-check-label" for="is_active">
+                                فعال (قابل استفاده در افزودن کالا)
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">
+                            غیرفعال کردن دسته‌بندی باعث عدم نمایش آن در فرم‌ها می‌شود
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="border-top: 1px solid #dee2e6; padding-top: 20px; margin-top: 20px;">
+                <button type="submit" class="btn btn-success">
+                    ✅ بروزرسانی دسته‌بندی
+                </button>
+                <a href="/inventory/categories" class="btn btn-secondary">
+                    انصراف
+                </a>
+                <button type="button" class="btn btn-outline-danger" 
+                        onclick="confirmDelete(<%= category.id %>, '<%= category.name_persian %>')">
+                    🗑️ حذف دسته‌بندی
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Current Usage Info -->
+<div class="card">
+    <div class="card-header">
+        وضعیت استفاده
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number">-</div>
+                    <div class="stat-label">کالاهای مرتبط</div>
+                    <div class="stat-icon" style="color: #007bff;">🏷️</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number">-</div>
+                    <div class="stat-label">زیرمجموعه‌ها</div>
+                    <div class="stat-icon" style="color: #28a745;">📂</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number">
+                        <span class="badge <%= category.is_active ? 'badge-success' : 'badge-secondary' %>">
+                            <%= category.is_active ? 'فعال' : 'غیرفعال' %>
+                        </span>
+                    </div>
+                    <div class="stat-label">وضعیت</div>
+                    <div class="stat-icon" style="color: #ffc107;">⚙️</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-warning">
+            <strong>توجه:</strong> 
+            <ul class="mb-0">
+                <li>تغییر نام انگلیسی ممکن است بر سیستم تأثیر بگذارد</li>
+                <li>دسته‌بندی‌هایی که دارای کالا یا زیرمجموعه هستند قابل حذف نیستند</li>
+                <li>غیرفعال کردن دسته‌بندی کالاهای موجود را حذف نمی‌کند</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأیید حذف</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>آیا مطمئن هستید که می‌خواهید دسته‌بندی "<span id="deleteCategoryName"></span>" را حذف کنید؟</p>
+                <div class="alert alert-danger">
+                    <strong>هشدار:</strong> این عمل قابل برگشت نیست!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">انصراف</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">حذف کن</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(categoryId, categoryName) {
+    document.getElementById('deleteCategoryName').textContent = categoryName;
+    document.getElementById('deleteForm').action = '/inventory/categories/delete/' + categoryId;
+    $('#deleteModal').modal('show');
+}
+
+// Load current usage stats
+window.addEventListener('load', function() {
+    fetch('/inventory/categories/stats/<%= category.id %>')
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector('.stat-card:nth-child(1) .stat-number').textContent = data.items_count || 0;
+            document.querySelector('.stat-card:nth-child(2) .stat-number').textContent = data.subcategories_count || 0;
+        })
+        .catch(error => console.log('Stats loading failed:', error));
+});
+</script> 

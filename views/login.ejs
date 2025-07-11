@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - طلافروشی موسی پور</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated Background */
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ffd700 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            z-index: -2;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Main Container */
+        .login-page {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Left Side - Branding */
+        .branding-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .branding-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .brand-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ffd700, #ffb300);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(255, 215, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-logo i {
+            font-size: 48px;
+            color: white;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .brand-title {
+            font-size: 48px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-subtitle {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+            max-width: 400px;
+        }
+
+        .features-list {
+            margin-top: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: white;
+            font-size: 16px;
+            opacity: 0;
+            animation: slideInLeft 0.8s ease forwards;
+        }
+
+        .feature-item:nth-child(1) { animation-delay: 0.2s; }
+        .feature-item:nth-child(2) { animation-delay: 0.4s; }
+        .feature-item:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 15px;
+            font-size: 16px;
+        }
+
+        /* Right Side - Login Form */
+        .login-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            position: relative;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 25px;
+            padding: 50px 40px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            animation: slideInRight 0.8s ease forwards;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ffd700, #ffb300, #ffd700);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-subtitle {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            border: none;
+            position: relative;
+            animation: slideInDown 0.5s ease;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-error {
+            background: linear-gradient(135deg, #ffe6e6, #ffcccc);
+            color: #e74c3c;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+            opacity: 0;
+            animation: slideInUp 0.6s ease forwards;
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 18px 25px 18px 55px;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+            background: white;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #95a5a6;
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+
+        .form-control:focus + .input-icon {
+            color: #667eea;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #95a5a6;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 8px;
+            transition: color 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: all 0.6s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            margin-left: 10px;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 30px;
+            color: #95a5a6;
+            font-size: 13px;
+            opacity: 0;
+            animation: fadeIn 1s ease 0.8s forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .login-page {
+                flex-direction: column;
+            }
+            
+            .branding-section {
+                flex: none;
+                padding: 40px 20px;
+                min-height: 40vh;
+            }
+            
+            .brand-title {
+                font-size: 36px;
+            }
+            
+            .brand-subtitle {
+                font-size: 16px;
+            }
+            
+            .features-list {
+                display: none;
+            }
+            
+            .login-section {
+                flex: none;
+                min-height: 60vh;
+                padding: 40px 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .login-page {
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .branding-section {
+                min-height: 35vh;
+                padding: 30px 20px;
+            }
+            
+            .brand-logo {
+                width: 80px;
+                height: 80px;
+                border-radius: 20px;
+            }
+            
+            .brand-logo i {
+                font-size: 32px;
+            }
+            
+            .brand-title {
+                font-size: 28px;
+            }
+            
+            .brand-subtitle {
+                font-size: 14px;
+            }
+            
+            .login-section {
+                padding: 30px 15px;
+            }
+            
+            .login-card {
+                padding: 35px 25px;
+                border-radius: 20px;
+            }
+            
+            .login-title {
+                font-size: 26px;
+            }
+            
+            .form-control {
+                padding: 16px 22px 16px 50px;
+                font-size: 15px;
+            }
+            
+            .input-icon {
+                font-size: 16px;
+                left: 16px;
+            }
+            
+            .password-toggle {
+                right: 16px;
+                font-size: 15px;
+            }
+            
+            .btn-primary {
+                padding: 16px;
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .branding-section {
+                min-height: 30vh;
+                padding: 20px 15px;
+            }
+            
+            .brand-logo {
+                width: 70px;
+                height: 70px;
+                border-radius: 18px;
+            }
+            
+            .brand-logo i {
+                font-size: 28px;
+            }
+            
+            .brand-title {
+                font-size: 24px;
+            }
+            
+            .login-card {
+                padding: 30px 20px;
+                border-radius: 18px;
+            }
+            
+            .login-title {
+                font-size: 22px;
+            }
+            
+            .form-control {
+                padding: 14px 20px 14px 45px;
+                font-size: 14px;
+            }
+            
+            .input-icon {
+                font-size: 15px;
+                left: 14px;
+            }
+            
+            .password-toggle {
+                right: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="background-container"></div>
+    
+    <!-- Floating Particles -->
+    <div class="particles"></div>
+
+    <div class="login-page">
+        <!-- Left Side - Branding -->
+        <div class="branding-section">
+            <div class="brand-logo">
+                <i class="fas fa-gem"></i>
+            </div>
+            <h1 class="brand-title">طلافروشی موسی پور</h1>
+            <p class="brand-subtitle">سیستم مدیریت جامع و حرفه‌ای طلافروشی<br>با امکانات پیشرفته و رابط کاربری زیبا</p>
+            
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <span>امنیت بالا و رمزگذاری پیشرفته</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <span>گزارش‌گیری دقیق و جامع</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <span>بک‌آپ خودکار و ایمن</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Login Form -->
+        <div class="login-section">
+            <div class="login-container">
+                <div class="login-card">
+                    <div class="login-header">
+                        <h2 class="login-title">ورود به سیستم</h2>
+                        <p class="login-subtitle">لطفاً اطلاعات خود را وارد کنید</p>
+                    </div>
+
+                    <% if (typeof error !== 'undefined' && error) { %>
+                        <div class="alert alert-error">
+                            <i class="fas fa-exclamation-triangle" style="margin-left: 8px;"></i>
+                            <%= error %>
+                        </div>
+                    <% } %>
+
+                    <form method="POST" action="/login" id="loginForm">
+                        <div class="form-group">
+                            <label for="username" class="form-label">نام کاربری</label>
+                            <div class="input-container">
+                                <input type="text" id="username" name="username" class="form-control" required autocomplete="username" value="admin">
+                                <i class="fas fa-user input-icon"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="form-label">رمز عبور</label>
+                            <div class="input-container">
+                                <input type="password" id="password" name="password" class="form-control" required autocomplete="current-password">
+                                <i class="fas fa-lock input-icon"></i>
+                                <button type="button" class="password-toggle" onclick="togglePassword()">
+                                    <i class="fas fa-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="fas fa-spinner fa-spin loading-spinner" id="loadingSpinner"></i>
+                                <i class="fas fa-sign-in-alt" style="margin-left: 8px;"></i>
+                                ورود به سیستم
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="footer-text">
+                        © ۱۴۰۳ طلافروشی موسی پور - تمامی حقوق محفوظ است
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password toggle functionality
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Form submission with loading state
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            
+            submitBtn.disabled = true;
+            loadingSpinner.style.display = 'inline-block';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin loading-spinner"></i>در حال ورود...';
+        });
+
+        // Auto-focus on username field
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('username').focus();
+            
+            // Create floating particles
+            createParticles();
+        });
+
+        // Handle enter key
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').submit();
+            }
+        });
+
+        // Create floating particles animation
+        function createParticles() {
+            const particlesContainer = document.querySelector('.particles');
+            const particleCount = 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Random size between 4px and 12px
+                const size = Math.random() * 8 + 4;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                
+                // Random horizontal position
+                particle.style.left = Math.random() * 100 + '%';
+                
+                // Random animation duration between 15s and 25s
+                const duration = Math.random() * 10 + 15;
+                particle.style.animationDuration = duration + 's';
+                
+                // Random animation delay
+                const delay = Math.random() * 20;
+                particle.style.animationDelay = delay + 's';
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                const focusableElements = document.querySelectorAll('input, button');
+                const currentIndex = Array.from(focusableElements).indexOf(document.activeElement);
+                
+                if (e.shiftKey) {
+                    // Shift + Tab (backwards)
+                    const prevIndex = currentIndex === 0 ? focusableElements.length - 1 : currentIndex - 1;
+                    focusableElements[prevIndex].focus();
+                } else {
+                    // Tab (forwards)
+                    const nextIndex = currentIndex === focusableElements.length - 1 ? 0 : currentIndex + 1;
+                    focusableElements[nextIndex].focus();
+                }
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشاهده فاکتور - <%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 class="page-title">فاکتور شماره <%= invoice.invoice_number %></h1>
+                    <p>جزئیات فاکتور فروش با قیمت‌گذاری دستی</p>
+                </div>
+                <div>
+                    <% if (invoice.status === 'active') { %>
+                        <a href="/sales/edit/<%= invoice.id %>" class="btn btn-warning">
+                            ویرایش فاکتور
+                        </a>
+                        <form method="POST" action="/sales/cancel/<%= invoice.id %>" style="display: inline;" 
+                              onsubmit="return confirm('آیا از لغو این فاکتور اطمینان دارید؟')">
+                            <button type="submit" class="btn btn-danger">لغو فاکتور</button>
+                        </form>
+                    <% } %>
+                    <a href="/sales/print/<%= invoice.id %>" class="btn btn-success" target="_blank">
+                        چاپ فاکتور
+                    </a>
+                    <a href="/sales/pdf/<%= invoice.id %>" class="btn btn-info">
+                        دانلود PDF
+                    </a>
+                    <a href="/sales" class="btn btn-secondary">
+                        بازگشت به لیست فاکتورها
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success">
+                <%= success %>
+            </div>
+        <% } %>
+
+        <div class="card">
+            <div class="card-header">
+                اطلاعات فاکتور
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <!-- Invoice Info -->
+                    <div>
+                        <h4 style="margin-bottom: 15px; color: #d4af37;">اطلاعات فاکتور</h4>
+                        <table class="table">
+                            <tr>
+                                <td><strong>شماره فاکتور:</strong></td>
+                                <td><%= invoice.invoice_number %></td>
+                            </tr>
+                            <tr>
+                                <td><strong>تاریخ فاکتور:</strong></td>
+                                <td><%= new Date(invoice.invoice_date).toLocaleDateString('fa-IR') %></td>
+                            </tr>
+                            <tr>
+                                <td><strong>نرخ طلای روز:</strong></td>
+                                <td><%= new Intl.NumberFormat('fa-IR').format(invoice.gold_rate) %> ریال</td>
+                            </tr>
+                            <tr>
+                                <td><strong>وضعیت:</strong></td>
+                                <td>
+                                    <% if (invoice.status === 'active') { %>
+                                        <span style="color: #28a745; font-weight: bold;">فعال</span>
+                                    <% } else if (invoice.status === 'cancelled') { %>
+                                        <span style="color: #dc3545; font-weight: bold;">لغو شده</span>
+                                    <% } else { %>
+                                        <span style="color: #6c757d; font-weight: bold;">برگشت داده شده</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Customer Info -->
+                    <div>
+                        <h4 style="margin-bottom: 15px; color: #d4af37;">اطلاعات مشتری</h4>
+                        <table class="table">
+                            <tr>
+                                <td><strong>نام مشتری:</strong></td>
+                                <td><%= invoice.customer_name %></td>
+                            </tr>
+                            <tr>
+                                <td><strong>شماره تماس:</strong></td>
+                                <td><%= invoice.customer_phone || '-' %></td>
+                            </tr>
+                            <tr>
+                                <td><strong>آدرس:</strong></td>
+                                <td><%= invoice.customer_address || '-' %></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Items with Manual Pricing -->
+        <div class="card">
+            <div class="card-header">
+                کالاهای فاکتور و جزئیات قیمت‌گذاری
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>کالا</th>
+                                <th>عیار</th>
+                                <th>تعداد</th>
+                                <th>وزن (گرم)</th>
+                                <th>اجرت (ریال)</th>
+                                <th>سود (ریال)</th>
+                                <th>مالیات (ریال)</th>
+                                <th>قیمت نهایی</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% items.forEach(item => { %>
+                                <tr>
+                                    <td>
+                                        <strong><%= item.item_code %></strong><br>
+                                        <small><%= item.item_name %></small>
+                                    </td>
+                                    <td><%= item.carat %> عیار</td>
+                                    <td><%= item.quantity %></td>
+                                    <td><%= new Intl.NumberFormat('fa-IR', {minimumFractionDigits: 3}).format(item.manual_weight || item.weight) %></td>
+                                    <td><%= new Intl.NumberFormat('fa-IR').format(item.labor_cost || 0) %></td>
+                                    <td><%= new Intl.NumberFormat('fa-IR').format(item.profit_amount || 0) %></td>
+                                    <td><%= new Intl.NumberFormat('fa-IR').format(item.tax_amount || 0) %></td>
+                                    <td><strong><%= new Intl.NumberFormat('fa-IR').format(item.total_price) %> ریال</strong></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Financial Summary -->
+        <div class="card">
+            <div class="card-header">
+                جمع‌بندی مالی تفصیلی
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <!-- Weight Summary -->
+                    <div>
+                        <h4 style="margin-bottom: 15px; color: #d4af37;">خلاصه وزن</h4>
+                        <table class="table">
+                            <tr>
+                                <td><strong>مجموع وزن:</strong></td>
+                                <td style="text-align: left;"><%= new Intl.NumberFormat('fa-IR', {minimumFractionDigits: 3}).format(invoice.manual_total_weight || invoice.total_weight) %> گرم</td>
+                            </tr>
+                            <% if (invoice.plastic_weight > 0) { %>
+                                <tr>
+                                    <td><strong>وزن پولاستیک:</strong></td>
+                                    <td style="text-align: left;"><%= new Intl.NumberFormat('fa-IR', {minimumFractionDigits: 3}).format(invoice.plastic_weight) %> گرم</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>وزن خالص:</strong></td>
+                                    <td style="text-align: left;"><%= new Intl.NumberFormat('fa-IR', {minimumFractionDigits: 3}).format(invoice.final_weight) %> گرم</td>
+                                </tr>
+                            <% } %>
+                        </table>
+                    </div>
+
+                    <!-- Cost Breakdown -->
+                    <div>
+                        <h4 style="margin-bottom: 15px; color: #d4af37;">تجزیه هزینه‌ها</h4>
+                        <table class="table">
+                            <tr>
+                                <td><strong>مجموع اجرت:</strong></td>
+                                <td style="text-align: left;"><%= new Intl.NumberFormat('fa-IR').format(invoice.total_labor_cost || 0) %> ریال</td>
+                            </tr>
+                            <tr>
+                                <td><strong>مجموع سود:</strong></td>
+                                <td style="text-align: left;"><%= new Intl.NumberFormat('fa-IR').format(invoice.total_profit || 0) %> ریال</td>
+                            </tr>
+                            <tr>
+                                <td><strong>مجموع مالیات:</strong></td>
+                                <td style="text-align: left;"><%= new Intl.NumberFormat('fa-IR').format(invoice.total_tax || 0) %> ریال</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Final Totals -->
+                <div style="max-width: 400px; margin: 20px auto 0;">
+                    <table class="table" style="border: 2px solid #d4af37;">
+                        <tr>
+                            <td><strong>جمع کل:</strong></td>
+                            <td style="text-align: left;"><%= new Intl.NumberFormat('fa-IR').format(invoice.subtotal) %> ریال</td>
+                        </tr>
+                        <% if (invoice.discount_amount > 0) { %>
+                            <tr>
+                                <td><strong>تخفیف:</strong></td>
+                                <td style="text-align: left; color: #28a745;">-<%= new Intl.NumberFormat('fa-IR').format(invoice.discount_amount) %> ریال</td>
+                            </tr>
+                        <% } %>
+                        <tr style="border-top: 2px solid #d4af37; font-size: 1.3em; background-color: #f8f9fa;">
+                            <td><strong>مبلغ نهایی:</strong></td>
+                            <td style="text-align: left;"><strong><%= new Intl.NumberFormat('fa-IR').format(invoice.grand_total) %> ریال</strong></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <% if (invoice.notes) { %>
+                    <div style="margin-top: 20px;">
+                        <h5>یادداشت:</h5>
+                        <p style="background-color: #f8f9fa; padding: 10px; border-radius: 5px;"><%= invoice.notes %></p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th,
+        .table td {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            text-align: right;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .card {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+        }
+        
+        .btn-warning { background-color: #ffc107; color: #000; }
+        .btn-danger { background-color: #dc3545; color: #fff; }
+        .btn-success { background-color: #28a745; color: #fff; }
+        .btn-info { background-color: #17a2b8; color: #fff; }
+        .btn-secondary { background-color: #6c757d; color: #fff; }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+    </style>
+</body>
+</html> 

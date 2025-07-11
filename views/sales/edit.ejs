@@ -1,0 +1,395 @@
+<div class="page-header">
+    <h1 class="page-title">ویرایش فاکتور شماره <%= invoice.invoice_number %></h1>
+    <p>ویرایش اطلاعات فاکتور فروش</p>
+</div>
+
+<form id="editInvoiceForm" method="POST" action="/sales/update/<%= invoice.id %>">
+    <!-- Customer Selection -->
+    <div class="card">
+        <div class="card-header">
+            اطلاعات مشتری و فاکتور
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="customer_id" class="form-label">مشتری *</label>
+                    <select id="customer_id" name="customer_id" class="form-control" required>
+                        <option value="">انتخاب مشتری</option>
+                        <% customers.forEach(customer => { %>
+                            <option value="<%= customer.id %>" 
+                                    <%= customer.id == invoice.customer_id ? 'selected' : '' %>>
+                                <%= customer.customer_code %> - <%= customer.full_name %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="invoice_date" class="form-label">تاریخ فاکتور *</label>
+                    <input type="date" id="invoice_date" name="invoice_date" class="form-control" 
+                           value="<%= moment(invoice.invoice_date).format('YYYY-MM-DD') %>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="gold_rate" class="form-label">نرخ طلای روز (ریال) *</label>
+                    <input type="number" id="gold_rate" name="gold_rate" class="form-control" 
+                           value="<%= invoice.gold_rate %>" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                <div class="form-group">
+                    <label for="plastic_weight" class="form-label">وزن پولاستیک (گرم)</label>
+                    <input type="number" step="0.001" id="plastic_weight" name="plastic_weight" 
+                           class="form-control" value="<%= invoice.plastic_weight || 0 %>">
+                </div>
+
+                <div class="form-group">
+                    <label for="notes" class="form-label">یادداشت</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="2"><%= invoice.notes || '' %></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Items -->
+    <div class="card">
+        <div class="card-header">
+            کالاهای فاکتور
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label for="item_search" class="form-label">افزودن کالای جدید</label>
+                <select id="item_search" class="form-control">
+                    <option value="">انتخاب کالا برای افزودن</option>
+                    <% availableItems.forEach(item => { %>
+                        <option value="<%= item.id %>" 
+                                data-name="<%= item.item_name %>"
+                                data-code="<%= item.item_code %>"
+                                data-weight="<%= item.precise_weight %>"
+                                data-stone-weight="<%= item.stone_weight %>"
+                                data-carat="<%= item.carat %>"
+                                data-labor-type="<%= item.labor_cost_type %>"
+                                data-labor-value="<%= item.labor_cost_value %>"
+                                data-profit="<%= item.profit_margin %>"
+                                data-type="<%= item.type_name %>">
+                            <%= item.item_code %> - <%= item.item_name %> (<%= item.precise_weight %> گرم، <%= item.carat %> عیار)
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <!-- Current Items Table -->
+            <div id="selectedItemsContainer" style="margin-top: 20px;">
+                <h4>کالاهای فاکتور</h4>
+                <div class="table-container">
+                    <table class="table" id="selectedItemsTable">
+                        <thead>
+                            <tr>
+                                <th>ردیف</th>
+                                <th>کد کالا</th>
+                                <th>شرح</th>
+                                <th>تعداد</th>
+                                <th>وزن (گرم)</th>
+                                <th>عیار</th>
+                                <th>فی (ریال)</th>
+                                <th>فی کل (ریال)</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="selectedItemsBody">
+                            <% invoiceItems.forEach((item, index) => { %>
+                                <tr data-item-id="<%= item.item_id %>" data-db-id="<%= item.id %>">
+                                    <td><%= index + 1 %></td>
+                                    <td><%= item.item_code %></td>
+                                    <td>
+                                        <input type="text" name="description_<%= item.id %>" 
+                                               value="<%= item.description || item.item_name %>" 
+                                               class="form-control" style="min-width: 200px;">
+                                    </td>
+                                    <td>
+                                        <input type="number" min="1" name="quantity_<%= item.id %>" 
+                                               value="<%= item.quantity %>" 
+                                               onchange="updateItemTotal(this)"
+                                               style="width: 60px; text-align: center;">
+                                    </td>
+                                    <td><%= item.weight %></td>
+                                    <td><%= item.carat %> عیار</td>
+                                    <td>
+                                        <input type="number" name="unit_price_<%= item.id %>" 
+                                               value="<%= item.unit_price %>" 
+                                               onchange="updateItemTotal(this)"
+                                               class="form-control" style="min-width: 120px;">
+                                    </td>
+                                    <td class="item-total"><%= formatNumber(item.total_price) %> ریال</td>
+                                    <td>
+                                        <button type="button" onclick="removeExistingItem(this, <%= item.id %>)" 
+                                                class="btn btn-sm btn-danger">حذف</button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Totals -->
+    <div class="card">
+        <div class="card-header">
+            جمع‌بندی فاکتور
+        </div>
+        <div class="card-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="form-label">مجموع (ریال)</label>
+                    <input type="number" id="subtotal" name="subtotal" class="form-control" 
+                           value="<%= invoice.subtotal %>" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="discount_amount" class="form-label">تخفیف (ریال)</label>
+                    <input type="number" id="discount_amount" name="discount_amount" 
+                           class="form-control" value="<%= invoice.discount_amount || 0 %>"
+                           onchange="calculateTotals()">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">جمع وزن کل (گرم)</label>
+                    <input type="number" step="0.001" id="total_weight" name="total_weight" 
+                           class="form-control" value="<%= invoice.total_weight %>" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">حساب نهایی (ریال)</label>
+                    <input type="number" id="grand_total" name="grand_total" class="form-control" 
+                           value="<%= invoice.grand_total %>" readonly>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <button type="submit" class="btn btn-primary" style="margin-left: 10px;">
+                    بروزرسانی فاکتور
+                </button>
+                <a href="/sales/view/<%= invoice.id %>" class="btn btn-secondary">
+                    انصراف
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden fields for tracking changes -->
+    <input type="hidden" id="selected_items_data" name="selected_items">
+    <input type="hidden" id="removed_items" name="removed_items" value="">
+</form>
+
+<script>
+let selectedItems = [];
+let itemCounter = <%= invoiceItems.length %>;
+let removedItems = [];
+
+// Load existing items into selectedItems array
+<% invoiceItems.forEach((item, index) => { %>
+    selectedItems.push({
+        id: '<%= item.item_id %>',
+        dbId: '<%= item.id %>',
+        name: '<%= item.description || item.item_name %>',
+        code: '<%= item.item_code %>',
+        weight: <%= item.weight %>,
+        carat: <%= item.carat %>,
+        quantity: <%= item.quantity %>,
+        unitPrice: <%= item.unit_price %>,
+        totalPrice: <%= item.total_price %>,
+        tableId: <%= index + 1 %>,
+        isExisting: true
+    });
+<% }) %>
+
+// Add new item to invoice
+document.getElementById('item_search').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    if (!selectedOption.value) return;
+    
+    const itemData = {
+        id: selectedOption.value,
+        name: selectedOption.dataset.name,
+        code: selectedOption.dataset.code,
+        weight: parseFloat(selectedOption.dataset.weight),
+        stoneWeight: parseFloat(selectedOption.dataset.stoneWeight || 0),
+        carat: parseInt(selectedOption.dataset.carat),
+        laborType: selectedOption.dataset.laborType,
+        laborValue: parseFloat(selectedOption.dataset.laborValue),
+        profit: parseFloat(selectedOption.dataset.profit || 0),
+        type: selectedOption.dataset.type,
+        quantity: 1,
+        tableId: ++itemCounter,
+        isExisting: false
+    };
+    
+    addItemToTable(itemData);
+    this.selectedIndex = 0;
+});
+
+function addItemToTable(item) {
+    const goldRate = parseFloat(document.getElementById('gold_rate').value) || 0;
+    const netWeight = item.weight - item.stoneWeight;
+    
+    // Calculate price
+    let basePrice = netWeight * goldRate;
+    
+    if (item.laborType === 'percentage') {
+        basePrice += (basePrice * item.laborValue / 100);
+    } else {
+        basePrice += item.laborValue;
+    }
+    
+    basePrice += (basePrice * item.profit / 100);
+    
+    item.unitPrice = Math.round(basePrice);
+    item.totalPrice = item.unitPrice * item.quantity;
+    
+    selectedItems.push(item);
+    
+    const tbody = document.getElementById('selectedItemsBody');
+    const row = tbody.insertRow();
+    row.innerHTML = `
+        <td>${item.tableId}</td>
+        <td>${item.code}</td>
+        <td>
+            <input type="text" name="description_new_${item.tableId}" 
+                   value="${item.name}" class="form-control" style="min-width: 200px;">
+        </td>
+        <td>
+            <input type="number" min="1" value="${item.quantity}" 
+                   onchange="updateNewItemQuantity(${item.tableId}, this.value)"
+                   style="width: 60px; text-align: center;">
+        </td>
+        <td>${item.weight}</td>
+        <td>${item.carat} عیار</td>
+        <td>
+            <input type="number" value="${item.unitPrice}" 
+                   onchange="updateNewItemPrice(${item.tableId}, this.value)"
+                   class="form-control" style="min-width: 120px;">
+        </td>
+        <td class="item-total" id="total-${item.tableId}">${formatNumber(item.totalPrice)} ریال</td>
+        <td>
+            <button type="button" onclick="removeNewItem(${item.tableId})" class="btn btn-sm btn-danger">
+                حذف
+            </button>
+        </td>
+    `;
+    
+    calculateTotals();
+}
+
+function removeExistingItem(btn, dbId) {
+    if (confirm('آیا از حذف این کالا اطمینان دارید؟')) {
+        removedItems.push(dbId);
+        document.getElementById('removed_items').value = removedItems.join(',');
+        
+        const row = btn.closest('tr');
+        const itemId = row.dataset.itemId;
+        
+        // Remove from selectedItems array
+        selectedItems = selectedItems.filter(item => !(item.id === itemId && item.isExisting));
+        
+        row.remove();
+        calculateTotals();
+    }
+}
+
+function removeNewItem(tableId) {
+    selectedItems = selectedItems.filter(item => item.tableId !== tableId);
+    document.querySelector(`tr:has(#total-${tableId})`).remove();
+    calculateTotals();
+}
+
+function updateItemTotal(input) {
+    const row = input.closest('tr');
+    const dbId = row.dataset.dbId;
+    const quantityInput = row.querySelector(`input[name="quantity_${dbId}"]`);
+    const priceInput = row.querySelector(`input[name="unit_price_${dbId}"]`);
+    const totalCell = row.querySelector('.item-total');
+    
+    const quantity = parseInt(quantityInput.value) || 1;
+    const unitPrice = parseFloat(priceInput.value) || 0;
+    const total = quantity * unitPrice;
+    
+    totalCell.textContent = formatNumber(total) + ' ریال';
+    calculateTotals();
+}
+
+function updateNewItemQuantity(tableId, quantity) {
+    const item = selectedItems.find(i => i.tableId === tableId);
+    if (item) {
+        item.quantity = parseInt(quantity) || 1;
+        item.totalPrice = item.quantity * item.unitPrice;
+        document.getElementById(`total-${tableId}`).textContent = formatNumber(item.totalPrice) + ' ریال';
+        calculateTotals();
+    }
+}
+
+function updateNewItemPrice(tableId, price) {
+    const item = selectedItems.find(i => i.tableId === tableId);
+    if (item) {
+        item.unitPrice = parseFloat(price) || 0;
+        item.totalPrice = item.quantity * item.unitPrice;
+        document.getElementById(`total-${tableId}`).textContent = formatNumber(item.totalPrice) + ' ریال';
+        calculateTotals();
+    }
+}
+
+function calculateTotals() {
+    let subtotal = 0;
+    let totalWeight = 0;
+    
+    // Calculate from existing items in DOM
+    document.querySelectorAll('#selectedItemsTable tbody tr').forEach(row => {
+        const dbId = row.dataset.dbId;
+        if (dbId) {
+            const quantityInput = row.querySelector(`input[name="quantity_${dbId}"]`);
+            const priceInput = row.querySelector(`input[name="unit_price_${dbId}"]`);
+            const weightCell = parseFloat(row.cells[4].textContent) || 0;
+            
+            if (quantityInput && priceInput) {
+                const quantity = parseInt(quantityInput.value) || 1;
+                const unitPrice = parseFloat(priceInput.value) || 0;
+                subtotal += quantity * unitPrice;
+                totalWeight += weightCell * quantity;
+            }
+        }
+    });
+    
+    // Add new items
+    selectedItems.filter(item => !item.isExisting).forEach(item => {
+        subtotal += item.totalPrice;
+        totalWeight += item.weight * item.quantity;
+    });
+    
+    const discount = parseFloat(document.getElementById('discount_amount').value) || 0;
+    const plasticWeight = parseFloat(document.getElementById('plastic_weight').value) || 0;
+    const finalWeight = totalWeight - plasticWeight;
+    const grandTotal = subtotal - discount;
+    
+    document.getElementById('subtotal').value = subtotal;
+    document.getElementById('total_weight').value = totalWeight.toFixed(3);
+    document.getElementById('grand_total').value = grandTotal;
+    
+    // Update selected_items_data
+    const newItems = selectedItems.filter(item => !item.isExisting);
+    document.getElementById('selected_items_data').value = JSON.stringify(newItems);
+}
+
+function formatNumber(num) {
+    return new Intl.NumberFormat('fa-IR').format(num);
+}
+
+// Initialize totals
+calculateTotals();
+
+// Handle form submission
+document.getElementById('editInvoiceForm').addEventListener('submit', function(e) {
+    calculateTotals();
+});
+</script> 

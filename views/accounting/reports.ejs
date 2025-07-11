@@ -1,0 +1,213 @@
+<div class="page-header">
+    <h1 class="page-title">گزارشات مالی</h1>
+    <p>آمار و تحلیل‌های مالی طلافروشی</p>
+</div>
+
+<!-- Period Filter -->
+<div class="card">
+    <div class="card-header">
+        انتخاب دوره زمانی
+    </div>
+    <div class="card-body">
+        <form method="GET" action="/accounting/reports">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+                <div class="form-group">
+                    <label>دوره:</label>
+                    <select name="period" class="form-control">
+                        <option value="today" <%= period === 'today' ? 'selected' : '' %>>امروز</option>
+                        <option value="week" <%= period === 'week' ? 'selected' : '' %>>هفته گذشته</option>
+                        <option value="month" <%= period === 'month' ? 'selected' : '' %>>ماه جاری</option>
+                        <option value="custom" <%= period === 'custom' ? 'selected' : '' %>>سفارشی</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">بروزرسانی گزارش</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                <small class="text-muted">
+                    دوره انتخاب شده: از <%= moment(dateRange.startDate).format('jYYYY/jM/jD') %> 
+                    تا <%= moment(dateRange.endDate).format('jYYYY/jM/jD') %>
+                </small>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Sales Summary -->
+<div class="card">
+    <div class="card-header">
+        خلاصه فروش
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <div style="text-align: center; padding: 20px; background: #e8f5e8; border-radius: 8px; border: 2px solid #28a745;">
+                <h3 style="color: #28a745; margin: 0;">
+                    <%= formatNumber(salesReport.invoice_count) %> فاکتور
+                </h3>
+                <p style="margin: 5px 0 0 0; color: #666;">
+                    تعداد فاکتورهای فروش
+                </p>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; background: #e3f2fd; border-radius: 8px; border: 2px solid #2196f3;">
+                <h3 style="color: #2196f3; margin: 0;">
+                    <%= formatNumber(salesReport.total_sales) %> ریال
+                </h3>
+                <p style="margin: 5px 0 0 0; color: #666;">
+                    مجموع فروش
+                </p>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; background: #fff3e0; border-radius: 8px; border: 2px solid #ff9800;">
+                <h3 style="color: #ff9800; margin: 0;">
+                    <%= formatNumber(Math.round(salesReport.avg_sale)) %> ریال
+                </h3>
+                <p style="margin: 5px 0 0 0; color: #666;">
+                    میانگین فروش
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Analysis -->
+<div class="card">
+    <div class="card-header">
+        تحلیل پرداخت‌ها
+    </div>
+    <div class="card-body">
+        <% if (paymentReport.length === 0) { %>
+            <div style="text-align: center; padding: 40px; color: #666;">
+                هیچ پرداختی در این دوره یافت نشد
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th>روش پرداخت</th>
+                            <th>تعداد</th>
+                            <th>مجموع مبلغ (ریال)</th>
+                            <th>درصد</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% 
+                            const totalPayments = paymentReport.reduce((sum, p) => sum + parseFloat(p.total_payments || 0), 0);
+                        %>
+                        <% paymentReport.forEach(payment => { %>
+                            <% const percentage = totalPayments > 0 ? ((payment.total_payments / totalPayments) * 100).toFixed(1) : 0; %>
+                            <tr>
+                                <td>
+                                    <% if (payment.payment_method === 'cash') { %>
+                                        <span class="badge badge-success">نقد</span>
+                                    <% } else if (payment.payment_method === 'card') { %>
+                                        <span class="badge badge-info">کارت</span>
+                                    <% } else if (payment.payment_method === 'transfer') { %>
+                                        <span class="badge badge-warning">حواله</span>
+                                    <% } else { %>
+                                        <span class="badge badge-secondary"><%= payment.payment_method %></span>
+                                    <% } %>
+                                </td>
+                                <td><%= formatNumber(payment.payment_count) %></td>
+                                <td style="text-align: left;"><%= formatNumber(payment.total_payments) %></td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span><%= percentage %>%</span>
+                                        <div style="flex: 1; height: 8px; background: #e9ecef; border-radius: 4px;">
+                                            <div style="height: 100%; background: #28a745; border-radius: 4px; width: <%= percentage %>%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Top Customers -->
+<div class="card">
+    <div class="card-header">
+        مشتریان برتر (در دوره انتخاب شده)
+    </div>
+    <div class="card-body">
+        <% if (topCustomers.length === 0) { %>
+            <div style="text-align: center; padding: 40px; color: #666;">
+                هیچ خرید در این دوره یافت نشد
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th>رتبه</th>
+                            <th>کد مشتری</th>
+                            <th>نام مشتری</th>
+                            <th>مجموع خرید (ریال)</th>
+                            <th>درصد از کل فروش</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% 
+                            const totalCustomerPurchases = topCustomers.reduce((sum, c) => sum + parseFloat(c.total_purchases || 0), 0);
+                        %>
+                        <% topCustomers.forEach((customer, index) => { %>
+                            <% const percentage = totalCustomerPurchases > 0 ? ((customer.total_purchases / totalCustomerPurchases) * 100).toFixed(1) : 0; %>
+                            <tr>
+                                <td>
+                                    <% if (index === 0) { %>
+                                        <span style="color: #ffd700; font-size: 18px;">🥇</span>
+                                    <% } else if (index === 1) { %>
+                                        <span style="color: #c0c0c0; font-size: 18px;">🥈</span>
+                                    <% } else if (index === 2) { %>
+                                        <span style="color: #cd7f32; font-size: 18px;">🥉</span>
+                                    <% } else { %>
+                                        <span style="color: #666;"><%= index + 1 %></span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <code><%= customer.customer_code %></code>
+                                </td>
+                                <td>
+                                    <strong><%= customer.full_name %></strong>
+                                </td>
+                                <td style="text-align: left; font-weight: bold;">
+                                    <%= formatNumber(customer.total_purchases) %>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span><%= percentage %>%</span>
+                                        <div style="flex: 1; height: 8px; background: #e9ecef; border-radius: 4px;">
+                                            <div style="height: 100%; background: #007bff; border-radius: 4px; width: <%= percentage %>%;"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        عملیات
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/accounting" class="btn btn-secondary">بازگشت به حسابداری</a>
+            <a href="/accounting/general-ledger" class="btn btn-info">دفتر کل</a>
+            <a href="/accounting/customer-accounts" class="btn btn-success">حساب مشتریان</a>
+            <button onclick="window.print()" class="btn btn-outline-primary">چاپ گزارش</button>
+        </div>
+    </div>
+</div> 

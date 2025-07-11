@@ -1,0 +1,449 @@
+<div class="page-header">
+    <h1 class="page-title">ثبت تراکنش ساده</h1>
+    <p>سیستم ثبت تراکنش برای خرید و فروش</p>
+</div>
+
+<!-- Professional Simple Transaction Form -->
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Transaction Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus-circle text-success"></i>
+                        ثبت تراکنش جدید
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/accounting/manual-transaction" id="transactionForm">
+                        
+                        <!-- Basic Information -->
+                        <div class="section-card">
+                            <h6 class="section-title">اطلاعات پایه</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="transaction_date">تاریخ تراکنش <span class="text-danger">*</span></label>
+                                        <input type="text" name="transaction_date" id="transaction_date" class="form-control persian-date" 
+                                               placeholder="1403/07/07" required>
+                                        <small class="form-text text-muted">تاریخ شمسی</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="transaction_number">شماره تراکنش</label>
+                                        <input type="text" name="transaction_number" id="transaction_number" class="form-control" 
+                                               value="TR-<%= Date.now() %>" readonly>
+                                        <small class="form-text text-muted">خودکار</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="my_account_id">حساب من <span class="text-danger">*</span></label>
+                                        <select name="my_account_id" id="my_account_id" class="form-control" required onchange="updateAccountBalance()">
+                                            <option value="">انتخاب حساب</option>
+                                            <% accounts.forEach(account => { %>
+                                                <option value="<%= account.id %>" data-balance="<%= account.balance %>" data-type="<%= account.account_type %>">
+                                                    [<%= account.account_code %>] <%= account.account_name_persian %>
+                                                </option>
+                                            <% }); %>
+                                        </select>
+                                        <small class="balance-info" id="myAccountBalance"></small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="description">شرح تراکنش <span class="text-danger">*</span></label>
+                                <input type="text" name="description" id="description" class="form-control" 
+                                       placeholder="توضیح کامل تراکنش..." required>
+                            </div>
+                        </div>
+
+                        <!-- Transaction Amount -->
+                        <div class="section-card">
+                            <h6 class="section-title">مبالغ</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="total_amount">مبلغ کل (ریال) <span class="text-danger">*</span></label>
+                                        <input type="number" name="total_amount" id="total_amount" class="form-control" 
+                                               min="1" step="1" required onchange="updateAmountDisplay()">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>مبلغ به حروف</label>
+                                        <div class="form-control-plaintext" id="amountInWords">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="transaction_type">نوع عملیات <span class="text-danger">*</span></label>
+                                        <select name="transaction_type" id="transaction_type" class="form-control" required onchange="updateTransactionType()">
+                                            <option value="">انتخاب کنید</option>
+                                            <option value="purchase">خرید</option>
+                                            <option value="sale">فروش</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="paid_amount">مبلغ پرداخت شده (ریال) <span class="text-danger">*</span></label>
+                                        <input type="number" name="paid_amount" id="paid_amount" class="form-control" 
+                                               min="0" step="1" required onchange="calculateRemaining()">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>مبلغ باقی‌مانده</label>
+                                        <div class="form-control-plaintext" id="remainingAmount" style="font-weight: bold; color: #dc3545;">0 ریال</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6" id="customerSection" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="customer_id">مشتری (برای ثبت باقی‌مانده)</label>
+                                        <select name="customer_id" id="customer_id" class="form-control" onchange="showCustomerBalance()">
+                                            <option value="">انتخاب مشتری</option>
+                                            <% customers.forEach(customer => { %>
+                                                <option value="<%= customer.id %>" data-balance="<%= customer.current_balance %>">
+                                                    <%= customer.full_name %> (<%= customer.customer_code %>)
+                                                </option>
+                                            <% }); %>
+                                        </select>
+                                        <small class="balance-info" id="customerBalance"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="section-card">
+                            <h6 class="section-title">روش پرداخت</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="payment_method">نحوه پرداخت</label>
+                                        <select name="payment_method" id="payment_method" class="form-control" onchange="handlePaymentMethodChange()">
+                                            <option value="cash">نقد</option>
+                                            <option value="check">چک</option>
+                                            <option value="bank_transfer">انتقال بانکی</option>
+                                            <option value="card">کارت</option>
+                                            <option value="online">آنلاین</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="reference_number">شماره مرجع/فیش</label>
+                                        <input type="text" name="reference_number" id="reference_number" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="manual_account_info">شماره حساب/کارت/چک</label>
+                                        <input type="text" name="manual_account_info" id="manual_account_info" class="form-control" 
+                                               placeholder="وارد کردن دستی">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="bank_account_id">حساب بانکی (اختیاری)</label>
+                                        <select name="bank_account_id" id="bank_account_id" class="form-control">
+                                            <option value="">انتخاب حساب بانکی</option>
+                                            <% bankAccounts.forEach(bank => { %>
+                                                <option value="<%= bank.id %>">
+                                                    <%= bank.bank_name %> - <%= bank.account_number %>
+                                                </option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="notes">یادداشت</label>
+                                        <textarea name="notes" id="notes" class="form-control" rows="2" placeholder="یادداشت اختیاری"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success btn-lg" id="submitButton">
+                                <i class="fas fa-save"></i> ثبت تراکنش
+                            </button>
+                            <a href="/accounting/journal-entries" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> انصراف
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Sidebar -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">راهنمای سریع</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6>نحوه کار:</h6>
+                        <ol class="small">
+                            <li>حساب خود را انتخاب کنید</li>
+                            <li>مبلغ کل را وارد کنید</li>
+                            <li>نوع عملیات (خرید/فروش) را انتخاب کنید</li>
+                            <li>مبلغ پرداخت شده را وارد کنید</li>
+                            <li>در صورت باقی‌مانده، مشتری را انتخاب کنید</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6>نکته مهم:</h6>
+                        <p class="small">اگر مبلغ پرداخت شده کمتر از مبلغ کل باشد، باقی‌مانده به حساب مشتری افزوده می‌شود.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Transactions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">تراکنش‌های اخیر</h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <!-- این بخش می‌تواند پر شود -->
+                        <div class="text-muted text-center small">تراکنش‌های اخیر در اینجا نمایش داده می‌شود</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.section-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #007bff;
+}
+
+.section-title {
+    color: #007bff;
+    font-weight: bold;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.section-title:before {
+    content: "▶";
+    margin-left: 10px;
+    color: #007bff;
+}
+
+.balance-info {
+    font-size: 0.85em;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+#remainingAmount {
+    font-size: 1.1em;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+</style>
+
+<script>
+// Variables to store data
+let accounts = <%-JSON.stringify(accounts)%>;
+let customers = <%-JSON.stringify(customers)%>;
+
+// Update account balance display
+function updateAccountBalance() {
+    const accountSelect = document.getElementById('my_account_id');
+    const balanceDiv = document.getElementById('myAccountBalance');
+    
+    if (accountSelect.value) {
+        const selectedOption = accountSelect.options[accountSelect.selectedIndex];
+        const balance = parseFloat(selectedOption.dataset.balance || 0);
+        const accountType = selectedOption.dataset.type;
+        
+        balanceDiv.innerHTML = `مانده فعلی: ${Math.abs(balance).toLocaleString('fa-IR')} ریال ${balance >= 0 ? '(بدهکار)' : '(بستانکار)'}`;
+        balanceDiv.style.color = balance >= 0 ? '#28a745' : '#dc3545';
+    } else {
+        balanceDiv.innerHTML = '';
+    }
+}
+
+// Update transaction type
+function updateTransactionType() {
+    const typeSelect = document.getElementById('transaction_type');
+    const customerSection = document.getElementById('customerSection');
+    
+    if (typeSelect.value === 'sale') {
+        customerSection.style.display = 'block';
+    } else {
+        customerSection.style.display = 'none';
+        document.getElementById('customer_id').value = '';
+        document.getElementById('customerBalance').innerHTML = '';
+    }
+    
+    calculateRemaining();
+}
+
+// Calculate remaining amount
+function calculateRemaining() {
+    const totalAmount = parseFloat(document.getElementById('total_amount').value || 0);
+    const paidAmount = parseFloat(document.getElementById('paid_amount').value || 0);
+    const remaining = totalAmount - paidAmount;
+    
+    const remainingDiv = document.getElementById('remainingAmount');
+    remainingDiv.textContent = `${Math.abs(remaining).toLocaleString('fa-IR')} ریال`;
+    
+    if (remaining > 0) {
+        remainingDiv.style.color = '#dc3545';
+        remainingDiv.innerHTML += ' <small>(باقی‌مانده)</small>';
+    } else if (remaining < 0) {
+        remainingDiv.style.color = '#ffc107';
+        remainingDiv.innerHTML += ' <small>(اضافه پرداخت)</small>';
+    } else {
+        remainingDiv.style.color = '#28a745';
+        remainingDiv.innerHTML += ' <small>(تسویه)</small>';
+    }
+}
+
+// Show customer balance
+function showCustomerBalance() {
+    const customerSelect = document.getElementById('customer_id');
+    const balanceDiv = document.getElementById('customerBalance');
+    
+    if (customerSelect.value) {
+        const selectedOption = customerSelect.options[customerSelect.selectedIndex];
+        const balance = parseFloat(selectedOption.dataset.balance || 0);
+        
+        balanceDiv.innerHTML = `مانده فعلی: ${Math.abs(balance).toLocaleString('fa-IR')} ریال ${balance >= 0 ? '(بدهکار)' : '(بستانکار)'}`;
+        balanceDiv.style.color = balance >= 0 ? '#dc3545' : '#28a745';
+    } else {
+        balanceDiv.innerHTML = '';
+    }
+}
+
+// Update amount display
+function updateAmountDisplay() {
+    const amount = document.getElementById('total_amount').value;
+    const amountInWords = document.getElementById('amountInWords');
+    
+    if (amount && amount > 0) {
+        // Simple number to words conversion (can be enhanced)
+        amountInWords.textContent = `${parseInt(amount).toLocaleString('fa-IR')} ریال`;
+    } else {
+        amountInWords.textContent = '-';
+    }
+    
+    calculateRemaining();
+}
+
+// Handle payment method change
+function handlePaymentMethodChange() {
+    const paymentMethod = document.getElementById('payment_method').value;
+    const referenceField = document.getElementById('reference_number');
+    const manualField = document.getElementById('manual_account_info');
+    
+    // Update placeholders based on payment method
+    switch(paymentMethod) {
+        case 'check':
+            referenceField.placeholder = 'شماره چک';
+            manualField.placeholder = 'شماره حساب بانک';
+            break;
+        case 'bank_transfer':
+            referenceField.placeholder = 'شماره پیگیری';
+            manualField.placeholder = 'شماره حساب مقصد';
+            break;
+        case 'card':
+            referenceField.placeholder = 'شماره تراکنش';
+            manualField.placeholder = 'شماره کارت';
+            break;
+        case 'online':
+            referenceField.placeholder = 'رسید آنلاین';
+            manualField.placeholder = 'درگاه پرداخت';
+            break;
+        default:
+            referenceField.placeholder = 'شماره مرجع';
+            manualField.placeholder = 'اطلاعات اضافی';
+    }
+}
+
+// Set today's date as default
+window.addEventListener('load', function() {
+    const today = new Date();
+    const persianDate = today.toLocaleDateString('fa-IR');
+    document.getElementById('transaction_date').value = persianDate;
+    
+    // Set default payment method
+    document.getElementById('payment_method').value = 'cash';
+});
+
+// Form validation
+document.getElementById('transactionForm').addEventListener('submit', function(e) {
+    const myAccount = document.getElementById('my_account_id').value;
+    const totalAmount = parseFloat(document.getElementById('total_amount').value || 0);
+    const paidAmount = parseFloat(document.getElementById('paid_amount').value || 0);
+    const transactionType = document.getElementById('transaction_type').value;
+    
+    if (!myAccount) {
+        e.preventDefault();
+        alert('لطفاً حساب خود را انتخاب کنید');
+        return;
+    }
+    
+    if (totalAmount <= 0) {
+        e.preventDefault();
+        alert('مبلغ کل باید بزرگتر از صفر باشد');
+        return;
+    }
+    
+    if (paidAmount < 0) {
+        e.preventDefault();
+        alert('مبلغ پرداخت شده نمی‌تواند منفی باشد');
+        return;
+    }
+    
+    if (!transactionType) {
+        e.preventDefault();
+        alert('لطفاً نوع عملیات را انتخاب کنید');
+        return;
+    }
+    
+    // Check if remaining amount exists but no customer selected for sale
+    const remaining = totalAmount - paidAmount;
+    if (transactionType === 'sale' && remaining > 0 && !document.getElementById('customer_id').value) {
+        if (!confirm('مبلغ باقی‌مانده وجود دارد اما مشتری انتخاب نشده. آیا ادامه می‌دهید؟')) {
+            e.preventDefault();
+            return;
+        }
+    }
+});
+</script> 

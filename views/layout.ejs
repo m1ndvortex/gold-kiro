@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - طلافروشی موسی پور</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-IPEf3LlYzu3d6PvJEa3TBUnIFJQGryuVKy7jH9MuNoMNFc13JUO2c+hJ1ytY1/6w" crossorigin="anonymous">
+    
+    <!-- Moment.js for Persian calendar support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-jalaali/0.9.6/moment-jalaali.js"></script>
+</head>
+<body>
+    <% if (typeof user !== 'undefined' && user) { %>
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <h1>طلافروشی موسی پور</h1>
+                    </div>
+                    <div class="user-info">
+                        <span>خوش آمدید، <%= user.full_name %></span>
+                        <a href="/logout" class="btn btn-secondary btn-sm">خروج</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="container">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/dashboard" class="nav-link <%= title.includes('داشبورد') ? 'active' : '' %>">
+                            داشبورد
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/inventory" class="nav-link <%= title.includes('انبار') ? 'active' : '' %>">
+                            انبار
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/customers" class="nav-link <%= title.includes('مشتریان') ? 'active' : '' %>">
+                            مشتریان
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/sales" class="nav-link <%= title.includes('فروش') ? 'active' : '' %>">
+                            فروش و فاکتور
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/accounting" class="nav-link <%= title.includes('حسابداری') ? 'active' : '' %>">
+                            حسابداری
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/settings" class="nav-link <%= title.includes('تنظیمات') ? 'active' : '' %>">
+                            تنظیمات
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    <% } %>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <%- body %>
+        </div>
+    </main>
+
+    <script src="/js/main.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9e9vrFica8F2ZpLxXTc3sEU1t1ikIYjneVt0ewJ" crossorigin="anonymous"></script>
+</body>
+</html> 

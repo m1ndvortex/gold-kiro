@@ -1,0 +1,190 @@
+<div class="page-header">
+    <h1 class="page-title">دفتر روزنامه</h1>
+    <p>مشاهده کلیه قیود حسابداری به ترتیب زمانی</p>
+</div>
+
+<!-- Statistics -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <div class="stat-card">
+        <div class="stat-number"><%= journalEntries ? journalEntries.length : 0 %></div>
+        <div class="stat-label">تعداد قیود</div>
+        <div class="stat-icon" style="color: #6f42c1;">📋</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">
+            <%= journalEntries ? new Intl.NumberFormat('fa-IR').format(
+                journalEntries.reduce((sum, entry) => sum + parseFloat(entry.total_debit || 0), 0)
+            ) : 0 %>
+        </div>
+        <div class="stat-label">مجموع بدهکار (ریال)</div>
+        <div class="stat-icon" style="color: #28a745;">➕</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">
+            <%= journalEntries ? new Intl.NumberFormat('fa-IR').format(
+                journalEntries.reduce((sum, entry) => sum + parseFloat(entry.total_credit || 0), 0)
+            ) : 0 %>
+        </div>
+        <div class="stat-label">مجموع بستانکار (ریال)</div>
+        <div class="stat-icon" style="color: #dc3545;">➖</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">
+            <%= journalEntries ? journalEntries.filter(entry => {
+                const entryDate = new Date(entry.entry_date);
+                const today = new Date();
+                return entryDate.toDateString() === today.toDateString();
+            }).length : 0 %>
+        </div>
+        <div class="stat-label">تراکنش‌های امروز</div>
+        <div class="stat-icon" style="color: #17a2b8;">📅</div>
+    </div>
+</div>
+
+<!-- Journal Entries Table -->
+<div class="card">
+    <div class="card-header">
+        قیود حسابداری
+        <a href="/accounting/manual-transaction" class="btn btn-success btn-sm float-left">
+            ➕ ثبت قید دستی
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead style="background: #f8f9fa;">
+                    <tr>
+                        <th>شماره قید</th>
+                        <th>تاریخ</th>
+                        <th>شرح</th>
+                        <th>نوع تراکنش</th>
+                        <th style="text-align: left;">بدهکار (ریال)</th>
+                        <th style="text-align: left;">بستانکار (ریال)</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (journalEntries && journalEntries.length > 0) { %>
+                        <% journalEntries.forEach((entry, index) => { %>
+                            <tr style="border-top: 3px solid #007bff; background: #f0f7ff;">
+                                <td rowspan="1" style="vertical-align: middle; text-align: center;">
+                                    <strong><%= entry.entry_number %></strong>
+                                </td>
+                                <td rowspan="1" style="vertical-align: middle;">
+                                    <%= new Date(entry.entry_date).toLocaleDateString('fa-IR') %><br>
+                                    <small class="text-muted">
+                                        <%= new Date(entry.created_at).toLocaleTimeString('fa-IR', {hour: '2-digit', minute: '2-digit'}) %>
+                                    </small>
+                                </td>
+                                <td rowspan="1" style="vertical-align: middle;">
+                                    <strong><%= entry.description %></strong><br>
+                                    <small class="text-muted">
+                                        <%= entry.transaction_type_persian %> 
+                                        <% if (entry.party_name) { %>
+                                            - <strong><%= entry.party_name %></strong>
+                                        <% } %>
+                                        <% if (entry.payment_method) { %>
+                                            <br>روش پرداخت: <%= entry.payment_method === 'cash' ? 'نقد' : entry.payment_method === 'card' ? 'کارت' : entry.payment_method === 'transfer' ? 'حواله' : entry.payment_method %>
+                                        <% } %>
+                                        <% if (entry.reference_number) { %>
+                                            <br>شماره مرجع: <%= entry.reference_number %>
+                                        <% } %>
+                                    </small>
+                                </td>
+                                <!-- Transaction Details -->
+                                <td>
+                                    <span class="badge badge-primary">
+                                        <%= entry.transaction_type_persian %>
+                                    </span>
+                                </td>
+                                <td style="text-align: left; font-weight: bold; color: #28a745;">
+                                    <%= new Intl.NumberFormat('fa-IR').format(entry.total_debit || 0) %>
+                                </td>
+                                <td style="text-align: left; font-weight: bold; color: #dc3545;">
+                                    <%= new Intl.NumberFormat('fa-IR').format(entry.total_credit || 0) %>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info"><%= entry.transaction_type_persian %></span>
+                                </td>
+                                <td rowspan="1" style="vertical-align: middle;">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/accounting/transactions/<%= entry.reference_id %>" 
+                                           class="btn btn-outline-primary btn-sm" title="مشاهده جزئیات">
+                                            👁
+                                        </a>
+                                        <button onclick="deleteTransaction(<%= entry.reference_id %>)" 
+                                                class="btn btn-outline-danger btn-sm" title="حذف">
+                                            🗑
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="8" class="text-center text-muted" style="padding: 50px;">
+                                <i class="fas fa-inbox fa-3x"></i><br><br>
+                                <h5>هنوز قیدی ثبت نشده است</h5>
+                                <p>برای شروع، اولین تراکنش خود را ثبت کنید</p>
+                                <a href="/accounting/manual-transaction" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> ثبت اولین تراکنش
+                                </a>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        عملیات
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/accounting" class="btn btn-secondary">بازگشت به حسابداری</a>
+            <a href="/accounting/manual-transaction" class="btn btn-success">ثبت قید دستی</a>
+            <a href="/accounting/trial-balance" class="btn btn-info">تراز آزمایشی</a>
+            <a href="/accounting/chart-of-accounts" class="btn btn-primary">بهار حساب‌ها</a>
+            <button onclick="window.print()" class="btn btn-outline-primary">چاپ</button>
+        </div>
+    </div>
+</div> 
+
+<script>
+function deleteTransaction(transactionId) {
+    if (confirm('آیا از حذف این تراکنش مطمئن هستید؟\nتوجه: تمام تأثیرات حسابداری آن برگردانده خواهد شد.')) {
+        // Create form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/accounting/transactions/${transactionId}/delete`;
+        form.style.display = 'none';
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function printPage() {
+    window.print();
+}
+
+// Filter functionality
+function filterEntries() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const referenceType = document.getElementById('referenceType').value;
+    
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    if (referenceType && referenceType !== 'all') params.append('reference_type', referenceType);
+    
+    window.location.href = '/accounting/journal-entries?' + params.toString();
+}
+</script> 

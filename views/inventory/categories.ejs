@@ -1,0 +1,752 @@
+<style>
+.category-system {
+    font-family: 'IRANSans', 'Tahoma', sans-serif;
+    line-height: 1.5;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+    color: #2c2c2c;
+    padding: 20px 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(184, 134, 11, 0.25);
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+.page-header p {
+    margin: 8px 0 0 0;
+    opacity: 0.8;
+    font-size: 1em;
+}
+
+.stat-card {
+    background: linear-gradient(145deg, #faf8f0, #f5f2e8);
+    border: 1px solid #d4c5a0;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(184, 134, 11, 0.12);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(184, 134, 11, 0.2);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(45deg, #d4af37, #ffd700);
+}
+
+.stat-number {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #b8860b;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: #8b7355;
+    font-weight: 500;
+}
+
+.stat-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.2em;
+    opacity: 0.4;
+    color: #d4af37;
+}
+
+.category-group {
+    margin-bottom: 25px;
+    border: 1px solid #e6d5a8;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.category-group:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
+
+.main-category-header {
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+    color: #2c2c2c;
+    padding: 15px;
+    position: relative;
+}
+
+.main-category-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.main-category-icon {
+    font-size: 1.5em;
+    opacity: 0.8;
+}
+
+.main-category-title {
+    flex-grow: 1;
+}
+
+.main-category-title h3 {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.main-category-title .subtitle {
+    margin-top: 3px;
+    opacity: 0.7;
+    font-size: 0.85em;
+}
+
+.category-badges {
+    display: flex;
+    gap: 8px;
+    margin-left: 10px;
+}
+
+.badge-modern {
+    background: rgba(255,255,255,0.3);
+    color: #2c2c2c;
+    border: 1px solid rgba(255,255,255,0.4);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+.category-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-action {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.3);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: #2c2c2c;
+    transition: all 0.2s ease;
+    font-size: 0.9em;
+}
+
+.btn-action:hover {
+    background: rgba(255,255,255,0.8);
+    color: #2c2c2c;
+    transform: scale(1.05);
+}
+
+.subcategories-container {
+    padding: 15px;
+    background: #fafbfc;
+}
+
+.subcategory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.subcategory-card {
+    background: white;
+    border: 1px solid #e6d5a8;
+    border-radius: 6px;
+    padding: 12px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.subcategory-card:hover {
+    border-color: #d4af37;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+    transform: translateY(-1px);
+}
+
+.subcategory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.subcategory-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.subcategory-icon {
+    font-size: 1.2em;
+    color: #d4af37;
+}
+
+.subcategory-title {
+    font-size: 1em;
+    font-weight: bold;
+    color: #2c2c2c;
+    margin: 0;
+}
+
+.subcategory-meta {
+    font-size: 0.8em;
+    color: #8b7355;
+    margin-top: 2px;
+}
+
+.subcategory-description {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f1f3f4;
+    font-size: 0.8em;
+    color: #8b7355;
+    line-height: 1.4;
+}
+
+.add-subcategory-btn {
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+    border: none;
+    color: #2c2c2c;
+    padding: 8px 16px;
+    border-radius: 15px;
+    font-weight: 500;
+    font-size: 0.85em;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(184, 134, 11, 0.18);
+}
+
+.add-subcategory-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(184, 134, 11, 0.25);
+    color: #2c2c2c;
+}
+
+.quick-actions-card {
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+    color: #2c2c2c;
+    border: none;
+    border-radius: 8px;
+}
+
+.quick-actions-card .card-header {
+    background: rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    color: #2c2c2c;
+    font-weight: bold;
+    padding: 10px 15px;
+}
+
+.quick-actions-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.quick-action-btn {
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 15px;
+    color: #8b7355;
+}
+
+.empty-state-icon {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    opacity: 0.4;
+    color: #d4af37;
+}
+
+.empty-state h4 {
+    margin-bottom: 10px;
+    color: #6b5b3d;
+}
+
+/* Modal مرکزی و حرفه‌ای */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+.modal.show {
+    display: flex !important;
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    max-width: 450px;
+    margin: 20px;
+}
+
+.modal-content {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    background: white;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    border-bottom: none;
+    padding: 15px 20px;
+}
+
+.modal-header .modal-title {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.modal-header .close {
+    color: white;
+    opacity: 0.8;
+    font-size: 1.2em;
+    border: none;
+    background: none;
+    padding: 0;
+    margin-left: auto;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.delete-warning-box {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 15px 0;
+}
+
+.delete-category-name {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+    margin: 15px 0;
+    font-weight: bold;
+    color: #495057;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 12px 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.alert-custom {
+    border: none;
+    border-radius: 6px;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.alert-success-custom {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.alert-warning-custom {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+/* حذف حالت نمایش پیش‌فرض modal */
+.modal.fade {
+    display: none;
+}
+</style>
+
+<div class="category-system">
+    <div class="page-header">
+        <h1>🏆 مدیریت دسته‌بندی‌ها</h1>
+        <p>سامانه مدیریت دسته‌بندی‌های انبار طلافروشی زرین</p>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <% if (typeof success !== 'undefined' && success) { %>
+        <div class="alert alert-success-custom alert-dismissible fade show">
+            <strong>✅ موفقیت:</strong> <%= success %>
+            <button type="button" class="close" data-dismiss="alert" style="color: inherit;">
+                <span>&times;</span>
+            </button>
+        </div>
+    <% } %>
+
+    <!-- Quick Actions -->
+    <div class="card quick-actions-card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0">⚡ عملیات سریع</h6>
+        </div>
+        <div class="card-body" style="padding: 12px 15px;">
+            <div class="quick-actions-container">
+                <a href="/inventory/categories/add" class="btn btn-light quick-action-btn">
+                    ➕ دسته‌بندی جدید
+                </a>
+                <a href="/inventory" class="btn btn-outline-light quick-action-btn">
+                    📦 بازگشت به انبار
+                </a>
+                <a href="/inventory/add" class="btn btn-warning quick-action-btn">
+                    🏷️ افزودن کالا
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Overview -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        <div class="stat-card">
+            <div class="stat-icon">📁</div>
+            <div class="stat-number"><%= formatNumber(mainCategories.length) %></div>
+            <div class="stat-label">دسته‌بندی اصلی</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">📂</div>
+            <div class="stat-number"><%= formatNumber(subCategories.length) %></div>
+            <div class="stat-label">زیرمجموعه</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🏷️</div>
+            <div class="stat-number">
+                <%= formatNumber(allCategories.reduce((sum, cat) => sum + (cat.items_count || 0), 0)) %>
+            </div>
+            <div class="stat-label">کل کالاها</div>
+        </div>
+    </div>
+
+    <!-- Main Categories List -->
+    <div class="card" style="border: 1px solid #d4c5a0; border-radius: 8px; box-shadow: 0 2px 8px rgba(184, 134, 11, 0.08);">
+        <div class="card-header" style="background: linear-gradient(135deg, #b8860b 0%, #daa520 100%); color: #2c2c2c; border-radius: 8px 8px 0 0;">
+            <h6 class="mb-0">📋 فهرست دسته‌بندی‌ها</h6>
+        </div>
+        <div class="card-body" style="padding: 20px;">
+            <% if (mainCategories.length === 0) { %>
+                <div class="empty-state">
+                    <div class="empty-state-icon">📁</div>
+                    <h5>هیچ دسته‌بندی‌ای تعریف نشده است</h5>
+                    <p class="mb-3">برای شروع، اولین دسته‌بندی خود را ایجاد کنید</p>
+                    <a href="/inventory/categories/add" class="btn btn-primary">
+                        🚀 ایجاد اولین دسته‌بندی
+                    </a>
+                </div>
+            <% } else { %>
+                <% mainCategories.forEach(function(mainCat) { %>
+                    <div class="category-group">
+                        <!-- Main Category Header -->
+                        <div class="main-category-header">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div class="main-category-info">
+                                    <div class="main-category-icon">📁</div>
+                                    <div class="main-category-title">
+                                        <h3><%= mainCat.name_persian %></h3>
+                                        <div class="subtitle">
+                                            <strong><%= mainCat.name %></strong>
+                                            <% if (mainCat.description) { %>
+                                                • <%= mainCat.description %>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div class="category-badges">
+                                        <span class="badge-modern">
+                                            📂 <%= formatNumber(mainCat.subcategories_count) %>
+                                        </span>
+                                        <span class="badge-modern">
+                                            🏷️ <%= formatNumber(mainCat.items_count) %>
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="category-actions">
+                                        <a href="/inventory/categories/edit/<%= mainCat.id %>" 
+                                           class="btn-action" title="ویرایش دسته‌بندی">
+                                            ✏️
+                                        </a>
+                                        <button onclick="confirmDelete(<%= mainCat.id %>, '<%= mainCat.name_persian %>')" 
+                                                class="btn-action" title="حذف دسته‌بندی">
+                                            🗑️
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Subcategories -->
+                        <div class="subcategories-container">
+                            <% 
+                            var categorySubItems = subCategories.filter(function(sub) { 
+                                return sub.parent_id == mainCat.id; 
+                            }); 
+                            %>
+                            
+                            <% if (categorySubItems.length === 0) { %>
+                                <div style="text-align: center; padding: 25px; color: #8b7355;">
+                                    <div style="font-size: 2em; margin-bottom: 10px; opacity: 0.3; color: #d4af37;">📂</div>
+                                    <h6>هیچ زیرمجموعه‌ای تعریف نشده</h6>
+                                    <p class="mb-0" style="font-size: 0.9em;">برای این دسته‌بندی زیرمجموعه ایجاد کنید</p>
+                                </div>
+                            <% } else { %>
+                                <div class="subcategory-grid">
+                                    <% categorySubItems.forEach(function(subCat) { %>
+                                        <div class="subcategory-card">
+                                            <div class="subcategory-header">
+                                                <div class="subcategory-info">
+                                                    <div class="subcategory-icon">📂</div>
+                                                    <div>
+                                                        <h6 class="subcategory-title"><%= subCat.name_persian %></h6>
+                                                        <div class="subcategory-meta">
+                                                            <strong><%= subCat.name %></strong> • 
+                                                            🏷️ <%= formatNumber(subCat.items_count) %> کالا
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div style="display: flex; gap: 5px;">
+                                                    <a href="/inventory/categories/edit/<%= subCat.id %>" 
+                                                       class="btn btn-sm btn-outline-primary" 
+                                                       style="border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 0.8em;"
+                                                       title="ویرایش">
+                                                        ✏️
+                                                    </a>
+                                                    <button onclick="confirmDelete(<%= subCat.id %>, '<%= subCat.name_persian %>')" 
+                                                            class="btn btn-sm btn-outline-danger"
+                                                            style="border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 0.8em;"
+                                                            title="حذف">
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            <% if (subCat.description) { %>
+                                                <div class="subcategory-description">
+                                                    <%= subCat.description %>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            <% } %>
+                            
+                            <!-- Add Subcategory Button -->
+                            <div style="text-align: center; margin-top: 15px;">
+                                <a href="/inventory/categories/add?parent=<%= mainCat.id %>" 
+                                   class="btn add-subcategory-btn">
+                                    ➕ افزودن زیرمجموعه
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Modal حذف مرکزی و حرفه‌ای -->
+<div class="modal fade" id="deleteModal" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">🗑️ تأیید حذف دسته‌بندی</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <div style="font-size: 2.5em; color: #dc3545; margin-bottom: 10px;">⚠️</div>
+                    <h6>آیا مطمئن هستید که می‌خواهید دسته‌بندی زیر را حذف کنید؟</h6>
+                </div>
+                
+                <div class="delete-category-name" id="deleteCategoryName"></div>
+                
+                <div class="delete-warning-box">
+                    <strong>⚠️ توجه:</strong>
+                    <ul style="margin: 8px 0 0 15px; font-size: 0.9em;">
+                        <li>دسته‌بندی‌هایی که دارای کالا هستند قابل حذف نیستند</li>
+                        <li>دسته‌بندی‌هایی که دارای زیرمجموعه هستند قابل حذف نیستند</li>
+                        <li>این عمل غیرقابل بازگشت است</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
+                    انصراف
+                </button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        🗑️ تأیید حذف
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تابع نمایش modal مرکزی
+function confirmDelete(categoryId, categoryName) {
+    // تنظیم نام دسته‌بندی
+    document.getElementById('deleteCategoryName').textContent = categoryName;
+    
+    // تنظیم action فرم حذف
+    document.getElementById('deleteForm').action = '/inventory/categories/delete/' + categoryId;
+    
+    // نمایش modal در مرکز صفحه
+    var modal = document.getElementById('deleteModal');
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+    
+    // افزودن backdrop
+    var backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.style.cssText = 
+        'position: fixed; ' +
+        'top: 0; ' +
+        'left: 0; ' +
+        'width: 100%; ' +
+        'height: 100%; ' +
+        'background: rgba(0,0,0,0.5); ' +
+        'z-index: 1040;';
+    backdrop.id = 'modalBackdrop';
+    document.body.appendChild(backdrop);
+    
+    // بستن modal با کلیک روی backdrop
+    backdrop.onclick = function() {
+        closeModal();
+    };
+    
+    // منع scroll صفحه
+    document.body.style.overflow = 'hidden';
+}
+
+// تابع بستن modal
+function closeModal() {
+    var modal = document.getElementById('deleteModal');
+    var backdrop = document.getElementById('modalBackdrop');
+    
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+    
+    if (backdrop) {
+        backdrop.remove();
+    }
+    
+    // بازگرداندن scroll صفحه
+    document.body.style.overflow = 'auto';
+}
+
+// بستن modal با دکمه ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
+});
+
+// مخفی کردن خودکار پیام‌ها
+setTimeout(function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        alert.style.transition = 'opacity 0.5s ease';
+        alert.style.opacity = '0';
+        setTimeout(function() {
+            alert.remove();
+        }, 500);
+    });
+}, 3000);
+
+// بستن manual پیام‌ها
+document.addEventListener('DOMContentLoaded', function() {
+    const closeButtons = document.querySelectorAll('[data-dismiss="alert"]');
+    closeButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            const alert = button.closest('.alert');
+            alert.style.transition = 'opacity 0.3s ease';
+            alert.style.opacity = '0';
+            setTimeout(function() {
+                alert.remove();
+            }, 300);
+        });
+    });
+    
+    // بستن modal با دکمه close
+    const modalCloseButtons = document.querySelectorAll('[data-dismiss="modal"]');
+    modalCloseButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            closeModal();
+        });
+    });
+});
+
+// انیمیشن‌های ملایم برای کارت‌ها
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.category-group, .stat-card');
+    cards.forEach(function(card, index) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(10px)';
+        card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        
+        setTimeout(function() {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 50 * index);
+    });
+});
+</script> 

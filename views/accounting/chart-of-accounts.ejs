@@ -1,0 +1,493 @@
+<div class="page-header">
+    <h1 class="page-title">بهار حساب‌ها</h1>
+    <p>مدیریت نمودار حساب‌های حسابداری</p>
+    <div class="page-actions">
+        <button class="btn btn-success" id="showAddFormBtn" onclick="toggleAddAccountForm()">
+            ➕ افزودن حساب جدید
+        </button>
+    </div>
+</div>
+
+<!-- Add Account Form (Hidden by Default) -->
+<div class="card" id="addAccountCard" style="display: none; margin-bottom: 20px;">
+    <div class="card-header" style="background: #28a745; color: white;">
+        <h5 class="mb-0">افزودن حساب جدید</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="/accounting/chart-of-accounts/add" id="addAccountForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="account_code">کد حساب: *</label>
+                        <input type="text" class="form-control" id="account_code" name="account_code" required
+                               placeholder="مثال: 1101" maxlength="10">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="account_name_persian">نام حساب (فارسی): *</label>
+                        <input type="text" class="form-control" id="account_name_persian" name="account_name_persian" required
+                               placeholder="مثال: صندوق">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="account_type">نوع حساب: *</label>
+                        <select class="form-control" id="account_type" name="account_type" required>
+                            <option value="">انتخاب کنید</option>
+                            <option value="asset">دارایی (Asset)</option>
+                            <option value="liability">بدهی (Liability)</option>
+                            <option value="equity">حقوق صاحبان سهام (Equity)</option>
+                            <option value="revenue">درآمد (Revenue)</option>
+                            <option value="expense">هزینه (Expense)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="parent_account_id">حساب والد:</label>
+                        <select class="form-control" id="parent_account_id" name="parent_account_id">
+                            <option value="">بدون والد (حساب اصلی)</option>
+                            <% accounts.forEach(account => { %>
+                                <option value="<%= account.id %>">
+                                    [<%= account.account_code %>] <%= account.account_name_persian %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="initial_balance">مانده اولیه:</label>
+                        <input type="number" class="form-control" id="initial_balance" name="initial_balance" 
+                               step="0.01" value="0" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="description">توضیحات:</label>
+                        <textarea class="form-control" id="description" name="description" rows="2" 
+                                  placeholder="توضیحات اختیاری درباره حساب"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> ذخیره حساب
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="toggleAddAccountForm()">
+                    <i class="fas fa-times"></i> انصراف
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+    <% 
+        let assetAccounts = accounts.filter(a => a.account_type === 'asset').length;
+        let liabilityAccounts = accounts.filter(a => a.account_type === 'liability').length;
+        let equityAccounts = accounts.filter(a => a.account_type === 'equity').length;
+        let revenueAccounts = accounts.filter(a => a.account_type === 'revenue').length;
+        let expenseAccounts = accounts.filter(a => a.account_type === 'expense').length;
+    %>
+    
+    <div class="stat-card">
+        <div class="stat-number" style="color: #28a745;"><%= assetAccounts %></div>
+        <div class="stat-label">حساب‌های دارایی</div>
+        <div class="stat-icon" style="color: #28a745;">💰</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number" style="color: #dc3545;"><%= liabilityAccounts %></div>
+        <div class="stat-label">حساب‌های بدهی</div>
+        <div class="stat-icon" style="color: #dc3545;">📋</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number" style="color: #17a2b8;"><%= equityAccounts %></div>
+        <div class="stat-label">حساب‌های حقوق صاحبان سهام</div>
+        <div class="stat-icon" style="color: #17a2b8;">🏛️</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number" style="color: #28a745;"><%= revenueAccounts %></div>
+        <div class="stat-label">حساب‌های درآمد</div>
+        <div class="stat-icon" style="color: #28a745;">📈</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number" style="color: #ffc107;"><%= expenseAccounts %></div>
+        <div class="stat-label">حساب‌های هزینه</div>
+        <div class="stat-icon" style="color: #ffc107;">💸</div>
+    </div>
+</div>
+
+<!-- Accounts by Type -->
+<% ['asset', 'liability', 'equity', 'revenue', 'expense'].forEach(accountType => { %>
+    <% let typeAccounts = accounts.filter(a => a.account_type === accountType); %>
+    <% if (typeAccounts.length > 0) { %>
+    
+    <div class="card">
+        <div class="card-header">
+            <% if (accountType === 'asset') { %>
+                🏦 حساب‌های دارایی (Assets)
+            <% } else if (accountType === 'liability') { %>
+                📋 حساب‌های بدهی (Liabilities)
+            <% } else if (accountType === 'equity') { %>
+                🏛️ حقوق صاحبان سهام (Equity)
+            <% } else if (accountType === 'revenue') { %>
+                📈 حساب‌های درآمد (Revenue)
+            <% } else if (accountType === 'expense') { %>
+                💸 حساب‌های هزینه (Expenses)
+            <% } %>
+            
+            <span class="badge badge-secondary float-left"><%= typeAccounts.length %> حساب</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th>کد حساب</th>
+                            <th>نام حساب</th>
+                            <th>حساب والد</th>
+                            <th>مانده جاری</th>
+                            <th>وضعیت</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% typeAccounts.forEach(account => { %>
+                            <tr>
+                                <td>
+                                    <code style="
+                                        background: <%= 
+                                            accountType === 'asset' ? '#d4edda' :
+                                            accountType === 'liability' ? '#f8d7da' :
+                                            accountType === 'equity' ? '#d1ecf1' :
+                                            accountType === 'revenue' ? '#d4edda' :
+                                            '#fff3cd'
+                                        %>;
+                                        padding: 4px 8px;
+                                        border-radius: 4px;
+                                        color: <%= 
+                                            accountType === 'asset' ? '#155724' :
+                                            accountType === 'liability' ? '#721c24' :
+                                            accountType === 'equity' ? '#0c5460' :
+                                            accountType === 'revenue' ? '#155724' :
+                                            '#856404'
+                                        %>;
+                                    "><%= account.account_code %></code>
+                                </td>
+                                <td>
+                                    <strong><%= account.account_name_persian %></strong>
+                                    <% if (account.account_name !== account.account_name_persian) { %>
+                                        <br>
+                                        <small class="text-muted"><%= account.account_name %></small>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (account.parent_name) { %>
+                                        <span class="text-muted"><%= account.parent_name %></span>
+                                    <% } else { %>
+                                        <span class="badge badge-primary">حساب اصلی</span>
+                                    <% } %>
+                                </td>
+                                <td style="text-align: left; font-weight: bold;">
+                                    <% const balance = parseFloat(account.balance || 0); %>
+                                    <span style="color: <%= balance > 0 ? '#28a745' : (balance < 0 ? '#dc3545' : '#6c757d') %>;">
+                                        <%= Math.abs(balance).toLocaleString('fa-IR') %> ریال
+                                        <% if (balance !== 0) { %>
+                                            <%= balance > 0 ? '(بدهکار)' : '(بستانکار)' %>
+                                        <% } %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (account.is_active) { %>
+                                        <span class="badge badge-success">فعال</span>
+                                    <% } else { %>
+                                        <span class="badge badge-secondary">غیرفعال</span>
+                                    <% } %>
+                                    
+                                    <% if (account.is_system_account) { %>
+                                        <span class="badge badge-info">سیستمی</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 5px;">
+                                        <a href="/accounting/account-ledger/<%= account.id %>" class="btn btn-sm btn-primary" title="دفتر معین">
+                                            📊
+                                        </a>
+                                        <% if (!account.is_system_account) { %>
+                                            <button class="btn btn-sm btn-warning" onclick="editAccount('<%= account.id %>', '<%= account.account_code %>', '<%= account.account_name_persian %>', '<%= account.account_type %>', '<%= account.parent_account_id || '' %>')" title="ویرایش">
+                                                ✏️
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteAccount('<%= account.id %>', '<%= account.account_name_persian %>')" title="حذف">
+                                                🗑️
+                                            </button>
+                                        <% } %>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <% } %>
+<% }); %>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        عملیات
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/accounting" class="btn btn-secondary">بازگشت به حسابداری</a>
+            <a href="/accounting/trial-balance" class="btn btn-info">تراز آزمایشی</a>
+            <a href="/accounting/journal-entries" class="btn btn-primary">دفتر روزنامه</a>
+            <button onclick="window.print()" class="btn btn-outline-primary">چاپ</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Account Modal -->
+<div class="modal fade" id="addAccountModal" tabindex="-1" role="dialog" aria-labelledby="addAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #28a745; color: white;">
+                <h5 class="modal-title" id="addAccountModalLabel">افزودن حساب جدید</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/accounting/chart-of-accounts/add" id="addAccountForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="account_code">کد حساب: *</label>
+                                <input type="text" class="form-control" id="account_code" name="account_code" required
+                                       placeholder="مانند: 1110" pattern="\d{4,6}">
+                                <small class="form-text text-muted">کد ۴ تا ۶ رقمی</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="account_type">نوع حساب: *</label>
+                                <select class="form-control" id="account_type" name="account_type" required>
+                                    <option value="">انتخاب کنید</option>
+                                    <option value="asset">دارایی (Asset)</option>
+                                    <option value="liability">بدهی (Liability)</option>
+                                    <option value="equity">حقوق صاحبان سهام (Equity)</option>
+                                    <option value="revenue">درآمد (Revenue)</option>
+                                    <option value="expense">هزینه (Expense)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label for="account_name_persian">نام حساب (فارسی): *</label>
+                                <input type="text" class="form-control" id="account_name_persian" name="account_name_persian" required
+                                       placeholder="مانند: صندوق">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="parent_account_id">حساب والد:</label>
+                                <select class="form-control" id="parent_account_id" name="parent_account_id">
+                                    <option value="">حساب اصلی</option>
+                                    <% accounts.forEach(account => { %>
+                                        <option value="<%= account.id %>">[<%= account.account_code %>] <%= account.account_name_persian %></option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label for="account_name">نام حساب (انگلیسی):</label>
+                                <input type="text" class="form-control" id="account_name" name="account_name"
+                                       placeholder="مانند: Cash">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="initial_balance">مانده اولیه:</label>
+                                <input type="number" class="form-control" id="initial_balance" name="initial_balance" 
+                                       value="0" step="1" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">توضیحات:</label>
+                        <textarea class="form-control" id="description" name="description" rows="2"
+                                  placeholder="توضیح اختیاری در مورد این حساب"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-success">ثبت حساب</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Account Modal -->
+<div class="modal fade" id="editAccountModal" tabindex="-1" role="dialog" aria-labelledby="editAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #ffc107; color: black;">
+                <h5 class="modal-title" id="editAccountModalLabel">ویرایش حساب</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="/accounting/chart-of-accounts/edit" id="editAccountForm">
+                <input type="hidden" id="edit_account_id" name="account_id">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_account_code">کد حساب: *</label>
+                                <input type="text" class="form-control" id="edit_account_code" name="account_code" required
+                                       placeholder="مانند: 1110" pattern="\d{4,6}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_account_type">نوع حساب: *</label>
+                                <select class="form-control" id="edit_account_type" name="account_type" required>
+                                    <option value="asset">دارایی (Asset)</option>
+                                    <option value="liability">بدهی (Liability)</option>
+                                    <option value="equity">حقوق صاحبان سهام (Equity)</option>
+                                    <option value="revenue">درآمد (Revenue)</option>
+                                    <option value="expense">هزینه (Expense)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_account_name_persian">نام حساب (فارسی): *</label>
+                        <input type="text" class="form-control" id="edit_account_name_persian" name="account_name_persian" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_parent_account_id">حساب والد:</label>
+                        <select class="form-control" id="edit_parent_account_id" name="parent_account_id">
+                            <option value="">حساب اصلی</option>
+                            <% accounts.forEach(account => { %>
+                                <option value="<%= account.id %>">[<%= account.account_code %>] <%= account.account_name_persian %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-warning">بروزرسانی</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Account Management Scripts -->
+<script>
+// Toggle Add Account Form
+function toggleAddAccountForm() {
+    const card = document.getElementById('addAccountCard');
+    const btn = document.getElementById('showAddFormBtn');
+    
+    if (card.style.display === 'none') {
+        card.style.display = 'block';
+        btn.innerHTML = '❌ بستن فرم';
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-secondary');
+        
+        // Scroll to form
+        card.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        card.style.display = 'none';
+        btn.innerHTML = '➕ افزودن حساب جدید';
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-success');
+        
+        // Reset form
+        document.getElementById('addAccountForm').reset();
+    }
+}
+
+function editAccount(accountId, accountCode, accountNamePersian, accountType, parentAccountId) {
+    document.getElementById('edit_account_id').value = accountId;
+    document.getElementById('edit_account_code').value = accountCode;
+    document.getElementById('edit_account_name_persian').value = accountNamePersian;
+    document.getElementById('edit_account_type').value = accountType;
+    document.getElementById('edit_parent_account_id').value = parentAccountId || '';
+    
+    $('#editAccountModal').modal('show');
+}
+
+function deleteAccount(accountId, accountName) {
+    if (confirm(`آیا از حذف حساب "${accountName}" اطمینان دارید؟\n\nتوجه: این عمل غیرقابل بازگشت است.`)) {
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/accounting/chart-of-accounts/delete';
+        
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'account_id';
+        input.value = accountId;
+        
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Auto-fill English name based on Persian name (optional)
+document.getElementById('account_name_persian').addEventListener('input', function() {
+    const persianName = this.value;
+    const englishField = document.getElementById('account_name');
+    
+    // Simple mapping - can be enhanced
+    const translations = {
+        'صندوق': 'Cash',
+        'بانک': 'Bank',
+        'حساب‌های دریافتنی': 'Accounts Receivable',
+        'موجودی کالا': 'Inventory',
+        'حساب‌های پرداختنی': 'Accounts Payable',
+        'فروش': 'Sales',
+        'خرید': 'Purchases'
+    };
+    
+    if (translations[persianName] && !englishField.value) {
+        englishField.value = translations[persianName];
+    }
+});
+
+// Format number helper function
+function formatNumber(num) {
+    return new Intl.NumberFormat('fa-IR').format(num);
+}
+</script> 

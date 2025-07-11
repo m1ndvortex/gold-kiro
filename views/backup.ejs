@@ -1,0 +1,481 @@
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">
+                <i class="fas fa-shield-alt"></i> مدیریت بک‌آپ
+            </h1>
+            <p>پشتیبان‌گیری و بازیابی اطلاعات سیستم</p>
+        </div>
+        <div>
+            <button class="btn btn-success" onclick="createBackup()">
+                <i class="fas fa-download"></i> ایجاد بک‌آپ جدید
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Statistics -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+    <div class="stat-card">
+        <div class="stat-number"><%= backups ? backups.length : 0 %></div>
+        <div class="stat-label">فایل‌های بک‌آپ</div>
+        <div class="stat-icon" style="color: #17a2b8;">💾</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">
+            <% if (lastBackup) { %>
+                <%= new Date(lastBackup.created_at).toLocaleDateString('fa-IR') %>
+            <% } else { %>
+                هیچ‌کدام
+            <% } %>
+        </div>
+        <div class="stat-label">آخرین بک‌آپ</div>
+        <div class="stat-icon" style="color: #28a745;">📅</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">
+            <% 
+            let totalSize = 0;
+            if (backups) {
+                totalSize = backups.reduce((sum, backup) => sum + (backup.file_size || 0), 0);
+            }
+            %>
+            <%= (totalSize / (1024 * 1024)).toFixed(2) %> MB
+        </div>
+        <div class="stat-label">حجم کل بک‌آپ‌ها</div>
+        <div class="stat-icon" style="color: #ffc107;">💿</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">
+            <% if (autoBackupEnabled) { %>
+                فعال
+            <% } else { %>
+                غیرفعال
+            <% } %>
+        </div>
+        <div class="stat-label">بک‌آپ خودکار</div>
+        <div class="stat-icon" style="color: #6f42c1;">⚙️</div>
+    </div>
+</div>
+
+<!-- Backup Options -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-cogs"></i> تنظیمات بک‌آپ</h5>
+            </div>
+            <div class="card-body">
+                <form id="backupSettingsForm">
+                    <div class="form-group">
+                        <label class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="autoBackup" <%= autoBackupEnabled ? 'checked' : '' %>>
+                            <span class="custom-control-label">بک‌آپ خودکار روزانه</span>
+                        </label>
+                        <small class="form-text text-muted">هر روز ساعت ۲۳:۰۰ بک‌آپ خودکار ایجاد می‌شود</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>نوع بک‌آپ:</label>
+                        <div class="custom-control custom-radio">
+                            <input type="radio" id="fullBackup" name="backupType" class="custom-control-input" value="full" checked>
+                            <label class="custom-control-label" for="fullBackup">
+                                <strong>کامل</strong> - تمام جداول و اطلاعات
+                            </label>
+                        </div>
+                        <div class="custom-control custom-radio">
+                            <input type="radio" id="dataBackup" name="backupType" class="custom-control-input" value="data">
+                            <label class="custom-control-label" for="dataBackup">
+                                <strong>داده‌ها</strong> - فقط اطلاعات بدون ساختار
+                            </label>
+                        </div>
+                        <div class="custom-control custom-radio">
+                            <input type="radio" id="schemaBackup" name="backupType" class="custom-control-input" value="schema">
+                            <label class="custom-control-label" for="schemaBackup">
+                                <strong>ساختار</strong> - فقط جداول و روابط
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>جداول مورد نظر:</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input table-select" value="customers" checked>
+                                    <span class="custom-control-label">مشتریان</span>
+                                </label>
+                                <label class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input table-select" value="products" checked>
+                                    <span class="custom-control-label">محصولات</span>
+                                </label>
+                                <label class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input table-select" value="sales" checked>
+                                    <span class="custom-control-label">فروش</span>
+                                </label>
+                            </div>
+                            <div class="col-6">
+                                <label class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input table-select" value="transactions" checked>
+                                    <span class="custom-control-label">تراکنش‌ها</span>
+                                </label>
+                                <label class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input table-select" value="accounts" checked>
+                                    <span class="custom-control-label">حساب‌ها</span>
+                                </label>
+                                <label class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input table-select" value="categories" checked>
+                                    <span class="custom-control-label">دسته‌بندی‌ها</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="button" class="btn btn-primary" onclick="updateSettings()">
+                            <i class="fas fa-save"></i> ذخیره تنظیمات
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-upload"></i> بازیابی بک‌آپ</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>هشدار:</strong> بازیابی بک‌آپ تمام اطلاعات فعلی را جایگزین می‌کند.
+                </div>
+                
+                <form id="restoreForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label>انتخاب فایل بک‌آپ:</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="backupFile" accept=".sql,.json">
+                            <label class="custom-file-label" for="backupFile">فایل را انتخاب کنید...</label>
+                        </div>
+                        <small class="form-text text-muted">فرمت‌های مجاز: .sql, .json</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="confirmRestore">
+                            <span class="custom-control-label">
+                                <strong>تأیید می‌کنم</strong> که از جایگزینی اطلاعات آگاه هستم
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="button" class="btn btn-danger" onclick="restoreBackup()" id="restoreBtn" disabled>
+                            <i class="fas fa-upload"></i> بازیابی بک‌آپ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup History -->
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-history"></i> تاریخچه بک‌آپ‌ها</h5>
+            <button class="btn btn-outline-danger btn-sm" onclick="cleanupOldBackups()">
+                <i class="fas fa-trash"></i> پاک‌سازی فایل‌های قدیمی
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <% if (backups && backups.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th>نام فایل</th>
+                            <th>تاریخ ایجاد</th>
+                            <th>نوع</th>
+                            <th>حجم</th>
+                            <th>وضعیت</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% backups.forEach(backup => { %>
+                            <tr>
+                                <td>
+                                    <i class="fas fa-file-archive text-primary"></i>
+                                    <strong><%= backup.filename %></strong>
+                                </td>
+                                <td>
+                                    <%= new Date(backup.created_at).toLocaleDateString('fa-IR') %><br>
+                                    <small class="text-muted">
+                                        <%= new Date(backup.created_at).toLocaleTimeString('fa-IR') %>
+                                    </small>
+                                </td>
+                                <td>
+                                    <% if (backup.backup_type === 'full') { %>
+                                        <span class="badge badge-success">کامل</span>
+                                    <% } else if (backup.backup_type === 'data') { %>
+                                        <span class="badge badge-info">داده‌ها</span>
+                                    <% } else { %>
+                                        <span class="badge badge-warning">ساختار</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <%= ((backup.file_size || 0) / (1024 * 1024)).toFixed(2) %> MB
+                                </td>
+                                <td>
+                                    <% if (backup.status === 'success') { %>
+                                        <span class="badge badge-success">موفق</span>
+                                    <% } else if (backup.status === 'failed') { %>
+                                        <span class="badge badge-danger">ناموفق</span>
+                                    <% } else { %>
+                                        <span class="badge badge-warning">در حال پردازش</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/backup/download/<%= backup.id %>" class="btn btn-outline-primary" title="دانلود">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        <button class="btn btn-outline-info" onclick="viewBackupInfo('<%= backup.id %>')" title="جزئیات">
+                                            <i class="fas fa-info"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteBackup('<%= backup.id %>')" title="حذف">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="text-center text-muted" style="padding: 50px;">
+                <i class="fas fa-archive fa-3x"></i><br><br>
+                <h5>هیچ بک‌آپی یافت نشد</h5>
+                <p>برای شروع، اولین بک‌آپ خود را ایجاد کنید</p>
+                <button class="btn btn-primary" onclick="createBackup()">
+                    <i class="fas fa-plus"></i> ایجاد بک‌آپ
+                </button>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Progress Modal for Backup Creation -->
+<div class="modal fade" id="backupProgressModal" tabindex="-1" role="dialog" data-backdrop="static">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-cogs fa-spin"></i> در حال ایجاد بک‌آپ
+                </h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" id="backupProgress">
+                        <span id="progressText">۰٪</span>
+                    </div>
+                </div>
+                <p id="backupStatus">آماده‌سازی بک‌آپ...</p>
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">در حال پردازش...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Create backup
+function createBackup() {
+    const backupType = document.querySelector('input[name="backupType"]:checked').value;
+    const selectedTables = Array.from(document.querySelectorAll('.table-select:checked')).map(cb => cb.value);
+    
+    if (selectedTables.length === 0) {
+        alert('لطفاً حداقل یک جدول را انتخاب کنید');
+        return;
+    }
+    
+    $('#backupProgressModal').modal('show');
+    updateProgress(10, 'در حال آماده‌سازی...');
+    
+    fetch('/backup/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            type: backupType,
+            tables: selectedTables
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateProgress(100, 'بک‌آپ با موفقیت ایجاد شد');
+            setTimeout(() => {
+                $('#backupProgressModal').modal('hide');
+                location.reload();
+            }, 2000);
+        } else {
+            updateProgress(100, 'خطا در ایجاد بک‌آپ: ' + data.message);
+            setTimeout(() => {
+                $('#backupProgressModal').modal('hide');
+            }, 3000);
+        }
+    })
+    .catch(error => {
+        updateProgress(100, 'خطا در ارتباط با سرور');
+        console.error('Error:', error);
+        setTimeout(() => {
+            $('#backupProgressModal').modal('hide');
+        }, 3000);
+    });
+}
+
+// Update progress
+function updateProgress(percent, message) {
+    document.getElementById('backupProgress').style.width = percent + '%';
+    document.getElementById('progressText').textContent = percent + '٪';
+    document.getElementById('backupStatus').textContent = message;
+}
+
+// Update settings
+function updateSettings() {
+    const autoBackup = document.getElementById('autoBackup').checked;
+    
+    fetch('/backup/settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            autoBackup: autoBackup
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('تنظیمات با موفقیت ذخیره شد');
+        } else {
+            alert('خطا در ذخیره تنظیمات');
+        }
+    });
+}
+
+// File input change
+document.getElementById('backupFile').addEventListener('change', function() {
+    const fileName = this.files[0] ? this.files[0].name : 'فایل را انتخاب کنید...';
+    this.nextElementSibling.textContent = fileName;
+    checkRestoreForm();
+});
+
+// Confirm restore checkbox
+document.getElementById('confirmRestore').addEventListener('change', checkRestoreForm);
+
+function checkRestoreForm() {
+    const fileSelected = document.getElementById('backupFile').files.length > 0;
+    const confirmed = document.getElementById('confirmRestore').checked;
+    document.getElementById('restoreBtn').disabled = !(fileSelected && confirmed);
+}
+
+// Restore backup
+function restoreBackup() {
+    if (!confirm('آیا از بازیابی این بک‌آپ اطمینان دارید؟\nتمام اطلاعات فعلی حذف خواهد شد.')) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('backupFile', document.getElementById('backupFile').files[0]);
+    
+    fetch('/backup/restore', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('بک‌آپ با موفقیت بازیابی شد');
+            location.reload();
+        } else {
+            alert('خطا در بازیابی بک‌آپ: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('خطا در ارتباط با سرور');
+        console.error('Error:', error);
+    });
+}
+
+// Delete backup
+function deleteBackup(backupId) {
+    if (!confirm('آیا از حذف این بک‌آپ اطمینان دارید؟')) {
+        return;
+    }
+    
+    fetch(`/backup/delete/${backupId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('خطا در حذف بک‌آپ');
+        }
+    });
+}
+
+// View backup info
+function viewBackupInfo(backupId) {
+    // Implementation for viewing backup details
+    alert('نمایش جزئیات بک‌آپ - در حال توسعه');
+}
+
+// Cleanup old backups
+function cleanupOldBackups() {
+    if (!confirm('آیا از حذف بک‌آپ‌های قدیمی‌تر از ۳۰ روز اطمینان دارید؟')) {
+        return;
+    }
+    
+    fetch('/backup/cleanup', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(`${data.deletedCount} فایل بک‌آپ حذف شد`);
+        location.reload();
+    });
+}
+
+// Auto refresh backup list every 30 seconds
+setInterval(() => {
+    // Only refresh if no modal is open
+    if (!document.querySelector('.modal.show')) {
+        fetch('/backup/status')
+        .then(response => response.json())
+        .then(data => {
+            // Update backup status if needed
+            if (data.hasNewBackups) {
+                location.reload();
+            }
+        })
+        .catch(() => {
+            // Ignore errors for auto-refresh
+        });
+    }
+}, 30000);
+</script> 

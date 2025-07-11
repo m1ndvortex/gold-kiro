@@ -1,0 +1,548 @@
+<div class="page-header">
+    <h1 class="page-title">مدیریت حساب‌های بانکی</h1>
+    <p>مدیریت و نظارت بر حساب‌های بانکی طلافروشی</p>
+
+</div>
+
+<!-- Bank Summary -->
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+    <div class="stat-card">
+        <div class="stat-number"><%= bankAccounts.length %></div>
+        <div class="stat-label">تعداد حساب‌های بانکی</div>
+        <div class="stat-icon" style="color: #17a2b8;">🏦</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number"><%= formatNumber(totalBalance) %></div>
+        <div class="stat-label">مجموع موجودی (ریال)</div>
+        <div class="stat-icon" style="color: #28a745;">💰</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">
+            <%= bankAccounts.reduce((sum, account) => sum + (account.transaction_count || 0), 0) %>
+        </div>
+        <div class="stat-label">کل تراکنش‌ها</div>
+        <div class="stat-icon" style="color: #ffc107;">📊</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">
+            <%= bankAccounts.reduce((sum, account) => sum + (account.unreconciled_count || 0), 0) %>
+        </div>
+        <div class="stat-label">تراکنش‌های تطبیق نشده</div>
+        <div class="stat-icon" style="color: #dc3545;">⚠️</div>
+    </div>
+</div>
+
+<!-- Add New Account Form (Hidden by default) -->
+<div class="card" id="addAccountCard" style="display: none;">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">افزودن حساب بانکی جدید</h5>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAddAccountForm()">
+                <i class="fas fa-times"></i> بستن
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="/accounting/bank-accounts/add" id="addAccountForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>نام بانک: *</label>
+                        <input type="text" name="bank_name" class="form-control" required placeholder="مثال: بانک ملی ایران">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>شماره حساب: *</label>
+                        <input type="text" name="account_number" class="form-control" required placeholder="0123456789">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>صاحب حساب: *</label>
+                        <input type="text" name="account_holder" class="form-control" required placeholder="نام صاحب حساب">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>نام شعبه:</label>
+                        <input type="text" name="branch_name" class="form-control" placeholder="نام شعبه (اختیاری)">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>نوع حساب: *</label>
+                        <select name="account_type" class="form-control" required>
+                            <option value="">انتخاب کنید</option>
+                            <option value="checking">جاری</option>
+                            <option value="savings">پس‌انداز</option>
+                            <option value="business">تجاری</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>موجودی اولیه (ریال):</label>
+                        <input type="number" name="initial_balance" class="form-control" value="0" min="0">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>یادداشت:</label>
+                <textarea name="notes" class="form-control" rows="2" placeholder="توضیحات اضافی در مورد این حساب"></textarea>
+            </div>
+            
+            <div class="form-group text-center">
+                <button type="button" class="btn btn-secondary" onclick="toggleAddAccountForm()">انصراف</button>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> ذخیره حساب
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bank Accounts Management -->
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">مدیریت حساب‌ها</h5>
+            <button class="btn btn-success" onclick="toggleAddAccountForm()" id="addAccountBtn">
+                <i class="fas fa-plus"></i> افزودن حساب بانکی جدید
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <% if (bankAccounts.length === 0) { %>
+            <div style="text-align: center; padding: 40px; color: #666;">
+                <h4>هیچ حساب بانکی‌ای ثبت نشده است</h4>
+                <p>برای شروع، اولین حساب بانکی خود را اضافه کنید</p>
+                <button class="btn btn-primary" onclick="toggleAddAccountForm()">
+                    <i class="fas fa-plus"></i> افزودن حساب بانکی
+                </button>
+            </div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th>نام بانک</th>
+                            <th>شماره حساب</th>
+                            <th>صاحب حساب</th>
+                            <th>نوع حساب</th>
+                            <th>موجودی جاری</th>
+                            <th>تراکنش‌ها</th>
+                            <th>وضعیت</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% bankAccounts.forEach(account => { %>
+                            <tr>
+                                <td>
+                                    <strong><%= account.bank_name %></strong>
+                                    <% if (account.branch_name) { %>
+                                        <br>
+                                        <small class="text-muted">شعبه: <%= account.branch_name %></small>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <code><%= account.account_number %></code>
+                                </td>
+                                <td>
+                                    <%= account.account_holder %>
+                                </td>
+                                <td>
+                                    <% if (account.account_type === 'checking') { %>
+                                        <span class="badge badge-primary">جاری</span>
+                                    <% } else if (account.account_type === 'savings') { %>
+                                        <span class="badge badge-success">پس‌انداز</span>
+                                    <% } else if (account.account_type === 'business') { %>
+                                        <span class="badge badge-info">تجاری</span>
+                                    <% } else { %>
+                                        <span class="badge badge-secondary"><%= account.account_type %></span>
+                                    <% } %>
+                                </td>
+                                <td style="text-align: left; font-weight: bold;">
+                                    <% const balance = parseFloat(account.current_balance || 0); %>
+                                    <span style="color: <%= balance >= 0 ? '#28a745' : '#dc3545' %>;">
+                                        <%= formatNumber(Math.abs(balance)) %> ریال
+                                        <% if (balance < 0) { %>
+                                            (منفی)
+                                        <% } %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">
+                                        <%= account.transaction_count || 0 %> تراکنش
+                                    </span>
+                                    <% if (account.unreconciled_count > 0) { %>
+                                        <br>
+                                        <span class="badge badge-warning">
+                                            <%= account.unreconciled_count %> تطبیق نشده
+                                        </span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (account.is_active) { %>
+                                        <span class="badge badge-success">فعال</span>
+                                    <% } else { %>
+                                        <span class="badge badge-secondary">غیرفعال</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-bars"></i>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            <h6 class="dropdown-header">
+                                                <i class="fas fa-university"></i> <%= account.bank_name %>
+                                            </h6>
+                                            <a class="dropdown-item" href="/accounting/bank-accounts/<%= account.id %>/transactions">
+                                                <i class="fas fa-chart-line text-info"></i> مشاهده تراکنش‌ها
+                                            </a>
+                                            <button class="dropdown-item" onclick="addBankTransaction(<%= account.id %>, '<%= account.bank_name %>')">
+                                                <i class="fas fa-plus-circle text-success"></i> افزودن تراکنش
+                                            </button>
+                                            <button class="dropdown-item" onclick="showEditModal(<%= account.id %>)">
+                                                <i class="fas fa-edit text-warning"></i> ویرایش حساب
+                                            </button>
+                                            <div class="dropdown-divider"></div>
+                                            <button class="dropdown-item" onclick="viewAccountDetails(<%= account.id %>)">
+                                                <i class="fas fa-eye text-primary"></i> جزئیات حساب
+                                            </button>
+                                            <div class="dropdown-divider"></div>
+                                            <button class="dropdown-item text-danger" onclick="deactivateAccount(<%= account.id %>)">
+                                                <i class="fas fa-ban"></i> غیرفعال‌سازی
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        عملیات سریع
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/accounting" class="btn btn-secondary">بازگشت به حسابداری</a>
+            <a href="/accounting/expenses" class="btn btn-warning">مدیریت هزینه‌ها</a>
+            <a href="/accounting/manual-transaction" class="btn btn-primary">قید دستی</a>
+            <button onclick="window.print()" class="btn btn-outline-primary">چاپ</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+<% if (typeof query !== 'undefined' && query.success) { %>
+    <div class="alert alert-success alert-dismissible fade show">
+        <% if (query.success === 'account_added') { %>
+            ✅ حساب بانکی با موفقیت اضافه شد.
+        <% } %>
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+<% } %>
+
+<% if (typeof query !== 'undefined' && query.error) { %>
+    <div class="alert alert-danger alert-dismissible fade show">
+        <% if (query.error === 'add_failed') { %>
+            ❌ خطا در افزودن حساب بانکی. لطفاً دوباره تلاش کنید.
+        <% } %>
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+<% } %>
+
+<script>
+// Bank account management functions
+const bankAccountsData = <%- JSON.stringify(bankAccounts) %>;
+
+// Toggle add account form visibility
+function toggleAddAccountForm() {
+    const card = document.getElementById('addAccountCard');
+    const btn = document.getElementById('addAccountBtn');
+    
+    if (card.style.display === 'none') {
+        card.style.display = 'block';
+        btn.innerHTML = '<i class="fas fa-times"></i> انصراف';
+        btn.className = 'btn btn-secondary';
+        // Scroll to form
+        card.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        card.style.display = 'none';
+        btn.innerHTML = '<i class="fas fa-plus"></i> افزودن حساب بانکی جدید';
+        btn.className = 'btn btn-success';
+        // Reset form
+        document.getElementById('addAccountForm').reset();
+    }
+}
+
+// Add bank transaction
+function addBankTransaction(accountId, bankName) {
+    // Redirect to transaction creation page
+    window.location.href = `/accounting/manual-transaction?bank_account=${accountId}`;
+}
+
+// Edit bank account
+function editBankAccount(accountId) {
+    const account = bankAccountsData.find(a => a.id === accountId);
+    if (!account) return alert('حساب پیدا نشد');
+    
+    // Create a proper edit form
+    const editData = {
+        bank_name: prompt('نام بانک:', account.bank_name),
+        account_holder: prompt('صاحب حساب:', account.account_holder),
+        branch_name: prompt('نام شعبه:', account.branch_name || ''),
+        account_type: account.account_type
+    };
+    
+    if (editData.bank_name === null || editData.account_holder === null) return;
+    
+    // Submit edit form
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/accounting/bank-accounts/${accountId}/edit`;
+    
+    Object.keys(editData).forEach(key => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = editData[key] || '';
+        form.appendChild(input);
+    });
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Deactivate account
+function deactivateAccount(accountId) {
+    if (!confirm('آیا از غیرفعال‌سازی این حساب اطمینان دارید؟\nاین عمل قابل بازگشت است.')) return;
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/accounting/bank-accounts/${accountId}/deactivate`;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Show edit modal
+function showEditModal(accountId) {
+    const account = bankAccountsData.find(a => a.id === accountId);
+    if (!account) return alert('حساب پیدا نشد');
+    
+    // Fill form data
+    document.getElementById('edit_bank_name').value = account.bank_name;
+    document.getElementById('edit_account_number').value = account.account_number;
+    document.getElementById('edit_account_holder').value = account.account_holder;
+    document.getElementById('edit_branch_name').value = account.branch_name || '';
+    document.getElementById('edit_account_type').value = account.account_type;
+    document.getElementById('edit_is_active').value = account.is_active ? '1' : '0';
+    document.getElementById('edit_notes').value = account.notes || '';
+    
+    // Set form action
+    document.getElementById('editAccountForm').action = `/accounting/bank-accounts/${accountId}/edit`;
+    
+    // Show modal
+    $('#editAccountModal').modal('show');
+}
+
+// View account details
+function viewAccountDetails(accountId) {
+    const account = bankAccountsData.find(a => a.id === accountId);
+    if (!account) return alert('حساب پیدا نشد');
+    
+    const balance = parseFloat(account.current_balance || 0);
+    const balanceColor = balance >= 0 ? 'success' : 'danger';
+    const balanceText = balance >= 0 ? 'مثبت' : 'منفی';
+    
+    const detailsHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">اطلاعات اصلی</h6>
+                        <p><strong>نام بانک:</strong> ${account.bank_name}</p>
+                        <p><strong>شماره حساب:</strong> <code>${account.account_number}</code></p>
+                        <p><strong>صاحب حساب:</strong> ${account.account_holder}</p>
+                        <p><strong>نام شعبه:</strong> ${account.branch_name || 'تعریف نشده'}</p>
+                        <p><strong>نوع حساب:</strong> 
+                            <span class="badge badge-info">${
+                                account.account_type === 'checking' ? 'جاری' :
+                                account.account_type === 'savings' ? 'پس‌انداز' : 'تجاری'
+                            }</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">وضعیت مالی</h6>
+                        <p><strong>موجودی جاری:</strong> 
+                            <span class="text-${balanceColor}">
+                                ${Math.abs(balance).toLocaleString('fa-IR')} ریال (${balanceText})
+                            </span>
+                        </p>
+                        <p><strong>تعداد تراکنش‌ها:</strong> ${account.transaction_count || 0}</p>
+                        <p><strong>تراکنش‌های تطبیق نشده:</strong> ${account.unreconciled_count || 0}</p>
+                        <p><strong>وضعیت:</strong> 
+                            <span class="badge badge-${account.is_active ? 'success' : 'secondary'}">
+                                ${account.is_active ? 'فعال' : 'غیرفعال'}
+                            </span>
+                        </p>
+                        <p><strong>تاریخ ایجاد:</strong> ${new Date(account.created_at).toLocaleDateString('fa-IR')}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        ${account.notes ? `
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title">یادداشت‌ها</h6>
+                    <p>${account.notes}</p>
+                </div>
+            </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('accountDetailsContent').innerHTML = detailsHTML;
+    $('#accountDetailsModal').modal('show');
+}
+
+// Auto-hide success/error messages
+setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        if (alert.classList.contains('fade')) {
+            alert.classList.remove('show');
+        }
+    });
+}, 5000);
+</script>
+
+<!-- Edit Account Modal -->
+<div class="modal fade" id="editAccountModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <form id="editAccountForm" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit"></i> ویرایش حساب بانکی
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>نام بانک: *</label>
+                                <input type="text" name="bank_name" id="edit_bank_name" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>شماره حساب: *</label>
+                                <input type="text" name="account_number" id="edit_account_number" class="form-control" required readonly>
+                                <small class="text-muted">شماره حساب قابل تغییر نیست</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>صاحب حساب: *</label>
+                                <input type="text" name="account_holder" id="edit_account_holder" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>نام شعبه:</label>
+                                <input type="text" name="branch_name" id="edit_branch_name" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>نوع حساب: *</label>
+                                <select name="account_type" id="edit_account_type" class="form-control" required>
+                                    <option value="checking">جاری</option>
+                                    <option value="savings">پس‌انداز</option>
+                                    <option value="business">تجاری</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>وضعیت حساب:</label>
+                                <select name="is_active" id="edit_is_active" class="form-control">
+                                    <option value="1">فعال</option>
+                                    <option value="0">غیرفعال</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>یادداشت:</label>
+                        <textarea name="notes" id="edit_notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> ذخیره تغییرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Account Details Modal -->
+<div class="modal fade" id="accountDetailsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle"></i> جزئیات حساب بانکی
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="accountDetailsContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">بستن</button>
+            </div>
+        </div>
+    </div>
+</div> 

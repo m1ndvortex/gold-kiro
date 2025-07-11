@@ -1,0 +1,780 @@
+<div class="page-header">
+    <h1 class="page-title">تنظیمات سیستم</h1>
+    <p>مدیریت تنظیمات و پیکربندی سیستم</p>
+</div>
+
+<style>
+.settings-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.settings-card {
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.settings-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ffd700, #ffb300);
+}
+
+.settings-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 15px;
+    color: white;
+    font-size: 20px;
+}
+
+.card-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.card-subtitle {
+    font-size: 14px;
+    color: #7f8c8d;
+    margin: 5px 0 0 0;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: white;
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #e83e8c);
+    color: white;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.3);
+}
+
+.backup-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.backup-option {
+    text-align: center;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.backup-option:hover {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.backup-option.selected {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.backup-option i {
+    font-size: 24px;
+    color: #667eea;
+    margin-bottom: 8px;
+}
+
+.backup-option span {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.progress-container {
+    display: none;
+    margin-top: 20px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.alert {
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: none;
+}
+
+.alert-success {
+    background: rgba(40, 167, 69, 0.1);
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-danger {
+    background: rgba(220, 53, 69, 0.1);
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.password-strength {
+    margin-top: 10px;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.strength-bar {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 3px;
+}
+
+.strength-weak { background: #dc3545; width: 25%; }
+.strength-fair { background: #ffc107; width: 50%; }
+.strength-good { background: #fd7e14; width: 75%; }
+.strength-strong { background: #28a745; width: 100%; }
+
+@media (max-width: 768px) {
+    .settings-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .settings-card {
+        padding: 20px;
+    }
+    
+    .backup-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+
+<div class="settings-container">
+    <!-- تغییر رمز عبور -->
+    <div class="settings-card">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-key"></i>
+            </div>
+            <div>
+                <h3 class="card-title">تغییر رمز عبور</h3>
+                <p class="card-subtitle">تغییر رمز عبور حساب کاربری</p>
+            </div>
+        </div>
+
+        <form id="changePasswordForm">
+            <div class="form-group">
+                <label for="currentPassword" class="form-label">رمز عبور فعلی</label>
+                <input type="password" id="currentPassword" name="currentPassword" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="newPassword" class="form-label">رمز عبور جدید</label>
+                <input type="password" id="newPassword" name="newPassword" class="form-control" required>
+                <div class="password-strength">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
+                <small id="strengthText" style="margin-top: 5px; display: block; color: #6c757d;"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword" class="form-label">تکرار رمز عبور جدید</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                تغییر رمز عبور
+            </button>
+        </form>
+    </div>
+
+    <!-- بک‌آپ سیستم -->
+    <div class="settings-card">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <div>
+                <h3 class="card-title">بک‌آپ سیستم</h3>
+                <p class="card-subtitle">پشتیبان‌گیری و بازیابی اطلاعات</p>
+            </div>
+        </div>
+
+        <div class="backup-options">
+            <div class="backup-option selected" data-type="full">
+                <i class="fas fa-database"></i>
+                <span>بک‌آپ کامل</span>
+            </div>
+            <div class="backup-option" data-type="data">
+                <i class="fas fa-table"></i>
+                <span>فقط داده‌ها</span>
+            </div>
+            <div class="backup-option" data-type="structure">
+                <i class="fas fa-project-diagram"></i>
+                <span>فقط ساختار</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="backupDescription" class="form-label">توضیحات بک‌آپ</label>
+            <input type="text" id="backupDescription" class="form-control" placeholder="توضیح اختیاری برای این بک‌آپ">
+        </div>
+
+        <button id="createBackupBtn" class="btn btn-success" style="width: 100%; margin-bottom: 15px;">
+            <i class="fas fa-download"></i>
+            ایجاد بک‌آپ
+        </button>
+
+        <div class="progress-container" id="backupProgress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <small style="margin-top: 5px; display: block; text-align: center;" id="progressText">در حال پردازش...</small>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+            <a href="/settings/backup/history" class="btn btn-warning">
+                <i class="fas fa-history"></i>
+                تاریخچه بک‌آپ
+            </a>
+            <button id="restoreBtn" class="btn btn-danger">
+                <i class="fas fa-upload"></i>
+                بازیابی
+            </button>
+        </div>
+    </div>
+
+    <!-- بخش سوم: امنیت و مانیتورینگ سیستم -->
+    <div class="settings-card">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div>
+                <h3 class="card-title">امنیت و مانیتورینگ سیستم</h3>
+                <p class="card-subtitle">تنظیمات امنیتی و نظارت بر عملکرد سیستم</p>
+            </div>
+        </div>
+
+        <div class="section-content">
+            <!-- تنظیمات جلسه کاری -->
+            <div class="form-group">
+                <label for="sessionTimeout">مدت اعتبار جلسه کاری (دقیقه):</label>
+                <select id="sessionTimeout" class="form-control">
+                    <option value="30">30 دقیقه</option>
+                    <option value="60" selected>1 ساعت</option>
+                    <option value="120">2 ساعت</option>
+                    <option value="240">4 ساعت</option>
+                    <option value="480">8 ساعت</option>
+                </select>
+                <small class="form-text text-muted">پس از این مدت، کاربر باید مجدداً وارد شود</small>
+            </div>
+
+            <!-- تنظیمات بک‌آپ خودکار -->
+            <div class="form-group">
+                <label for="autoBackupInterval">بک‌آپ خودکار:</label>
+                <select id="autoBackupInterval" class="form-control">
+                    <option value="disabled">غیرفعال</option>
+                    <option value="daily" selected>روزانه</option>
+                    <option value="weekly">هفتگی</option>
+                    <option value="monthly">ماهانه</option>
+                </select>
+                <small class="form-text text-muted">بک‌آپ خودکار هر شب ساعت 2:00 صبح انجام می‌شود</small>
+            </div>
+
+            <!-- حداکثر تعداد بک‌آپ -->
+            <div class="form-group">
+                <label for="maxBackups">حداکثر تعداد بک‌آپ نگهداری:</label>
+                <select id="maxBackups" class="form-control">
+                    <option value="5">5 فایل</option>
+                    <option value="10" selected>10 فایل</option>
+                    <option value="20">20 فایل</option>
+                    <option value="50">50 فایل</option>
+                </select>
+                <small class="form-text text-muted">فایل‌های قدیمی‌تر خودکار حذف می‌شوند</small>
+            </div>
+
+            <!-- آمار سیستم -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-title">وضعیت دیتابیس</div>
+                        <div class="info-value" id="dbStatus">✅ متصل و سالم</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-title">حجم دیتابیس</div>
+                        <div class="info-value" id="dbSize">📊 در حال محاسبه...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-title">آخرین بک‌آپ</div>
+                        <div class="info-value" id="lastBackup">🕐 در حال بررسی...</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-card">
+                        <div class="info-title">آخرین ورود</div>
+                        <div class="info-value" id="lastLogin">👤 الان</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- دکمه‌های کاربردی -->
+            <div class="form-actions mt-4">
+                <button type="button" onclick="clearSystemCache()" class="btn btn-warning">
+                    🗑️ پاک کردن کش سیستم
+                </button>
+                <button type="button" onclick="checkSystemHealth()" class="btn btn-info">
+                    🔍 بررسی سلامت سیستم
+                </button>
+                <button type="button" onclick="optimizeDatabase()" class="btn btn-success">
+                    ⚡ بهینه‌سازی دیتابیس
+                </button>
+            </div>
+
+            <div class="save-section">
+                <button type="button" onclick="saveSecuritySettings()" class="btn btn-primary btn-lg">
+                    💾 ذخیره تنظیمات امنیتی
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal برای بازیابی -->
+<div class="modal fade" id="restoreModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">بازیابی بک‌آپ</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="restoreFile" class="form-label">انتخاب فایل بک‌آپ</label>
+                    <input type="file" id="restoreFile" class="form-control" accept=".sql">
+                </div>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>توجه:</strong> بازیابی بک‌آپ تمام اطلاعات فعلی را جایگزین خواهد کرد.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">انصراف</button>
+                <button type="button" id="confirmRestore" class="btn btn-danger">بازیابی</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تغییر رمز عبور
+document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        alert('رمز عبور جدید و تکرار آن یکسان نیستند');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        alert('رمز عبور باید حداقل 6 کاراکتر باشد');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/settings/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                currentPassword,
+                newPassword
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('رمز عبور با موفقیت تغییر یافت');
+            document.getElementById('changePasswordForm').reset();
+            document.getElementById('strengthBar').className = 'strength-bar';
+            document.getElementById('strengthText').textContent = '';
+        } else {
+            alert(result.message || 'خطا در تغییر رمز عبور');
+        }
+    } catch (error) {
+        alert('خطا در ارتباط با سرور');
+    }
+});
+
+// بررسی قدرت رمز عبور
+document.getElementById('newPassword').addEventListener('input', function(e) {
+    const password = e.target.value;
+    const strengthBar = document.getElementById('strengthBar');
+    const strengthText = document.getElementById('strengthText');
+    
+    let strength = 0;
+    let text = '';
+    
+    if (password.length >= 6) strength++;
+    if (password.match(/[a-z]+/)) strength++;
+    if (password.match(/[A-Z]+/)) strength++;
+    if (password.match(/[0-9]+/)) strength++;
+    if (password.match(/[^a-zA-Z0-9]+/)) strength++;
+    
+    strengthBar.className = 'strength-bar';
+    
+    if (strength < 2) {
+        strengthBar.classList.add('strength-weak');
+        text = 'ضعیف';
+    } else if (strength < 3) {
+        strengthBar.classList.add('strength-fair');
+        text = 'متوسط';
+    } else if (strength < 4) {
+        strengthBar.classList.add('strength-good');
+        text = 'خوب';
+    } else {
+        strengthBar.classList.add('strength-strong');
+        text = 'قوی';
+    }
+    
+    strengthText.textContent = password.length > 0 ? `قدرت رمز: ${text}` : '';
+});
+
+// انتخاب نوع بک‌آپ
+document.querySelectorAll('.backup-option').forEach(option => {
+    option.addEventListener('click', function() {
+        document.querySelectorAll('.backup-option').forEach(o => o.classList.remove('selected'));
+        this.classList.add('selected');
+    });
+});
+
+// ایجاد بک‌آپ
+document.getElementById('createBackupBtn').addEventListener('click', async function() {
+    const backupType = document.querySelector('.backup-option.selected').dataset.type;
+    const description = document.getElementById('backupDescription').value;
+    
+    const progressContainer = document.getElementById('backupProgress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    
+    progressContainer.style.display = 'block';
+    this.disabled = true;
+    
+    try {
+        const response = await fetch('/settings/backup/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                type: backupType,
+                description
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // شبیه‌سازی progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressFill.style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    progressText.textContent = 'بک‌آپ با موفقیت ایجاد شد';
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        progressFill.style.width = '0%';
+                        this.disabled = false;
+                        document.getElementById('backupDescription').value = '';
+                    }, 2000);
+                }
+            }, 200);
+        } else {
+            alert(result.message || 'خطا در ایجاد بک‌آپ');
+            progressContainer.style.display = 'none';
+            this.disabled = false;
+        }
+    } catch (error) {
+        alert('خطا در ارتباط با سرور');
+        progressContainer.style.display = 'none';
+        this.disabled = false;
+    }
+});
+
+// بازیابی بک‌آپ
+document.getElementById('restoreBtn').addEventListener('click', function() {
+    $('#restoreModal').modal('show');
+});
+
+document.getElementById('confirmRestore').addEventListener('click', async function() {
+    const fileInput = document.getElementById('restoreFile');
+    
+    if (!fileInput.files[0]) {
+        alert('لطفاً فایل بک‌آپ را انتخاب کنید');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('backupFile', fileInput.files[0]);
+    
+    try {
+        const response = await fetch('/settings/backup/restore', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('بازیابی با موفقیت انجام شد');
+            $('#restoreModal').modal('hide');
+            location.reload();
+        } else {
+            alert(result.message || 'خطا در بازیابی');
+        }
+    } catch (error) {
+        alert('خطا در ارتباط با سرور');
+    }
+});
+
+// Security & Monitoring Functions
+function saveSecuritySettings() {
+    const sessionTimeout = document.getElementById('sessionTimeout').value;
+    const autoBackupInterval = document.getElementById('autoBackupInterval').value;
+    const maxBackups = document.getElementById('maxBackups').value;
+
+    const settings = {
+        sessionTimeout,
+        autoBackupInterval,
+        maxBackups
+    };
+
+    fetch('/settings/security', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(settings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', 'تنظیمات امنیتی با موفقیت ذخیره شد');
+        } else {
+            showAlert('error', data.message || 'خطا در ذخیره تنظیمات');
+        }
+    })
+    .catch(error => {
+        showAlert('error', 'خطا در ارتباط با سرور');
+    });
+}
+
+function clearSystemCache() {
+    if (confirm('آیا از پاک کردن کش سیستم مطمئن هستید؟')) {
+        fetch('/settings/clear-cache', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', 'کش سیستم با موفقیت پاک شد');
+            } else {
+                showAlert('error', data.message || 'خطا در پاک کردن کش');
+            }
+        });
+    }
+}
+
+function checkSystemHealth() {
+    showAlert('info', 'در حال بررسی سلامت سیستم...');
+    
+    fetch('/settings/system-health')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            let message = `✅ سیستم سالم است\n📊 دیتابیس: ${data.dbStatus}\n💾 حجم: ${data.dbSize}\n⚡ عملکرد: ${data.performance}`;
+            showAlert('success', message);
+            
+            // Update UI
+            document.getElementById('dbStatus').textContent = data.dbStatus;
+            document.getElementById('dbSize').textContent = data.dbSize;
+        } else {
+            showAlert('error', data.message || 'خطا در بررسی سیستم');
+        }
+    });
+}
+
+function optimizeDatabase() {
+    if (confirm('آیا از بهینه‌سازی دیتابیس مطمئن هستید؟\nاین عملیات ممکن است چند دقیقه طول بکشد.')) {
+        showAlert('info', 'بهینه‌سازی دیتابیس در حال انجام...');
+        
+        fetch('/settings/optimize-db', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', `بهینه‌سازی با موفقیت انجام شد\n📈 بهبود: ${data.improvement}`);
+            } else {
+                showAlert('error', data.message || 'خطا در بهینه‌سازی');
+            }
+        });
+    }
+}
+
+// Load system info on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Load last backup info
+    fetch('/settings/last-backup-info')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.lastBackup) {
+            document.getElementById('lastBackup').textContent = `📅 ${data.lastBackup}`;
+        } else {
+            document.getElementById('lastBackup').textContent = '❌ هرگز';
+        }
+    });
+
+    // Load database size
+    fetch('/settings/db-size')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('dbSize').textContent = `📊 ${data.size}`;
+        }
+    });
+});
+</script> 

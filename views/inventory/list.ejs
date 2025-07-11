@@ -1,0 +1,227 @@
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="page-title">مدیریت انبار</h1>
+            <p>مشاهده و مدیریت کالاهای موجود در انبار</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="/inventory/categories" class="btn btn-primary">
+                📁 مدیریت دسته‌بندی‌ها
+            </a>
+            <a href="/inventory/add" class="btn btn-success">
+                ➕ افزودن کالای جدید
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="search-filters">
+    <div class="filters-row">
+        <div class="form-group">
+            <label class="form-label">جستجو در نام کالا</label>
+            <input type="text" id="searchInput" class="form-control" placeholder="نام کالا را وارد کنید...">
+        </div>
+        <div class="form-group">
+            <label class="form-label">نوع کالا</label>
+            <select id="typeFilter" class="form-control">
+                <option value="">همه انواع</option>
+                <% types.forEach(type => { %>
+                    <option value="<%= type.category_name %>"><%= type.category_name %></option>
+                <% }) %>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">عیار</label>
+            <select id="caratFilter" class="form-control">
+                <option value="">همه عیارها</option>
+                <option value="18">18 عیار</option>
+                <option value="21">21 عیار</option>
+                <option value="24">24 عیار</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button type="button" class="btn btn-secondary" onclick="clearFilters()">
+                پاک کردن فیلترها
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Table -->
+<div class="table-container">
+    <table class="table" id="inventoryTable">
+        <thead>
+            <tr>
+                <th>تصویر</th>
+                <th>کد کالا</th>
+                <th>نام کالا</th>
+                <th>نوع</th>
+                <th>عیار</th>
+                <th>موجودی</th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (items && items.length > 0) { %>
+                <% items.forEach(item => { %>
+                    <tr>
+                        <td>
+                            <% if (item.image_path) { %>
+                                <img src="<%= item.image_path %>" alt="<%= item.item_name %>">
+                            <% } else { %>
+                                <div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                                    <span style="color: #999;">بدون تصویر</span>
+                                </div>
+                            <% } %>
+                        </td>
+                        <td><strong><%= item.item_code %></strong></td>
+                        <td><%= item.item_name %></td>
+                        <td><%= item.type_name %></td>
+                        <td><%= item.carat %> عیار</td>
+                        <td>
+                            <span class="<%= item.current_quantity > 0 ? 'text-success' : 'text-danger' %>">
+                                <%= item.current_quantity %>
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/inventory/view/<%= item.id %>" class="btn btn-sm btn-primary">
+                                مشاهده
+                            </a>
+                            <a href="/inventory/edit/<%= item.id %>" class="btn btn-sm btn-secondary">
+                                ویرایش
+                            </a>
+                            <button onclick="deleteItem('<%= item.id %>', '<%= item.item_code %>')" 
+                                    class="btn btn-sm btn-danger" data-item-name="<%= item.item_name %>">
+                                حذف
+                            </button>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
+                        هیچ کالایی در انبار موجود نیست
+                    </td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<script>
+// Search and filter functionality
+document.getElementById('searchInput').addEventListener('input', filterTable);
+document.getElementById('typeFilter').addEventListener('change', filterTable);
+document.getElementById('caratFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const typeFilter = document.getElementById('typeFilter').value;
+    const caratFilter = document.getElementById('caratFilter').value;
+    
+    const table = document.getElementById('inventoryTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const name = row.cells[2].textContent.toLowerCase();
+        const type = row.cells[3].textContent;
+        const carat = row.cells[4].textContent;
+        
+        let showRow = true;
+        
+        if (searchTerm && !name.includes(searchTerm)) {
+            showRow = false;
+        }
+        
+        if (typeFilter && !type.includes(typeFilter)) {
+            showRow = false;
+        }
+        
+        if (caratFilter && !carat.includes(caratFilter)) {
+            showRow = false;
+        }
+        
+        row.style.display = showRow ? '' : 'none';
+    }
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('typeFilter').value = '';
+    document.getElementById('caratFilter').value = '';
+    filterTable();
+}
+
+// Delete item function
+async function deleteItem(itemId, itemCode) {
+    const button = event.target;
+    const itemName = button.getAttribute('data-item-name');
+    
+    // Confirm deletion
+    if (!confirm(`آیا مطمئن هستید که می‌خواهید کالای "${itemName}" (کد: ${itemCode}) را حذف کنید؟\n\nتوجه: اگر این کالا قبلاً فروخته شده باشد، قابل حذف نخواهد بود.`)) {
+        return;
+    }
+    
+    // Disable button during request
+    button.disabled = true;
+    button.textContent = 'در حال حذف...';
+    
+    try {
+        const response = await fetch(`/inventory/delete/${itemId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success message
+            alert(result.message);
+            // Reload page to update the list
+            window.location.reload();
+        } else {
+            // Show error message
+            alert('خطا: ' + result.message);
+            // Re-enable button
+            button.disabled = false;
+            button.textContent = 'حذف';
+        }
+        
+    } catch (error) {
+        console.error('Delete error:', error);
+        alert('خطا در حذف کالا. لطفاً دوباره تلاش کنید.');
+        // Re-enable button
+        button.disabled = false;
+        button.textContent = 'حذف';
+    }
+}
+</script>
+
+<style>
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: 1px solid #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.btn-danger:disabled {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+    margin: 2px;
+}
+</style> 

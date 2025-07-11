@@ -1,0 +1,220 @@
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header">
+                <h2>افزودن کالای جدید</h2>
+                <a href="/inventory" class="btn btn-secondary">بازگشت به انبار</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <!-- نمایش پیغام خطا -->
+                    <% if (typeof error !== 'undefined' && error) { %>
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <%= error %>
+                        </div>
+                    <% } %>
+                    
+                    <form action="/inventory/add" method="POST" enctype="multipart/form-data" id="inventoryForm">
+                        
+                        <!-- دسته‌بندی اصلی -->
+                        <div class="form-group">
+                            <label for="category_id" class="required">دسته‌بندی اصلی *</label>
+                            <select name="category_id" id="category_id" class="form-control" required onchange="updateSubcategories()">
+                                <option value="">انتخاب کنید</option>
+                                <% mainCategories.forEach(category => { %>
+                                    <option value="<%= category.id %>" 
+                                            <%= (typeof formData !== 'undefined' && formData && formData.category_id == category.id) ? 'selected' : '' %>>
+                                        <%= category.name_persian %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                            <small class="text-muted">ابتدا دسته‌بندی‌ها را تعریف کنید</small>
+                        </div>
+
+                        <!-- زیر دسته‌بندی -->
+                        <div class="form-group">
+                            <label for="subcategory_id">زیر دسته‌بندی</label>
+                            <select name="subcategory_id" id="subcategory_id" class="form-control">
+                                <option value="">انتخاب کنید (اختیاری)</option>
+                            </select>
+                        </div>
+
+                        <!-- عیار -->
+                        <div class="form-group">
+                            <label for="carat" class="required">عیار *</label>
+                            <input type="number" name="carat" id="carat" class="form-control" 
+                                   value="<%= (typeof formData !== 'undefined' && formData && formData.carat) ? formData.carat : '18' %>" 
+                                   min="1" max="24" step="0.1" required>
+                            <small class="text-muted">عیار طلا (پیش فرض: 18 عیار)</small>
+                        </div>
+
+                        <!-- موجودی اولیه -->
+                        <div class="form-group">
+                            <label for="current_quantity" class="required">موجودی اولیه *</label>
+                            <input type="number" name="current_quantity" id="current_quantity" 
+                                   class="form-control" value="<%= (typeof formData !== 'undefined' && formData && formData.current_quantity) ? formData.current_quantity : '1' %>" 
+                                   min="1" required>
+                            <small class="text-muted">تعداد کالایی که در انبار موجود است</small>
+                        </div>
+
+                        <!-- تصویر کالا -->
+                        <div class="form-group">
+                            <label for="image">تصویر کالا</label>
+                            <input type="file" name="image" id="image" class="form-control" 
+                                   accept="image/*" onchange="previewImage(this)">
+                            <small class="text-muted">فرمت‌های مجاز: JPG, PNG, GIF</small>
+                            
+                            <!-- پیش‌نمایش تصویر -->
+                            <div id="imagePreview" style="margin-top: 10px; display: none;">
+                                <img id="preview" src="" alt="پیش‌نمایش" style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">افزودن کالا</button>
+                            <a href="/inventory" class="btn btn-secondary">انصراف</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// پیش‌نمایش تصویر
+function previewImage(input) {
+    const preview = document.getElementById('preview');
+    const previewDiv = document.getElementById('imagePreview');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            previewDiv.style.display = 'block';
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        previewDiv.style.display = 'none';
+    }
+}
+
+// داده‌های زیردسته‌ها در JavaScript
+const allSubcategories = [
+    <% subCategories.forEach((sub, index) => { %>
+        {
+            id: <%= sub.id %>,
+            name: '<%= sub.name_persian.replace(/'/g, "\\'") %>',
+            parent_id: <%= sub.parent_id || 'null' %>
+        }<%= index < subCategories.length - 1 ? ',' : '' %>
+    <% }); %>
+];
+
+// به‌روزرسانی زیردسته‌ها بر اساس دسته اصلی
+function updateSubcategories() {
+    const categoryId = document.getElementById('category_id').value;
+    const subcategorySelect = document.getElementById('subcategory_id');
+    
+    // پاک کردن گزینه‌های قبلی
+    subcategorySelect.innerHTML = '<option value="">انتخاب کنید (اختیاری)</option>';
+    
+    if (!categoryId) return;
+    
+    // فیلتر کردن زیردسته‌ها بر اساس دسته اصلی
+    const filteredSubs = allSubcategories.filter(sub => sub.parent_id == categoryId);
+    
+    if (filteredSubs.length > 0) {
+        filteredSubs.forEach(sub => {
+            const option = document.createElement('option');
+            option.value = sub.id;
+            option.textContent = sub.name;
+            subcategorySelect.appendChild(option);
+        });
+        
+        // نمایش فیلد زیردسته‌بندی
+        document.querySelector('[for="subcategory_id"]').parentElement.style.display = 'block';
+    } else {
+        // مخفی کردن فیلد زیردسته‌بندی اگر زیردسته‌ای وجود ندارد
+        document.querySelector('[for="subcategory_id"]').parentElement.style.display = 'none';
+    }
+}
+
+// validation فرم
+document.getElementById('inventoryForm').addEventListener('submit', function(e) {
+    const categoryId = document.getElementById('category_id').value;
+    const carat = document.getElementById('carat').value;
+    const quantity = document.getElementById('current_quantity').value;
+    
+    if (!categoryId) {
+        alert('لطفاً دسته‌بندی اصلی را انتخاب کنید');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!carat || carat < 1 || carat > 24) {
+        alert('عیار باید بین 1 تا 24 باشد');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!quantity || quantity < 1) {
+        alert('موجودی باید حداقل 1 باشد');
+        e.preventDefault();
+        return;
+    }
+});
+</script>
+
+<style>
+.required {
+    font-weight: bold;
+}
+
+.required::after {
+    content: " *";
+    color: red;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.form-actions .btn {
+    margin: 0 10px;
+    min-width: 120px;
+}
+
+.card {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border: none;
+    border-radius: 10px;
+}
+
+.card-body {
+    padding: 30px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #eee;
+}
+</style> 
