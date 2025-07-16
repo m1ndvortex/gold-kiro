@@ -856,7 +856,7 @@ app.post('/sales/create', requireAuth, async (req, res) => {
                 total_weight, plastic_weight, final_weight,
                 total_labor_cost, total_profit, total_tax, manual_total_weight,
                 notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
             invoice_number, customer_id, invoice_date, invoice_date_shamsi, daily_gold_rate, 
             calculatedSubtotal, discount_amount || 0, finalTotal,
@@ -877,7 +877,7 @@ app.post('/sales/create', requireAuth, async (req, res) => {
                     weight, carat, description,
                     manual_weight, daily_gold_price, labor_cost, profit_amount, tax_amount,
                     final_unit_price, labor_percentage, tax_percentage
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `, [
                 invoiceId, item.id, item.quantity, unitPrice, item.totalPrice,
                 item.weight || 0, item.carat || 18, item.name || '',
@@ -2026,46 +2026,78 @@ app.get('/accounting/customer/:id', requireAuth, async (req, res) => {
             return res.status(404).send('مشتری یافت نشد');
         }
         
+        // Enhanced transactions query with proper payment tracking
         const [transactions] = await db.execute(`
-            SELECT ft.*, i.invoice_number
-            FROM financial_transactions ft
-            LEFT JOIN invoices i ON ft.related_invoice_id = i.id
-            WHERE ft.related_customer_id = ?
-            ORDER BY ft.transaction_date DESC, ft.created_at DESC
+            SELECT 
+                'sale' as transaction_type,
+                i.grand_total as amount,
+                i.invoice_date as transaction_date,
+                CONCAT('فاکتور شماره ', i.invoice_number) as description,
+                i.invoice_number,
+                i.id as related_invoice_id
+            FROM invoices i
+            WHERE i.customer_id = ? AND i.status = 'active'
+            
+            UNION ALL
+            
+            SELECT 
+                'payment' as transaction_type,
+                p.amount,
+                p.payment_date as transaction_date,
+                COALESCE(p.description, CONCAT('پرداخت فاکتور ', i.invoice_number)) as description,
+                i.invoice_number,
+                p.invoice_id as related_invoice_id
+            FROM payments p
+            LEFT JOIN invoices i ON p.invoice_id = i.id
+            WHERE p.customer_id = ?
+            
+            ORDER BY transaction_date DESC
+        `, [req.params.id, req.params.id]);
+        
+        // Get invoices with enhanced payment status
+        const [invoices] = await db.execute(`
+            SELECT 
+                i.*,
+                IFNULL(i.paid_amount, 0) as paid_amount,
+                IFNULL(i.remaining_amount, i.grand_total) as remaining_amount,
+                IFNULL(i.payment_status, 'unpaid') as payment_status
+            FROM invoices i
+            WHERE i.customer_id = ? AND i.status = 'active'
+            ORDER BY i.created_at DESC
         `, [req.params.id]);
         
-        const [payments] = await db.execute(`
-            SELECT * FROM payments 
-            WHERE customer_id = ?
-            ORDER BY payment_date DESC, created_at DESC
+        // Calculate accurate summary using customer table data
+        const [summaryData] = await db.execute(`
+            SELECT 
+                total_purchases,
+                total_payments,
+                current_balance
+            FROM customers 
+            WHERE id = ?
         `, [req.params.id]);
         
-        // محاسبه خلاصه مالی
-        const [invoicesSummary] = await db.execute(`
-            SELECT COALESCE(SUM(grand_total), 0) as total_purchases
-            FROM invoices 
-            WHERE customer_id = ? AND status = 'active'
-        `, [req.params.id]);
-        
-        const totalPayments = payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
-        const totalPurchases = Number(invoicesSummary[0].total_purchases);
-        const currentBalance = totalPurchases - totalPayments;
+        const summary = summaryData[0] || { total_purchases: 0, total_payments: 0, current_balance: 0 };
 
         res.render('accounting/customer-detail', {
             title: `حسابداری - ${customer[0].full_name}`,
             user: req.session.user,
             customer: customer[0],
-            transactions: transactions,
-            payments: payments,
-            invoices: [], // برای سازگاری
+            transactions: transactions.map(t => ({
+                ...t,
+                formatted_date: moment(t.transaction_date).format('jYYYY/jMM/jDD')
+            })),
+            invoices: invoices.map(inv => ({
+                ...inv,
+                formatted_date: moment(inv.invoice_date).format('jYYYY/jMM/jDD')
+            })),
             summary: {
-                totalPurchases: totalPurchases,
-                totalPayments: totalPayments,
-                currentBalance: currentBalance
+                totalPurchases: summary.total_purchases,
+                totalPayments: summary.total_payments,
+                currentBalance: summary.current_balance
             }
         });
     } catch (error) {
-        console.error('Customer detail error:', error);
+        console.error('Enhanced customer detail error:', error);
         res.status(500).send('خطا در بارگذاری جزئیات مشتری');
     }
 });
@@ -2143,51 +2175,107 @@ app.get('/accounting/reports', requireAuth, async (req, res) => {
     }
 });
 
-// Add Payment
+// Enhanced Payment Processing - Inline Implementation
+
 app.post('/accounting/add-payment', requireAuth, async (req, res) => {
     const connection = await db.getConnection();
     
     try {
         await connection.beginTransaction();
         
-        const { customer_id, amount, payment_method, payment_date, description } = req.body;
+        const { customer_id, invoice_id, amount, payment_method, payment_date, description } = req.body;
         
-        // Add payment record
-        await connection.execute(`
-            INSERT INTO payments (customer_id, amount, payment_method, payment_date, description)
-            VALUES (?, ?, ?, ?, ?)
-        `, [customer_id, amount, payment_method, payment_date, description || '']);
+        // Validate required fields
+        if (!customer_id || !amount || !payment_date) {
+            throw new Error('اطلاعات ضروری ناقص است');
+        }
         
-        // Update customer balance
+        const paymentAmount = parseFloat(amount);
+        
+        // 1. Insert payment record
+        const [paymentResult] = await connection.execute(`
+            INSERT INTO payments (customer_id, invoice_id, amount, payment_method, payment_date, description)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `, [customer_id, invoice_id || null, paymentAmount, payment_method || 'cash', payment_date, description || 'پرداخت مشتری']);
+        
+        // 2. If payment is for a specific invoice, update invoice payment status
+        if (invoice_id) {
+            // Get current invoice data
+            const [invoiceData] = await connection.execute(`
+                SELECT grand_total, IFNULL(paid_amount, 0) as current_paid
+                FROM invoices WHERE id = ?
+            `, [invoice_id]);
+            
+            if (invoiceData.length > 0) {
+                const invoice = invoiceData[0];
+                const newPaidAmount = parseFloat(invoice.current_paid) + paymentAmount;
+                const remainingAmount = parseFloat(invoice.grand_total) - newPaidAmount;
+                
+                let paymentStatus = 'unpaid';
+                if (newPaidAmount >= parseFloat(invoice.grand_total)) {
+                    paymentStatus = 'paid';
+                } else if (newPaidAmount > 0) {
+                    paymentStatus = 'partial';
+                }
+                
+                // Update invoice payment status
+                await connection.execute(`
+                    UPDATE invoices 
+                    SET paid_amount = ?, remaining_amount = ?, payment_status = ?
+                    WHERE id = ?
+                `, [newPaidAmount, Math.max(0, remainingAmount), paymentStatus, invoice_id]);
+            }
+        }
+        
+        // 3. Update customer balance
         await connection.execute(`
             UPDATE customers 
             SET total_payments = total_payments + ?,
                 current_balance = current_balance - ?
             WHERE id = ?
-        `, [amount, amount, customer_id]);
+        `, [paymentAmount, paymentAmount, customer_id]);
         
-        // Add financial transaction
+        // 4. Add financial transaction record
         const transactionId = `PAY-${Date.now()}`;
         await connection.execute(`
             INSERT INTO financial_transactions (
                 transaction_id, transaction_type, description, amount, 
-                related_customer_id, transaction_date
-            ) VALUES (?, 'payment', ?, ?, ?, ?)
+                related_customer_id, related_invoice_id, transaction_date
+            ) VALUES (?, 'payment', ?, ?, ?, ?, ?)
         `, [
             transactionId,
-            description || `دریافت پرداخت`,
-            amount,
+            description || 'دریافت پرداخت',
+            paymentAmount,
             customer_id,
+            invoice_id || null,
             payment_date
         ]);
         
         await connection.commit();
-        res.redirect(`/accounting/customer/${customer_id}`);
+        
+        // Check if request expects JSON response
+        if (req.headers['content-type'] && req.headers['content-type'].includes('application/json')) {
+            res.json({ 
+                success: true, 
+                message: 'پرداخت با موفقیت ثبت و تمام حساب‌ها بروزرسانی شد' 
+            });
+        } else {
+            res.redirect(`/accounting/customer/${customer_id}?success=1`);
+        }
         
     } catch (error) {
         await connection.rollback();
-        console.error('Add payment error:', error);
-        res.status(500).send('خطا در ثبت پرداخت: ' + error.message);
+        console.error('Payment processing error:', error);
+        
+        // Check if request expects JSON response
+        if (req.headers['content-type'] && req.headers['content-type'].includes('application/json')) {
+            res.status(500).json({ 
+                success: false, 
+                message: 'خطا در ثبت پرداخت: ' + error.message 
+            });
+        } else {
+            res.status(500).send('خطا در ثبت پرداخت: ' + error.message);
+        }
     } finally {
         connection.release();
     }

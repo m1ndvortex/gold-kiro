@@ -526,7 +526,7 @@ function recordPayment(invoiceId, invoiceNumber, remainingAmount) {
     
     if (amount && !isNaN(amount) && Number(amount) > 0) {
         // ارسال درخواست ثبت پرداخت
-        fetch('/accounting/record-payment', {
+        fetch('/accounting/add-payment', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -535,7 +535,9 @@ function recordPayment(invoiceId, invoiceNumber, remainingAmount) {
                 invoice_id: invoiceId,
                 customer_id: '<%= customer.id %>',
                 amount: Number(amount),
-                payment_date: new Date().toISOString().split('T')[0]
+                payment_method: 'cash',
+                payment_date: new Date().toISOString().split('T')[0],
+                description: `پرداخت فاکتور ${invoiceNumber}`
             })
         })
         .then(response => response.json())
