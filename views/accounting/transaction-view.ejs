@@ -1,30 +1,62 @@
+
+
+<%
+function getTypeLabel(type) {
+    const labels = {
+        'payment': 'دریافت وجه',
+        'receipt': 'پرداخت وجه',
+        'purchase': 'خرید', 
+        'sale': 'فروش',
+        'transfer': 'انتقال',
+        'adjustment': 'تعدیل حساب'
+    };
+    return labels[type] || type;
+}
+
+function getPaymentMethodLabel(method) {
+    const labels = {
+        'cash': 'نقد',
+        'check': 'چک',
+        'bank_transfer': 'انتقال بانکی',
+        'card': 'کارت',
+        'online': 'آنلاین'
+    };
+    return labels[method] || method;
+}
+
+function formatNumber(num) {
+    return new Intl.NumberFormat('fa-IR').format(num);
+}
+%>
+
+<!-- Page Header -->
 <div class="page-header">
     <div class="d-flex justify-content-between align-items-center">
+        <h1 class="page-title">
+            <i class="fas fa-eye"></i>
+            جزئیات تراکنش #<%= transaction.transaction_number %>
+        </h1>
         <div>
-            <h1 class="page-title">جزئیات تراکنش</h1>
-            <p>شماره تراکنش: <strong><%= transaction.transaction_number %></strong></p>
-        </div>
-        <div>
-            <a href="/accounting/transactions/<%= transaction.id %>/edit" class="btn btn-warning">
+            <a href="/accounting/journal-entries" class="btn btn-secondary">
+                <i class="fas fa-arrow-right"></i> بازگشت
+            </a>
+            <a href="/accounting/transactions/<%= transaction.id %>/edit" class="btn btn-primary">
                 <i class="fas fa-edit"></i> ویرایش
             </a>
             <button type="button" class="btn btn-danger" onclick="confirmDelete()">
                 <i class="fas fa-trash"></i> حذف
             </button>
-            <a href="/accounting/journal-entries" class="btn btn-secondary">
-                <i class="fas fa-arrow-right"></i> بازگشت
-            </a>
         </div>
     </div>
 </div>
 
-<!-- Transaction Details -->
 <div class="row">
-    <div class="col-lg-8">
+    <!-- Transaction Details -->
+    <div class="col-md-8">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fas fa-file-invoice"></i>
+                    <i class="fas fa-info-circle"></i>
                     اطلاعات تراکنش
                 </h5>
             </div>
@@ -32,37 +64,64 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="info-group">
-                            <label>تاریخ تراکنش:</label>
+                            <label>شماره تراکنش:</label>
+                            <span><%= transaction.transaction_number %></span>
+                        </div>
+                        
+                        <div class="info-group">
+                            <label>تاریخ:</label>
                             <span><%= new Date(transaction.transaction_date).toLocaleDateString('fa-IR') %></span>
                         </div>
+                        
                         <div class="info-group">
                             <label>نوع تراکنش:</label>
-                            <span class="badge badge-primary"><%= getTypeLabel(transaction.transaction_type) %></span>
+                            <span class="badge badge-info"><%= getTypeLabel(transaction.transaction_type) %></span>
                         </div>
+                        
                         <div class="info-group">
                             <label>مبلغ:</label>
                             <span class="amount"><%= formatNumber(transaction.amount) %> ریال</span>
                         </div>
                     </div>
+                    
                     <div class="col-md-6">
-                        <% if (transaction.party_name) { %>
+                        <% if (transaction.party_type && transaction.party_name) { %>
                         <div class="info-group">
-                            <label>طرف تراکنش:</label>
+                            <label>طرف معامله:</label>
                             <span><%= transaction.party_name %></span>
                         </div>
                         <% } %>
+                        
                         <% if (transaction.payment_method) { %>
                         <div class="info-group">
                             <label>روش پرداخت:</label>
                             <span><%= getPaymentMethodLabel(transaction.payment_method) %></span>
                         </div>
                         <% } %>
+                        
                         <% if (transaction.reference_number) { %>
                         <div class="info-group">
                             <label>شماره مرجع:</label>
                             <span><%= transaction.reference_number %></span>
                         </div>
                         <% } %>
+                        
+                        <div class="info-group">
+                            <label>وضعیت:</label>
+                            <div class="status-badge">
+                                <% 
+                                let badgeClass = 'secondary';
+                                let statusText = transaction.status;
+                                switch(transaction.status) {
+                                    case 'completed': badgeClass = 'success'; statusText = 'تکمیل شده'; break;
+                                    case 'pending': badgeClass = 'warning'; statusText = 'در انتظار'; break;
+                                    case 'draft': badgeClass = 'info'; statusText = 'پیش‌نویس'; break;
+                                    case 'cancelled': badgeClass = 'danger'; statusText = 'لغو شده'; break;
+                                }
+                                %>
+                                <span class="badge badge-<%= badgeClass %>"><%= statusText %></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -77,56 +136,17 @@
                     <p><%= transaction.notes %></p>
                 </div>
                 <% } %>
-                
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <div class="info-group">
-                            <label>ایجاد شده توسط:</label>
-                            <span><%= transaction.created_by_name %></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="info-group">
-                            <label>تاریخ ایجاد:</label>
-                            <span><%= new Date(transaction.created_at).toLocaleDateString('fa-IR') %></span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
     
-    <div class="col-lg-4">
-        <!-- Status Card -->
+    <!-- Actions Sidebar -->
+    <div class="col-md-4">
         <div class="card">
             <div class="card-header">
                 <h6 class="mb-0">
-                    <i class="fas fa-info-circle"></i>
-                    وضعیت تراکنش
-                </h6>
-            </div>
-            <div class="card-body text-center">
-                <div class="status-badge">
-                    <% if (transaction.status === 'completed') { %>
-                        <i class="fas fa-check-circle text-success fa-3x"></i>
-                        <h6 class="mt-2 text-success">تکمیل شده</h6>
-                    <% } else if (transaction.status === 'pending') { %>
-                        <i class="fas fa-clock text-warning fa-3x"></i>
-                        <h6 class="mt-2 text-warning">در انتظار</h6>
-                    <% } else if (transaction.status === 'cancelled') { %>
-                        <i class="fas fa-times-circle text-danger fa-3x"></i>
-                        <h6 class="mt-2 text-danger">لغو شده</h6>
-                    <% } %>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Quick Actions -->
-        <div class="card mt-3">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="fas fa-bolt"></i>
-                    عملیات سریع
+                    <i class="fas fa-tools"></i>
+                    عملیات
                 </h6>
             </div>
             <div class="card-body">
@@ -145,6 +165,7 @@
 </div>
 
 <!-- Journal Entries -->
+<% if (journalEntries && journalEntries.length > 0) { %>
 <div class="card mt-4">
     <div class="card-header">
         <h5 class="mb-0">
@@ -192,6 +213,7 @@
         </div>
     </div>
 </div>
+<% } %>
 
 <!-- Delete Confirmation Form -->
 <form id="deleteForm" method="POST" action="/accounting/transactions/<%= transaction.id %>/delete" style="display: none;">
@@ -269,62 +291,4 @@ function duplicateTransaction() {
     
     window.location.href = '/accounting/manual-transaction?' + params.toString();
 }
-
-function getTypeLabel(type) {
-    const labels = {
-        'payment': 'دریافت وجه',
-        'receipt': 'پرداخت وجه', 
-        'purchase': 'خرید',
-        'sale': 'فروش',
-        'transfer': 'انتقال',
-        'adjustment': 'تعدیل حساب'
-    };
-    return labels[type] || type;
-}
-
-function getPaymentMethodLabel(method) {
-    const labels = {
-        'cash': 'نقد',
-        'check': 'چک',
-        'bank_transfer': 'انتقال بانکی',
-        'card': 'کارت',
-        'online': 'آنلاین'
-    };
-    return labels[method] || method;
-}
-
-function formatNumber(num) {
-    return new Intl.NumberFormat('fa-IR').format(num);
-}
 </script>
-
-<%- include('../layout') %>
-
-<% 
-function getTypeLabel(type) {
-    const labels = {
-        'payment': 'دریافت وجه',
-        'receipt': 'پرداخت وجه',
-        'purchase': 'خرید', 
-        'sale': 'فروش',
-        'transfer': 'انتقال',
-        'adjustment': 'تعدیل حساب'
-    };
-    return labels[type] || type;
-}
-
-function getPaymentMethodLabel(method) {
-    const labels = {
-        'cash': 'نقد',
-        'check': 'چک',
-        'bank_transfer': 'انتقال بانکی',
-        'card': 'کارت',
-        'online': 'آنلاین'
-    };
-    return labels[method] || method;
-}
-
-function formatNumber(num) {
-    return new Intl.NumberFormat('fa-IR').format(num);
-}
-%> 

@@ -2637,50 +2637,41 @@ app.get('/accounting/account-ledger/:id', requireAuth, async (req, res) => {
         
         // Build date filter
         let dateFilter = '';
-        let params = [accountId, accountId];
+        let dateParams = [];
         
         if (startDate) {
-            dateFilter += ' AND t.transaction_date >= ?';
-            params.push(startDate);
+            dateFilter += ' AND je.entry_date >= ?';
+            dateParams.push(startDate);
         }
         
         if (endDate) {
-            dateFilter += ' AND t.transaction_date <= ?';
-            params.push(endDate);
+            dateFilter += ' AND je.entry_date <= ?';
+            dateParams.push(endDate);
         }
         
         // Get account transactions
         const [transactions] = await db.execute(`
-            SELECT t.*, 
+            SELECT je.*, jed.debit_amount, jed.credit_amount, jed.description as detail_description,
+                   ca_opposite.account_name_persian as opposite_account,
                    CASE 
-                       WHEN t.debit_account_id = ? THEN t.amount 
-                       ELSE 0 
-                   END as debit_amount,
-                   CASE 
-                       WHEN t.credit_account_id = ? THEN t.amount 
-                       ELSE 0 
-                   END as credit_amount,
-                   CASE 
-                       WHEN t.debit_account_id = ? THEN ca_credit.account_name_persian 
-                       ELSE ca_debit.account_name_persian 
-                   END as opposite_account,
-                   CASE 
-                       WHEN t.party_type = 'customer' THEN c.full_name
-                       WHEN t.party_type = 'supplier' THEN s.company_name
-                       WHEN t.party_type = 'employee' THEN e.full_name
-                       WHEN t.party_type = 'other' THEN op.party_name
+                       WHEN je.reference_type = 'transaction' AND t.party_type = 'customer' THEN c.full_name
+                       WHEN je.reference_type = 'transaction' AND t.party_type = 'supplier' THEN s.company_name
+                       WHEN je.reference_type = 'transaction' AND t.party_type = 'employee' THEN e.full_name
+                       WHEN je.reference_type = 'transaction' AND t.party_type = 'other' THEN op.party_name
                        ELSE NULL
                    END as party_name
-            FROM transactions t
-            LEFT JOIN chart_of_accounts ca_debit ON t.debit_account_id = ca_debit.id
-            LEFT JOIN chart_of_accounts ca_credit ON t.credit_account_id = ca_credit.id
+            FROM journal_entries je
+            JOIN journal_entry_details jed ON je.id = jed.journal_entry_id
+            LEFT JOIN journal_entry_details jed_opposite ON je.id = jed_opposite.journal_entry_id AND jed_opposite.account_id != ?
+            LEFT JOIN chart_of_accounts ca_opposite ON jed_opposite.account_id = ca_opposite.id
+            LEFT JOIN transactions t ON je.reference_type = 'transaction' AND je.reference_id = t.id
             LEFT JOIN customers c ON t.party_type = 'customer' AND t.party_id = c.id
             LEFT JOIN suppliers s ON t.party_type = 'supplier' AND t.party_id = s.id
             LEFT JOIN employees e ON t.party_type = 'employee' AND t.party_id = e.id
             LEFT JOIN other_parties op ON t.party_type = 'other' AND t.party_id = op.id
-            WHERE (t.debit_account_id = ? OR t.credit_account_id = ?) ${dateFilter}
-            ORDER BY t.transaction_date DESC, t.created_at DESC
-        `, [...params, accountId, accountId]);
+            WHERE jed.account_id = ? ${dateFilter}
+            ORDER BY je.entry_date DESC, je.created_at DESC
+        `, [accountId, accountId, ...dateParams]);
         
         // Calculate running balance
         let runningBalance = parseFloat(account[0].balance || 0);
@@ -4487,5 +4478,53 @@ app.get('/settings/db-size', requireAuth, async (req, res) => {
         res.json({ success: true, size: `${size} MB` });
     } catch (error) {
         res.json({ success: false, size: 'نامشخص' });
+    }
+});
+
+// Add this after the /sales/new route (around line 755)
+
+// API to get customer financial info
+app.get('/api/customer/:id/financial', requireAuth, async (req, res) => {
+    try {
+        const [customer] = await db.execute(`
+            SELECT id, customer_code, full_name, current_balance, total_purchases, total_payments
+            FROM customers 
+            WHERE id = ?
+        `, [req.params.id]);
+
+        if (customer.length === 0) {
+            return res.status(404).json({ error: 'مشتری یافت نشد' });
+        }
+
+        const customerData = customer[0];
+        const balance = parseFloat(customerData.current_balance || 0);
+        
+        // تعیین وضعیت مالی
+        let balanceStatus;
+        let balanceType;
+        if (balance > 0) {
+            balanceStatus = 'بدهکار';
+            balanceType = 'debt';
+        } else if (balance < 0) {
+            balanceStatus = 'بستانکار';
+            balanceType = 'credit';
+        } else {
+            balanceStatus = 'تسویه';
+            balanceType = 'clear';
+        }
+
+        res.json({
+            id: customerData.id,
+            customerCode: customerData.customer_code,
+            fullName: customerData.full_name,
+            currentBalance: Math.abs(balance),
+            balanceStatus: balanceStatus,
+            balanceType: balanceType,
+            totalPurchases: parseFloat(customerData.total_purchases || 0),
+            totalPayments: parseFloat(customerData.total_payments || 0)
+        });
+    } catch (error) {
+        console.error('Error fetching customer financial info:', error);
+        res.status(500).json({ error: 'خطا در دریافت اطلاعات مالی مشتری' });
     }
 });

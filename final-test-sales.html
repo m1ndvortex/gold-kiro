@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست نهایی صفحه فروش</title>
+    <style>
+        body { 
+            font-family: Tahoma, Arial, sans-serif; 
+            padding: 20px; 
+            direction: rtl; 
+            text-align: right;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .success { border-left-color: #28a745; }
+        .warning { border-left-color: #ffc107; }
+        .error { border-left-color: #dc3545; }
+        h2 { color: #333; }
+        h3 { color: #666; }
+        ul { margin: 10px 0; }
+        li { margin: 5px 0; }
+        .code { 
+            background: #e9ecef; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 تست نهایی صفحه فروش و فاکتور</h1>
+    
+    <div class="test-section success">
+        <h2>✅ تغییرات اعمال شده</h2>
+        <ul>
+            <li><strong>Dropdown Positioning:</strong> حالا dropdown در پایین صفحه به سمت بالا باز می‌شود</li>
+            <li><strong>تاریخ شمسی:</strong> تاریخ‌های قدیمی خودکار به شمسی تبدیل می‌شوند</li>
+            <li><strong>فیلدهای جستجو:</strong> تاریخ‌ها حالا شمسی هستند</li>
+            <li><strong>حذف فاکتور:</strong> از fetch API استفاده می‌کند</li>
+        </ul>
+    </div>
+
+    <div class="test-section warning">
+        <h2>🧪 مراحل تست</h2>
+        <h3>1. تست Dropdown:</h3>
+        <ul>
+            <li>روی دکمه سه نقطه در فاکتورهای بالا کلیک کنید - باید کاملاً باز شود</li>
+            <li>روی دکمه سه نقطه در آخرین فاکتور کلیک کنید - باید به سمت بالا باز شود</li>
+            <li>تمام گزینه‌ها باید نمایش داده شوند: مشاهده، ویرایش، چاپ، PDF، لغو، حذف</li>
+        </ul>
+        
+        <h3>2. تست تاریخ شمسی:</h3>
+        <ul>
+            <li>تاریخ‌های فاکتورها باید شمسی باشند (آبی رنگ برای تبدیل شده‌ها)</li>
+            <li>فیلدهای "از تاریخ" و "تا تاریخ" باید placeholder شمسی داشته باشند</li>
+        </ul>
+        
+        <h3>3. تست حذف فاکتور:</h3>
+        <ul>
+            <li>فقط برای Admin قابل مشاهده است</li>
+            <li>دو بار تأیید می‌خواهد</li>
+            <li>باید بدون خطا کار کند</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 اگر مشکلی وجود دارد:</h2>
+        <ul>
+            <li><strong>Console را باز کنید</strong> (F12 → Console)</li>
+            <li>دنبال این پیام‌ها باشید:
+                <ul>
+                    <li><span class="code">"Sales page JavaScript loaded successfully"</span></li>
+                    <li><span class="code">"toggleDropdown called for invoice: [ID]"</span></li>
+                </ul>
+            </li>
+            <li>اگر خطایی دیدید، آن را گزارش دهید</li>
+        </ul>
+    </div>
+
+    <div class="test-section success">
+        <h2>📋 خلاصه بهبودها</h2>
+        <ul>
+            <li>✅ Dropdown positioning برای فاکتورهای پایین صفحه</li>
+            <li>✅ تبدیل خودکار تاریخ میلادی به شمسی</li>
+            <li>✅ فیلدهای جستجوی تاریخ شمسی</li>
+            <li>✅ حذف فاکتور با fetch API</li>
+            <li>✅ Event handling بهبود یافته</li>
+            <li>✅ Responsive design</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 مرحله بعد</h2>
+        <p>اگر همه چیز درست کار می‌کند، می‌توانید:</p>
+        <ul>
+            <li>از عملکرد dropdown در تمام فاکتورها اطمینان حاصل کنید</li>
+            <li>تاریخ‌های شمسی را بررسی کنید</li>
+            <li>عملکرد حذف فاکتور را تست کنید (اختیاری)</li>
+        </ul>
+    </div>
+
+    <script>
+        console.log('🧪 Test page loaded - Ready for sales page testing');
+        console.log('📝 Check the sales page at: http://localhost:3000/sales');
+    </script>
+</body>
+</html>

@@ -24,12 +24,12 @@
             <input type="text" id="customerSearch" class="form-control" placeholder="نام مشتری را وارد کنید...">
         </div>
         <div class="form-group">
-            <label class="form-label">از تاریخ</label>
-            <input type="date" id="fromDate" class="form-control">
+            <label class="form-label">از تاریخ (شمسی)</label>
+            <input type="text" id="fromDate" class="form-control" placeholder="1403/01/01">
         </div>
         <div class="form-group">
-            <label class="form-label">تا تاریخ</label>
-            <input type="date" id="toDate" class="form-control">
+            <label class="form-label">تا تاریخ (شمسی)</label>
+            <input type="text" id="toDate" class="form-control" placeholder="1403/12/29">
         </div>
         <div class="form-group">
             <button type="button" class="btn btn-secondary" onclick="clearFilters()">
@@ -103,7 +103,9 @@
                             <% if (invoice.invoice_date_shamsi) { %>
                                 <%= invoice.invoice_date_shamsi %>
                             <% } else { %>
-                                <%= moment(invoice.invoice_date).format('YYYY/MM/DD') %>
+                                <span class="shamsi-date" data-gregorian="<%= invoice.invoice_date %>">
+                                    <%= moment(invoice.invoice_date).format('YYYY/MM/DD') %>
+                                </span>
                             <% } %>
                         </td>
                         <td><%= formatNumber(invoice.gold_rate) %> ریال</td>
@@ -119,7 +121,7 @@
                         </td>
                         <td>
                             <div class="actions-dropdown">
-                                <button class="btn-actions" onclick="toggleDropdown('<%= invoice.id %>')">
+                                <button class="btn-actions" onclick="toggleDropdown('<%= invoice.id %>', event)">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M12 6C12.5523 6 13 5.55228 13 5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5C11 5.55228 11.4477 6 12 6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -252,7 +254,9 @@
 }
 
 .dropdown-menu {
-    position: fixed;
+    position: absolute;
+    top: 100%;
+    right: 0;
     background: white;
     border: 1px solid #dee2e6;
     border-radius: 8px;
@@ -262,6 +266,12 @@
     z-index: 9999;
     display: none;
     padding: 8px 0;
+}
+
+/* Auto-adjust dropdown position if near bottom of viewport */
+.dropdown-menu.dropdown-up {
+    top: auto;
+    bottom: 100%;
 }
 
 .dropdown-menu.show {
@@ -318,10 +328,29 @@
     flex-shrink: 0;
 }
 
+/* Table container fix for dropdown */
+.table-container {
+    overflow: visible;
+}
+
+/* Ensure table doesn't clip dropdowns */
+table {
+    overflow: visible;
+}
+
+tbody {
+    overflow: visible;
+}
+
+tr {
+    overflow: visible;
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
     .table-container {
         overflow-x: auto;
+        overflow-y: visible;
     }
     
     .actions-dropdown {
@@ -339,11 +368,64 @@
 </style>
 
 <script>
-// Search functionality
-document.getElementById('invoiceSearch').addEventListener('input', filterTable);
-document.getElementById('customerSearch').addEventListener('input', filterTable);
-document.getElementById('fromDate').addEventListener('change', filterTable);
-document.getElementById('toDate').addEventListener('change', filterTable);
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const invoiceSearch = document.getElementById('invoiceSearch');
+    const customerSearch = document.getElementById('customerSearch');
+    const fromDate = document.getElementById('fromDate');
+    const toDate = document.getElementById('toDate');
+    
+    if (invoiceSearch) invoiceSearch.addEventListener('input', filterTable);
+    if (customerSearch) customerSearch.addEventListener('input', filterTable);
+    if (fromDate) fromDate.addEventListener('change', filterTable);
+    if (toDate) toDate.addEventListener('change', filterTable);
+    
+    console.log('Sales page JavaScript loaded successfully');
+    
+    // Convert Gregorian dates to Persian for old records
+    convertGregorianToPersian();
+});
+
+// Function to convert Gregorian dates to Persian
+function convertGregorianToPersian() {
+    const shamsiElements = document.querySelectorAll('.shamsi-date');
+    
+    shamsiElements.forEach(function(element) {
+        const gregorianDate = element.getAttribute('data-gregorian');
+        if (gregorianDate && typeof moment !== 'undefined') {
+            try {
+                // Use moment-jalaali to convert to Persian date
+                const persianDate = moment(gregorianDate).format('jYYYY/jMM/jDD');
+                element.textContent = persianDate;
+                element.style.color = '#007bff'; // Blue color to indicate converted date
+                element.title = 'تاریخ تبدیل شده از میلادی: ' + gregorianDate;
+            } catch (error) {
+                console.error('Error converting date:', error);
+                // Fallback to simple conversion
+                const date = new Date(gregorianDate);
+                const persianDate = convertToSimplePersian(date);
+                if (persianDate) {
+                    element.textContent = persianDate;
+                    element.style.color = '#28a745'; // Green color for simple conversion
+                }
+            }
+        }
+    });
+}
+
+// Simple Persian date conversion fallback
+function convertToSimplePersian(date) {
+    try {
+        // Simple approximation - not accurate but better than Gregorian
+        const year = date.getFullYear() - 621;
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}/${month}/${day}`;
+    } catch (error) {
+        return null;
+    }
+}
 
 function filterTable() {
     const invoiceSearch = document.getElementById('invoiceSearch').value.toLowerCase();
@@ -399,18 +481,46 @@ function clearFilters() {
 }
 
 // Dropdown functionality
-function toggleDropdown(invoiceId) {
+function toggleDropdown(invoiceId, event) {
+    // Prevent event bubbling
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    
+    console.log('toggleDropdown called for invoice:', invoiceId);
+    
     // Close all other dropdowns first
     const allDropdowns = document.querySelectorAll('.dropdown-menu');
     allDropdowns.forEach(function(dropdown) {
         if (dropdown.id !== `dropdown-${invoiceId}`) {
             dropdown.classList.remove('show');
+            dropdown.classList.remove('dropdown-up');
         }
     });
     
     // Toggle the clicked dropdown
     const dropdown = document.getElementById(`dropdown-${invoiceId}`);
-    dropdown.classList.toggle('show');
+    if (dropdown) {
+        dropdown.classList.toggle('show');
+        
+        // Check if dropdown should open upward
+        if (dropdown.classList.contains('show')) {
+            const rect = dropdown.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            
+            // If dropdown would go below viewport, open it upward
+            if (rect.bottom > viewportHeight - 20) {
+                dropdown.classList.add('dropdown-up');
+            } else {
+                dropdown.classList.remove('dropdown-up');
+            }
+        }
+        
+        console.log('Dropdown toggled, current classes:', dropdown.className);
+    } else {
+        console.error('Dropdown not found for invoice:', invoiceId);
+    }
 }
 
 // Close dropdowns when clicking outside
@@ -447,20 +557,27 @@ function cancelInvoice(invoiceId) {
 function deleteInvoice(invoiceId) {
     if (confirm('آیا از حذف این فاکتور مطمئن هستید؟ این عمل کاملاً غیرقابل برگشت است.')) {
         if (confirm('هشدار: حذف فاکتور تمام اطلاعات مربوط به آن را از بین می‌برد. آیا مطمئن هستید؟')) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/sales/delete/${invoiceId}`;
-            form.style.display = 'none';
-            
-            // Add CSRF token if needed
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_method';
-            csrfInput.value = 'DELETE';
-            form.appendChild(csrfInput);
-            
-            document.body.appendChild(form);
-            form.submit();
+            // Use fetch API for DELETE request
+            fetch(`/sales/delete/${invoiceId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Reload the page to show updated list
+                    window.location.reload();
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(text || 'خطا در حذف فاکتور');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('خطا در حذف فاکتور: ' + error.message);
+            });
         }
     }
 }

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dropdown</title>
+    <link rel="stylesheet" href="http://localhost:3000/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://localhost:3000/css/style.css">
+    <style>
+        body { padding: 50px; }
+        
+        .actions-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .btn-actions {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #6c757d;
+        }
+
+        .btn-actions:hover {
+            background: #e9ecef;
+            color: #495057;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+            min-width: 200px;
+            max-width: 250px;
+            z-index: 9999;
+            display: none;
+            padding: 8px 0;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            text-decoration: none;
+            color: #495057;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: right;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+            color: #495057;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>تست عملکرد Dropdown</h1>
+    
+    <div class="actions-dropdown">
+        <button class="btn-actions" onclick="toggleDropdown('test')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 6C12.5523 6 13 5.55228 13 5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5C11 5.55228 11.4477 6 12 6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 20C12.5523 20 13 19.5523 13 19C13 18.4477 12.5523 18 12 18C11.4477 18 11 18.4477 11 19C11 19.5523 11.4477 20 12 20Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+        <div class="dropdown-menu" id="dropdown-test">
+            <a href="#" class="dropdown-item">مشاهده</a>
+            <a href="#" class="dropdown-item">ویرایش</a>
+            <a href="#" class="dropdown-item">چاپ</a>
+            <a href="#" class="dropdown-item">حذف</a>
+        </div>
+    </div>
+
+    <script src="http://localhost:3000/js/jquery.min.js"></script>
+    <script src="http://localhost:3000/js/bootstrap.bundle.min.js"></script>
+    <script>
+        console.log('jQuery loaded:', typeof $ !== 'undefined');
+        console.log('Bootstrap loaded:', typeof bootstrap !== 'undefined');
+        
+        function toggleDropdown(invoiceId) {
+            console.log('toggleDropdown called with:', invoiceId);
+            
+            // Close all other dropdowns first
+            const allDropdowns = document.querySelectorAll('.dropdown-menu');
+            allDropdowns.forEach(function(dropdown) {
+                if (dropdown.id !== `dropdown-${invoiceId}`) {
+                    dropdown.classList.remove('show');
+                }
+            });
+            
+            // Toggle the clicked dropdown
+            const dropdown = document.getElementById(`dropdown-${invoiceId}`);
+            console.log('Dropdown element:', dropdown);
+            
+            if (dropdown) {
+                dropdown.classList.toggle('show');
+                console.log('Dropdown classes after toggle:', dropdown.className);
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            console.log('Document clicked, target:', event.target);
+            if (!event.target.closest('.actions-dropdown')) {
+                const allDropdowns = document.querySelectorAll('.dropdown-menu');
+                allDropdowns.forEach(function(dropdown) {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+        
+        // Test on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, testing dropdown...');
+        });
+    </script>
+</body>
+</html>

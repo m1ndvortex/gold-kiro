@@ -160,16 +160,7 @@
             font-size: 14px;
         }
 
-        .footer-info {
-            position: absolute;
-            bottom: 20mm;
-            right: 20mm;
-            left: 20mm;
-            text-align: center;
-            border-top: 1px solid #000;
-            padding-top: 10px;
-            font-size: 10px;
-        }
+
 
         @media print {
             body {
@@ -344,7 +335,7 @@
                 </div>
                 <div class="total-row">
                     <span class="total-label">حساب نهایی:</span>
-                    <span class="total-value"><%= formatNumber(invoice.grand_total + (invoice.customer_balance || 0)) %></span>
+                    <span class="total-value"><%= formatNumber((parseFloat(invoice.grand_total) || 0) + (parseFloat(invoice.customer_balance) || 0)) %></span>
                 </div>
             </div>
             
@@ -353,7 +344,7 @@
                     <span class="total-label">مجموع:</span>
                     <span class="total-value">
                         <%= formatNumber(invoice.subtotal) %> 
-                        <span style="font-size: 10px;">(<%= Math.round(invoice.subtotal/1000) %> هزار تومان)</span>
+                        <span style="font-size: 10px;">(<%= formatNumber(Math.round(invoice.subtotal/10)) %> تومان)</span>
                     </span>
                 </div>
                 <div class="total-row">
@@ -367,15 +358,7 @@
             </div>
         </div>
 
-        <!-- Footer -->
-        <div class="footer-info">
-            <div style="margin-bottom: 10px;">
-                شماره ملی فروشنده: ۲۳۸_۷۰۳_۱۷۲۶
-            </div>
-            <div>
-                www.zarbesah.com &nbsp;&nbsp;&nbsp; تولید: ۰۹۱۶۱۲۴۷۸ طراحی و چاپ
-            </div>
-        </div>
+
     </div>
 
     <script>

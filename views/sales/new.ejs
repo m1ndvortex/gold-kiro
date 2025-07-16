@@ -38,7 +38,7 @@
 
                         <div class="form-group">
                             <label for="customer_id" class="form-label">مشتری *</label>
-                            <select id="customer_id" name="customer_id" class="form-control" required>
+                            <select id="customer_id" name="customer_id" class="form-control" required onchange="loadCustomerFinancialInfo()">
                                 <option value="">انتخاب مشتری</option>
                                 <% customers.forEach(customer => { %>
                                     <option value="<%= customer.id %>" <%= (typeof formData !== 'undefined' && formData && formData.customer_id == customer.id) ? 'selected' : '' %>>
@@ -62,6 +62,30 @@
                             <input type="number" id="daily_gold_rate" name="daily_gold_rate" class="form-control" 
                                    value="<%= (typeof formData !== 'undefined' && formData && formData.daily_gold_rate) ? formData.daily_gold_rate : (goldRate || 3500000) %>" 
                                    required placeholder="مثال: 3500000">
+                        </div>
+                    </div>
+
+                    <!-- Customer Financial Info -->
+                    <div id="customer-financial-info" style="display: none; margin-top: 20px; padding: 15px; border: 2px solid #e9ecef; border-radius: 8px; background-color: #f8f9fa;">
+                        <h5 style="margin-bottom: 15px; color: #495057;">وضعیت مالی مشتری</h5>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="customer-balance-info">
+                                <label class="form-label">وضعیت حساب:</label>
+                                <div id="customer-balance-display" class="balance-display">
+                                    <span class="balance-amount">0</span>
+                                    <span class="balance-status">تسویه</span>
+                                </div>
+                            </div>
+                            <div class="customer-totals-info">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                    <span>کل خریدها:</span>
+                                    <span id="customer-total-purchases">0 ریال</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>کل پرداختی‌ها:</span>
+                                    <span id="customer-total-payments">0 ریال</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -526,6 +550,48 @@
             }
         }
 
+        // Load customer financial information
+        async function loadCustomerFinancialInfo() {
+            const customerId = document.getElementById('customer_id').value;
+            const infoDiv = document.getElementById('customer-financial-info');
+            
+            if (!customerId) {
+                infoDiv.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/customer/${customerId}/financial`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Update balance display
+                    const balanceDisplay = document.getElementById('customer-balance-display');
+                    const balanceAmount = document.querySelector('.balance-amount');
+                    const balanceStatus = document.querySelector('.balance-status');
+                    
+                    balanceAmount.textContent = formatNumber(data.currentBalance) + ' ریال';
+                    balanceStatus.textContent = data.balanceStatus;
+                    
+                    // Set appropriate style based on balance type
+                    balanceDisplay.className = `balance-display ${data.balanceType}`;
+                    
+                    // Update totals
+                    document.getElementById('customer-total-purchases').textContent = formatNumber(data.totalPurchases) + ' ریال';
+                    document.getElementById('customer-total-payments').textContent = formatNumber(data.totalPayments) + ' ریال';
+                    
+                    // Show the info panel
+                    infoDiv.style.display = 'block';
+                } else {
+                    console.error('Error loading customer info:', data.error);
+                    infoDiv.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching customer financial info:', error);
+                infoDiv.style.display = 'none';
+            }
+        }
+
         // Form validation
         document.getElementById('invoiceForm').addEventListener('submit', function(e) {
             if (selectedItems.length === 0) {
@@ -605,6 +671,56 @@
             color: #721c24;
             background-color: #f8d7da;
             border-color: #f5c6cb;
+        }
+
+        /* Customer Financial Info Styles */
+        .balance-display {
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .balance-display.debt {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .balance-display.credit {
+            background-color: #d1edff;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .balance-display.clear {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .balance-amount {
+            display: block;
+            font-size: 1.1em;
+            margin-bottom: 3px;
+        }
+
+        .balance-status {
+            display: block;
+            font-size: 0.9em;
+            font-weight: normal;
+            opacity: 0.8;
+        }
+
+        .customer-totals-info {
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        #customer-financial-info h5 {
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 8px;
         }
     </style>
 </body>
