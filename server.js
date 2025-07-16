@@ -2088,7 +2088,7 @@ app.get('/accounting/customer/:id', requireAuth, async (req, res) => {
             })),
             invoices: invoices.map(inv => ({
                 ...inv,
-                formatted_date: moment(inv.invoice_date).format('jYYYY/jMM/jDD')
+                formatted_date: inv.invoice_date_shamsi || moment(inv.invoice_date).format('jYYYY/jMM/jDD')
             })),
             summary: {
                 totalPurchases: summary.total_purchases,

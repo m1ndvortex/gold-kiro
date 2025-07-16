@@ -345,7 +345,7 @@
             <div class="card-icon">🛒</div>
             <div class="card-title">کل خریدها</div>
             <div class="card-amount neutral">
-                <%= Number(summary.totalPurchases).toLocaleString('fa-IR') %> تومان
+                <%= Number(summary.totalPurchases).toLocaleString('fa-IR') %> ریال
             </div>
         </div>
         
@@ -353,7 +353,7 @@
             <div class="card-icon">💳</div>
             <div class="card-title">کل پرداخت‌ها</div>
             <div class="card-amount positive">
-                <%= Number(summary.totalPayments).toLocaleString('fa-IR') %> تومان
+                <%= Number(summary.totalPayments).toLocaleString('fa-IR') %> ریال
             </div>
         </div>
         
@@ -363,7 +363,7 @@
             </div>
             <div class="card-title">موجودی حساب</div>
             <div class="card-amount <%= summary.currentBalance >= 0 ? 'positive' : 'negative' %>">
-                <%= Number(summary.currentBalance).toLocaleString('fa-IR') %> تومان
+                <%= Number(summary.currentBalance).toLocaleString('fa-IR') %> ریال
             </div>
             <% if (summary.currentBalance < 0) { %>
                 <div style="color: #dc3545; font-size: 0.9em;">بدهکار</div>
@@ -413,7 +413,7 @@
                     <td>
                         <span class="<%= transaction.transaction_type === 'payment' || transaction.transaction_type === 'refund' ? 'amount-negative' : 'amount-positive' %>">
                             <%= transaction.transaction_type === 'payment' || transaction.transaction_type === 'refund' ? '-' : '+' %>
-                            <%= Number(transaction.amount).toLocaleString('fa-IR') %> تومان
+                            <%= Number(transaction.amount).toLocaleString('fa-IR') %> ریال
                         </span>
                     </td>
                     <td>
@@ -471,12 +471,12 @@
                     <td><%= invoice.formatted_date %></td>
                     <td>
                         <span class="amount-positive">
-                            <%= Number(invoice.grand_total).toLocaleString('fa-IR') %> تومان
+                            <%= Number(invoice.grand_total).toLocaleString('fa-IR') %> ریال
                         </span>
                     </td>
                     <td>
                         <span class="<%= Number(invoice.remaining_amount) > 0 ? 'amount-negative' : 'amount-positive' %>">
-                            <%= Number(invoice.remaining_amount).toLocaleString('fa-IR') %> تومان
+                            <%= Number(invoice.remaining_amount).toLocaleString('fa-IR') %> ریال
                         </span>
                     </td>
                     <td>
@@ -521,10 +521,26 @@
 </div>
 
 <script>
-function recordPayment(invoiceId, invoiceNumber, remainingAmount) {
-    const amount = prompt(`ثبت پرداخت برای فاکتور ${invoiceNumber}\n\nمبلغ باقیمانده: ${Number(remainingAmount).toLocaleString('fa-IR')} تومان\n\nمبلغ پرداخت را وارد کنید:`, remainingAmount);
+// Function to convert Persian numbers to English
+function persianToEnglish(str) {
+    const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+    const englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     
-    if (amount && !isNaN(amount) && Number(amount) > 0) {
+    let result = str.toString();
+    for (let i = 0; i < persianNumbers.length; i++) {
+        result = result.replace(new RegExp(persianNumbers[i], 'g'), englishNumbers[i]);
+    }
+    return result;
+}
+
+function recordPayment(invoiceId, invoiceNumber, remainingAmount) {
+    const amount = prompt(`ثبت پرداخت برای فاکتور ${invoiceNumber}\n\nمبلغ باقیمانده: ${Number(remainingAmount).toLocaleString('fa-IR')} ریال\n\nمبلغ پرداخت را وارد کنید (ریال):`, remainingAmount);
+    
+    if (amount) {
+        // Convert Persian numbers to English
+        const englishAmount = persianToEnglish(amount.replace(/,/g, ''));
+        
+        if (!isNaN(englishAmount) && Number(englishAmount) > 0) {
         // ارسال درخواست ثبت پرداخت
         fetch('/accounting/add-payment', {
             method: 'POST',
@@ -534,7 +550,7 @@ function recordPayment(invoiceId, invoiceNumber, remainingAmount) {
             body: JSON.stringify({
                 invoice_id: invoiceId,
                 customer_id: '<%= customer.id %>',
-                amount: Number(amount),
+                amount: Number(englishAmount),
                 payment_method: 'cash',
                 payment_date: new Date().toISOString().split('T')[0],
                 description: `پرداخت فاکتور ${invoiceNumber}`
@@ -553,6 +569,54 @@ function recordPayment(invoiceId, invoiceNumber, remainingAmount) {
             console.error('Error:', error);
             alert('❌ خطا در ثبت پرداخت');
         });
+        } else {
+            alert('لطفاً مبلغ معتبری وارد کنید');
+        }
     }
 }
+
+// Convert Gregorian dates to Persian for old records
+function convertGregorianToPersian() {
+    const shamsiElements = document.querySelectorAll('.shamsi-date');
+    
+    shamsiElements.forEach(function(element) {
+        const gregorianDate = element.getAttribute('data-gregorian');
+        if (gregorianDate && typeof moment !== 'undefined') {
+            try {
+                // Use moment-jalaali to convert to Persian date
+                const persianDate = moment(gregorianDate).format('jYYYY/jMM/jDD');
+                element.textContent = persianDate;
+                element.style.color = '#007bff'; // Blue color to indicate converted date
+                element.title = 'تاریخ تبدیل شده از میلادی: ' + gregorianDate;
+            } catch (error) {
+                console.error('Error converting date:', error);
+                // Fallback to simple conversion
+                const date = new Date(gregorianDate);
+                const persianDate = convertToSimplePersian(date);
+                if (persianDate) {
+                    element.textContent = persianDate;
+                    element.style.color = '#28a745'; // Green color for simple conversion
+                }
+            }
+        }
+    });
+}
+
+// Simple Persian date conversion fallback
+function convertToSimplePersian(date) {
+    try {
+        // Simple approximation - not accurate but better than Gregorian
+        const year = date.getFullYear() - 621;
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}/${month}/${day}`;
+    } catch (error) {
+        return null;
+    }
+}
+
+// Initialize date conversion on page load
+document.addEventListener('DOMContentLoaded', function() {
+    convertGregorianToPersian();
+});
 </script> 
