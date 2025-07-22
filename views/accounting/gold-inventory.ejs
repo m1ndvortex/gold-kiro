@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدیریت موجودی طلا - طلافروشی موسی پور</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            direction: rtl;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        .btn {
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            border: none;
+        }
+        
+        .table td {
+            border: none;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .badge {
+            font-size: 0.8rem;
+            padding: 0.5em 0.8em;
+        }
+        
+        .text-success { color: #28a745 !important; }
+        .text-danger { color: #dc3545 !important; }
+        .bg-primary { background-color: #007bff !important; }
+        .bg-success { background-color: #28a745 !important; }
+        .bg-danger { background-color: #dc3545 !important; }
+        .bg-info { background-color: #17a2b8 !important; }
+        .bg-warning { background-color: #ffc107 !important; }
+        .bg-secondary { background-color: #6c757d !important; }
+        .bg-dark { background-color: #343a40 !important; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-gem me-2"></i>
+                طلافروشی موسی پور
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/dashboard">
+                    <i class="fas fa-home me-1"></i>
+                    داشبورد
+                </a>
+                <a class="nav-link" href="/accounting">
+                    <i class="fas fa-calculator me-1"></i>
+                    حسابداری
+                </a>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    خروج
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <main>
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">مدیریت موجودی طلا</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#adjustInventoryModal">
+                        <i class="fas fa-plus"></i>
+                        تنظیم موجودی
+                    </button>
+                </div>
+            </div>
+            
+            <% if (typeof setupRequired !== 'undefined' && setupRequired) { %>
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">راه‌اندازی مورد نیاز!</h4>
+                <p>برای استفاده از سیستم مدیریت موجودی طلا، ابتدا باید جداول مورد نیاز را در دیتابیس ایجاد کنید.</p>
+                <hr>
+                <p class="mb-0">
+                    <strong>دستورات SQL:</strong><br>
+                    <code>mysql -u root -p gold_shop_db < create-gold-inventory-tables.sql</code>
+                </p>
+            </div>
+            <% } %>
+            
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <h5 class="card-title">موجودی فعلی طلا</h5>
+                            <h2 class="card-text" id="current-inventory"><%= (currentWeight || 0).toFixed(3) %> گرم</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white <%= parseFloat(todayChange || 0) >= 0 ? 'bg-success' : 'bg-danger' %>">
+                        <div class="card-body">
+                            <h5 class="card-title">تغییرات امروز</h5>
+                            <h2 class="card-text" id="today-change">
+                                <% if (parseFloat(todayChange || 0) > 0) { %>
+                                    <i class="fas fa-arrow-up"></i>
+                                <% } else if (parseFloat(todayChange || 0) < 0) { %>
+                                    <i class="fas fa-arrow-down"></i>
+                                <% } %>
+                                <%= Math.abs(todayChange || 0).toFixed(3) %> گرم
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white <%= parseFloat(weekChange || 0) >= 0 ? 'bg-info' : 'bg-warning' %>">
+                        <div class="card-body">
+                            <h5 class="card-title">تغییرات هفته</h5>
+                            <h2 class="card-text" id="week-change">
+                                <% if (parseFloat(weekChange || 0) > 0) { %>
+                                    <i class="fas fa-arrow-up"></i>
+                                <% } else if (parseFloat(weekChange || 0) < 0) { %>
+                                    <i class="fas fa-arrow-down"></i>
+                                <% } %>
+                                <%= Math.abs(weekChange || 0).toFixed(3) %> گرم
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white <%= parseFloat(monthChange || 0) >= 0 ? 'bg-secondary' : 'bg-dark' %>">
+                        <div class="card-body">
+                            <h5 class="card-title">تغییرات ماه</h5>
+                            <h2 class="card-text" id="month-change">
+                                <% if (parseFloat(monthChange || 0) > 0) { %>
+                                    <i class="fas fa-arrow-up"></i>
+                                <% } else if (parseFloat(monthChange || 0) < 0) { %>
+                                    <i class="fas fa-arrow-down"></i>
+                                <% } %>
+                                <%= Math.abs(monthChange || 0).toFixed(3) %> گرم
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>تاریخچه تغییرات موجودی</h3>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>تاریخ</th>
+                            <th>نوع تراکنش</th>
+                            <th>مرجع</th>
+                            <th>تغییر (گرم)</th>
+                            <th>موجودی نهایی (گرم)</th>
+                            <th>توضیحات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% transactions.forEach(function(transaction) { %>
+                            <tr>
+                                <td><%= transaction.transaction_date_shamsi || new Date(transaction.transaction_date).toLocaleDateString('fa-IR') %></td>
+                                <td>
+                                    <% if (transaction.transaction_type === 'initial') { %>
+                                        <span class="badge bg-primary">موجودی اولیه</span>
+                                    <% } else if (transaction.transaction_type === 'sale') { %>
+                                        <span class="badge bg-danger">فروش</span>
+                                    <% } else if (transaction.transaction_type === 'purchase') { %>
+                                        <span class="badge bg-success">خرید</span>
+                                    <% } else if (transaction.transaction_type === 'adjustment') { %>
+                                        <span class="badge bg-warning">تنظیم دستی</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (transaction.transaction_type === 'sale' || transaction.transaction_type === 'purchase') { %>
+                                        <a href="/sales/view/<%= transaction.reference_id %>">
+                                            فاکتور #<%= transaction.reference_id %>
+                                        </a>
+                                    <% } else { %>
+                                        -
+                                    <% } %>
+                                </td>
+                                <td class="<%= parseFloat(transaction.weight_change || 0) > 0 ? 'text-success' : 'text-danger' %>">
+                                    <%= parseFloat(transaction.weight_change || 0) > 0 ? '+' : '' %><%= parseFloat(transaction.weight_change || 0).toFixed(3) %>
+                                </td>
+                                <td><%= parseFloat(transaction.current_weight || 0).toFixed(3) %></td>
+                                <td><%= transaction.description || '-' %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Adjusting Inventory -->
+    <div class="modal fade" id="adjustInventoryModal" tabindex="-1" aria-labelledby="adjustInventoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adjustInventoryModalLabel">تنظیم موجودی طلا</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/accounting/gold-inventory/adjust" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="adjustment_type" class="form-label">نوع تنظیم</label>
+                            <select class="form-select" id="adjustment_type" name="adjustment_type" required>
+                                <option value="set">تنظیم مقدار دقیق</option>
+                                <option value="add">افزودن به موجودی</option>
+                                <option value="subtract">کاهش از موجودی</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="weight" class="form-label">وزن (گرم)</label>
+                            <input type="number" step="0.001" class="form-control" id="weight" name="weight" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">توضیحات</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                        <button type="submit" class="btn btn-primary">ثبت تغییرات</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

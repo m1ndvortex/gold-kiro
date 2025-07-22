@@ -916,6 +916,39 @@ app.post('/sales/create', requireAuth, async (req, res) => {
             invoice_date
         ]);
         
+        // Update gold inventory for sales invoice
+        // Get current gold inventory
+        const [currentInventory] = await connection.execute(`
+            SELECT current_weight FROM gold_inventory
+            ORDER BY transaction_date DESC LIMIT 1
+        `);
+        
+        let currentWeight = 0;
+        if (currentInventory.length > 0) {
+            currentWeight = parseFloat(currentInventory[0].current_weight);
+        } else {
+            // Check if we have initial setting
+            const [settings] = await connection.execute('SELECT setting_value FROM system_settings WHERE setting_key = "gold_inventory_initial"');
+            if (settings.length > 0) {
+                currentWeight = parseFloat(settings[0].setting_value);
+            }
+        }
+        
+        // Calculate new weight (subtract finalWeight for sales)
+        const newWeight = currentWeight - parseFloat(finalWeight);
+        
+        // Insert gold inventory transaction
+        await connection.execute(`
+            INSERT INTO gold_inventory (
+                transaction_date, transaction_date_shamsi, transaction_type, 
+                reference_id, weight_change, current_weight, description
+            ) VALUES (?, ?, 'sale', ?, ?, ?, ?)
+        `, [
+            invoice_date, invoice_date_shamsi, invoiceId, 
+            -parseFloat(finalWeight), newWeight, 
+            `فروش طلا - فاکتور شماره ${invoice_number}`
+        ]);
+        
         await connection.commit();
         res.redirect(`/sales/view/${invoiceId}?success=فاکتور با موفقیت ایجاد شد`);
         
@@ -1106,6 +1139,39 @@ app.post('/sales/create-purchase', requireAuth, async (req, res) => {
             customer_id,
             invoiceId,
             invoice_date
+        ]);
+        
+        // Update gold inventory for purchase invoice
+        // Get current gold inventory
+        const [currentInventory] = await connection.execute(`
+            SELECT current_weight FROM gold_inventory
+            ORDER BY transaction_date DESC LIMIT 1
+        `);
+        
+        let currentWeight = 0;
+        if (currentInventory.length > 0) {
+            currentWeight = parseFloat(currentInventory[0].current_weight);
+        } else {
+            // Check if we have initial setting
+            const [settings] = await connection.execute('SELECT setting_value FROM system_settings WHERE setting_key = "gold_inventory_initial"');
+            if (settings.length > 0) {
+                currentWeight = parseFloat(settings[0].setting_value);
+            }
+        }
+        
+        // Calculate new weight (add finalWeight for purchases)
+        const newWeight = currentWeight + parseFloat(finalWeight);
+        
+        // Insert gold inventory transaction
+        await connection.execute(`
+            INSERT INTO gold_inventory (
+                transaction_date, transaction_date_shamsi, transaction_type, 
+                reference_id, weight_change, current_weight, description
+            ) VALUES (?, ?, 'purchase', ?, ?, ?, ?)
+        `, [
+            invoice_date, invoice_date_shamsi, invoiceId, 
+            parseFloat(finalWeight), newWeight, 
+            `خرید طلا - فاکتور شماره ${invoice_number}`
         ]);
         
         await connection.commit();
@@ -2984,6 +3050,175 @@ app.get('/accounting/bank-transactions', requireAuth, async (req, res) => {
     } catch (error) {
         console.error('Bank transactions error:', error);
         res.status(500).send('خطا در بارگذاری تراکنش‌های بانکی');
+    }
+});
+
+// Gold Inventory Management
+app.get('/accounting/gold-inventory', requireAuth, async (req, res) => {
+    try {
+        let currentWeight = 0;
+        let todayChange = 0;
+        let weekChange = 0;
+        let monthChange = 0;
+        let transactions = [];
+        
+        try {
+            // Check if tables exist first
+            const [tableCheck] = await db.execute("SHOW TABLES LIKE 'gold_inventory'");
+            const [settingsTableCheck] = await db.execute("SHOW TABLES LIKE 'system_settings'");
+            
+            if (tableCheck.length === 0 || settingsTableCheck.length === 0) {
+                // Tables don't exist, show setup message
+                return res.render('accounting/gold-inventory', {
+                    title: 'مدیریت موجودی طلا',
+                    user: req.session.user,
+                    currentWeight: 0,
+                    todayChange: 0,
+                    weekChange: 0,
+                    monthChange: 0,
+                    transactions: [],
+                    setupRequired: true
+                });
+            }
+            
+            // Get current inventory
+            const [settings] = await db.execute('SELECT setting_value FROM system_settings WHERE setting_key = "gold_inventory_initial"');
+            
+            if (settings.length === 0) {
+                // Initialize settings if not exists
+                await db.execute('INSERT INTO system_settings (setting_key, setting_value) VALUES ("gold_inventory_initial", "0")');
+            } else {
+                currentWeight = parseFloat(settings[0].setting_value) || 0;
+            }
+            
+            // Get all transactions
+            const [transactionResults] = await db.execute(`
+                SELECT * FROM gold_inventory
+                ORDER BY transaction_date DESC
+            `);
+            transactions = transactionResults || [];
+            
+            // If there are transactions, use the most recent current_weight
+            if (transactions.length > 0) {
+                currentWeight = parseFloat(transactions[0].current_weight) || 0;
+            }
+            
+            // Calculate today's change
+            const today = new Date();
+            const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            
+            const [todayResult] = await db.execute(`
+                SELECT SUM(weight_change) as total_change
+                FROM gold_inventory
+                WHERE DATE(transaction_date) = DATE(?)
+            `, [todayStart]);
+            todayChange = parseFloat(todayResult[0]?.total_change) || 0;
+            
+            // Calculate week's change (last 7 days including today)
+            const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
+            
+            const [weekResult] = await db.execute(`
+                SELECT SUM(weight_change) as total_change
+                FROM gold_inventory
+                WHERE DATE(transaction_date) >= DATE(?)
+            `, [weekStart]);
+            weekChange = parseFloat(weekResult[0]?.total_change) || 0;
+            
+            // Calculate month's change (last 30 days including today)
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29);
+            
+            const [monthResult] = await db.execute(`
+                SELECT SUM(weight_change) as total_change
+                FROM gold_inventory
+                WHERE DATE(transaction_date) >= DATE(?)
+            `, [monthStart]);
+            monthChange = parseFloat(monthResult[0]?.total_change) || 0;
+            
+        } catch (dbError) {
+            console.log('Database tables not ready:', dbError.message);
+            // Continue with default values
+        }
+        
+        res.render('accounting/gold-inventory', {
+            title: 'مدیریت موجودی طلا',
+            user: req.session.user,
+            currentWeight: currentWeight || 0,
+            todayChange: todayChange || 0,
+            weekChange: weekChange || 0,
+            monthChange: monthChange || 0,
+            transactions: transactions || []
+        });
+    } catch (error) {
+        console.error('Error fetching gold inventory:', error);
+        res.status(500).send('خطا در دریافت اطلاعات موجودی طلا');
+    }
+});
+
+// Adjust gold inventory
+app.post('/accounting/gold-inventory/adjust', requireAuth, async (req, res) => {
+    try {
+        const { adjustment_type, weight, description } = req.body;
+        const weightValue = parseFloat(weight);
+        
+        // Get current inventory
+        const [currentResult] = await db.execute(`
+            SELECT current_weight FROM gold_inventory
+            ORDER BY transaction_date DESC LIMIT 1
+        `);
+        
+        let currentWeight = 0;
+        if (currentResult.length > 0) {
+            currentWeight = parseFloat(currentResult[0].current_weight);
+        } else {
+            // Check if we have initial setting
+            const [settings] = await db.execute('SELECT setting_value FROM system_settings WHERE setting_key = "gold_inventory_initial"');
+            if (settings.length > 0) {
+                currentWeight = parseFloat(settings[0].setting_value);
+            }
+        }
+        
+        let newWeight = currentWeight;
+        let weightChange = 0;
+        
+        // Calculate new weight based on adjustment type
+        if (adjustment_type === 'set') {
+            weightChange = weightValue - currentWeight;
+            newWeight = weightValue;
+        } else if (adjustment_type === 'add') {
+            weightChange = weightValue;
+            newWeight = currentWeight + weightValue;
+        } else if (adjustment_type === 'subtract') {
+            weightChange = -weightValue;
+            newWeight = currentWeight - weightValue;
+        }
+        
+        // Get current date in Shamsi format
+        const today = new Date();
+        const shamsiDate = new Intl.DateTimeFormat('fa-IR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(today).replace(/\//g, '/');
+        
+        // Insert transaction
+        await db.execute(`
+            INSERT INTO gold_inventory (
+                transaction_date, transaction_date_shamsi, transaction_type, 
+                weight_change, current_weight, description
+            ) VALUES (?, ?, 'adjustment', ?, ?, ?)
+        `, [today, shamsiDate, weightChange, newWeight, description]);
+        
+        // Update initial setting
+        await db.execute(`
+            UPDATE system_settings 
+            SET setting_value = ? 
+            WHERE setting_key = 'gold_inventory_initial'
+        `, [newWeight.toString()]);
+        
+        res.redirect('/accounting/gold-inventory');
+    } catch (error) {
+        console.error('Error adjusting gold inventory:', error);
+        res.status(500).send('خطا در تنظیم موجودی طلا');
     }
 });
 
