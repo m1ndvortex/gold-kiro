@@ -1,264 +1,179 @@
-# Gold Shop Management System - Installation Guide
+# راهنمای نصب سیستم مدیریت طلافروشی زرین
+## Gold Shop Management System Installation Guide
 
-## Complete Installation Guide for Ubuntu Server
-
-This guide provides step-by-step instructions to install and configure the Gold Shop Management System on Ubuntu Server with domain configuration and SSL setup.
-
-## Table of Contents
-1. [System Requirements](#system-requirements)
-2. [Initial Server Setup](#initial-server-setup)
-3. [Install Prerequisites](#install-prerequisites)
-4. [Database Setup](#database-setup)
-5. [Application Installation](#application-installation)
-6. [Domain Configuration](#domain-configuration)
-7. [SSL Certificate Setup](#ssl-certificate-setup)
-8. [Service Configuration](#service-configuration)
-9. [Security Configuration](#security-configuration)
-10. [Maintenance](#maintenance)
+### 🌟 مشخصات پروژه
+- **نام پروژه**: سیستم مدیریت طلافروشی زرین
+- **نسخه**: 1.0.0
+- **زبان**: فارسی (RTL)
+- **تکنولوژی**: Node.js, Express, MySQL, EJS
 
 ---
 
-## System Requirements
+## 📋 پیش‌نیازها (Prerequisites)
 
-- **OS**: Ubuntu Server 20.04 LTS or 22.04 LTS
-- **RAM**: Minimum 2GB (4GB recommended)
-- **Storage**: Minimum 20GB free space
-- **Network**: Internet connection for downloads and updates
-- **Domain**: A registered domain name pointing to your server IP
+### سرور VPS
+- **IP سرور**: 87.248.131.94
+- **دامنه**: mosaporgold.ir
+- **سیستم عامل**: Ubuntu/CentOS/Debian
+- **RAM**: حداقل 1GB
+- **فضای ذخیره**: حداقل 10GB
+
+### نرم‌افزارهای مورد نیاز
+- Node.js (نسخه 16 یا بالاتر)
+- MySQL یا MariaDB
+- Nginx (برای پروکسی معکوس)
+- PM2 (برای مدیریت پروسه)
+- Git
 
 ---
 
-## Initial Server Setup
+## 🚀 مراحل نصب
 
-### 1. Update System
+### مرحله 1: آماده‌سازی سرور
+
 ```bash
+# بروزرسانی سیستم
 sudo apt update && sudo apt upgrade -y
+
+# نصب پیش‌نیازها
+sudo apt install curl wget git nginx mysql-server -y
 ```
 
-### 2. Install Essential Tools
+### مرحله 2: نصب Node.js
+
 ```bash
-sudo apt install -y curl wget git unzip software-properties-common
-```
-
-### 3. Create Application User
-```bash
-sudo useradd -m -s /bin/bash goldshop
-sudo usermod -aG sudo goldshop
-```
-
-### 4. Set Up Firewall
-```bash
-sudo ufw allow OpenSSH
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw allow 3000/tcp
-sudo ufw --force enable
-```
-
----
-
-## Install Prerequisites
-
-### 1. Install Node.js (v18 LTS)
-```bash
+# نصب NodeSource repository
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
-```
 
-Verify installation:
-```bash
+# نصب Node.js
+sudo apt install nodejs -y
+
+# بررسی نسخه
 node --version
 npm --version
 ```
 
-### 2. Install MySQL Server
-```bash
-sudo apt install -y mysql-server
-sudo systemctl start mysql
-sudo systemctl enable mysql
-```
+### مرحله 3: نصب و پیکربندی MySQL
 
-### 3. Secure MySQL Installation
 ```bash
+# اجرای اسکریپت امنیتی MySQL
 sudo mysql_secure_installation
-```
 
-**Configuration options:**
-- Set root password: `YES` (use a strong password)
-- Remove anonymous users: `YES`
-- Disallow root login remotely: `YES`
-- Remove test database: `YES`
-- Reload privilege tables: `YES`
-
-### 4. Install Nginx
-```bash
-sudo apt install -y nginx
-sudo systemctl start nginx
-sudo systemctl enable nginx
-```
-
-### 5. Install PM2 (Process Manager)
-```bash
-sudo npm install -g pm2
-```
-
----
-
-## Database Setup
-
-### 1. Create Database and User
-```bash
+# ورود به MySQL
 sudo mysql -u root -p
 ```
 
-In MySQL console:
+در MySQL:
 ```sql
-CREATE DATABASE goldshop_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'goldshop_user'@'localhost' IDENTIFIED BY 'your_strong_password_here';
-GRANT ALL PRIVILEGES ON goldshop_db.* TO 'goldshop_user'@'localhost';
+-- ایجاد دیتابیس
+CREATE DATABASE gold_shop_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ایجاد کاربر جدید
+CREATE USER 'goldshop_user'@'localhost' IDENTIFIED BY 'StrongPassword123!';
+
+-- اعطای دسترسی‌ها
+GRANT ALL PRIVILEGES ON gold_shop_db.* TO 'goldshop_user'@'localhost';
 FLUSH PRIVILEGES;
+
+-- خروج
 EXIT;
 ```
 
-### 2. Create Combined Database Initialization Script
-Create a single script that combines all database files:
+### مرحله 4: دانلود و نصب پروژه
 
 ```bash
-sudo -u goldshop mkdir -p /home/goldshop/database-init
-sudo -u goldshop tee /home/goldshop/database-init/init_complete_database.sql << 'EOF'
--- Gold Shop Management System - Complete Database Initialization
--- This script combines all database files in the correct order
+# رفتن به دایرکتوری وب
+cd /var/www
 
--- 1. Create main database schema
-SOURCE /home/goldshop/gold-shop/database/schema.sql;
+# کلون پروژه (یا آپلود فایل‌ها)
+sudo git clone [YOUR_REPOSITORY_URL] gold-shop
+# یا
+sudo mkdir gold-shop
+# سپس فایل‌های پروژه را آپلود کنید
 
--- 2. Initialize categories
-SOURCE /home/goldshop/gold-shop/database/init_categories.sql;
+# تغییر مالکیت
+sudo chown -R $USER:$USER /var/www/gold-shop
+cd /var/www/gold-shop
 
--- 3. Create accounting tables
-SOURCE /home/goldshop/gold-shop/database/accounting_tables.sql;
-
--- 4. Update invoice system
-SOURCE /home/goldshop/gold-shop/database/update_invoice_system.sql;
-
--- 5. Apply invoice updates
-SOURCE /home/goldshop/gold-shop/database/invoice_update.sql;
-
--- 6. Apply customer enhancements
-SOURCE /home/goldshop/gold-shop/database/customers_enhanced.sql;
-
--- 7. Update categories
-SOURCE /home/goldshop/gold-shop/database/categories_update.sql;
-
--- Success message
-SELECT 'Database initialization completed successfully!' as Status;
-EOF
-```
-
----
-
-## Application Installation
-
-### 1. Switch to Application User
-```bash
-sudo su - goldshop
-```
-
-### 2. Clone/Upload Application
-```bash
-cd /home/goldshop
-# If using Git:
-git clone https://github.com/yourusername/gold-shop.git
-# OR upload your files to /home/goldshop/gold-shop/
-
-# Set proper permissions
-chmod -R 755 /home/goldshop/gold-shop/
-```
-
-### 3. Install Dependencies
-```bash
-cd /home/goldshop/gold-shop
+# نصب وابستگی‌ها
 npm install
 ```
 
-### 4. Create Environment Configuration
+### مرحله 5: پیکربندی دیتابیس
+
 ```bash
-cp .env.example .env
+# وارد کردن اسکیمای دیتابیس
+mysql -u goldshop_user -p gold_shop_db < database/schema.sql
+
+# اگر فایل gold_shop_db.sql دارید:
+mysql -u goldshop_user -p gold_shop_db < gold_shop_db.sql
+```
+
+### مرحله 6: پیکربندی متغیرهای محیطی
+
+```bash
+# ایجاد فایل .env
 nano .env
 ```
 
-Add the following configuration:
+محتوای فایل `.env`:
 ```env
 # Database Configuration
 DB_HOST=localhost
-DB_PORT=3306
 DB_USER=goldshop_user
-DB_PASSWORD=your_strong_password_here
-DB_NAME=goldshop_db
+DB_PASSWORD=StrongPassword123!
+DB_NAME=gold_shop_db
+DB_PORT=3306
 
 # Application Configuration
 PORT=3000
 NODE_ENV=production
-SESSION_SECRET=your_very_long_random_session_secret_here
 
-# Application Settings
-APP_NAME=Gold Shop Management
-APP_URL=https://yourdomain.com
-ADMIN_EMAIL=admin@yourdomain.com
+# Session Configuration
+SESSION_SECRET=your_very_secure_session_secret_key_here_2024
+
+# Upload Configuration
+UPLOAD_PATH=/var/www/gold-shop/public/uploads
+MAX_FILE_SIZE=5242880
+
+# Application URLs
+BASE_URL=https://mosaporgold.ir
 ```
 
-### 5. Initialize Database with Single Command
-```bash
-mysql -u goldshop_user -p goldshop_db < /home/goldshop/database-init/init_complete_database.sql
-```
+### مرحله 7: تست اجرای برنامه
 
-### 6. Test Application
 ```bash
+# تست اجرا
 npm start
+
+# بررسی در مرورگر
+# http://87.248.131.94:3000
 ```
 
-Open browser: `http://your-server-ip:3000`
-
-If working, stop with `Ctrl+C`.
+اطلاعات ورود پیش‌فرض:
+- **نام کاربری**: admin
+- **رمز عبور**: admin123
 
 ---
 
-## Domain Configuration
+## 🌐 پیکربندی Nginx
 
-### 1. Configure DNS
-Point your domain to your server IP:
-- **A Record**: `yourdomain.com` → `your-server-ip`
-- **CNAME Record**: `www.yourdomain.com` → `yourdomain.com`
+### ایجاد فایل پیکربندی Nginx
 
-### 2. Create Nginx Configuration
 ```bash
-sudo tee /etc/nginx/sites-available/goldshop << 'EOF'
+sudo nano /etc/nginx/sites-available/mosaporgold.ir
+```
+
+محتوای فایل:
+```nginx
 server {
     listen 80;
-    server_name yourdomain.com www.yourdomain.com;
+    server_name mosaporgold.ir www.mosaporgold.ir 87.248.131.94;
 
-    # Redirect HTTP to HTTPS
-    return 301 https://$server_name$request_uri;
-}
+    # Redirect HTTP to HTTPS (بعد از نصب SSL)
+    # return 301 https://$server_name$request_uri;
 
-server {
-    listen 443 ssl http2;
-    server_name yourdomain.com www.yourdomain.com;
-
-    # SSL Configuration (will be added by Certbot)
-    
-    # Security Headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "no-referrer-when-downgrade" always;
-    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
-
-    # Gzip Compression
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-
-    # Proxy to Node.js Application
+    # موقتاً برای تست
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -269,312 +184,409 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 86400;
+        
+        # افزایش timeout برای عملیات طولانی
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
     }
 
-    # Static Files
+    # Static files
     location /css/ {
-        proxy_pass http://localhost:3000;
-        expires 30d;
-        add_header Cache-Control "public, no-transform";
+        alias /var/www/gold-shop/public/css/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
     }
 
     location /js/ {
-        proxy_pass http://localhost:3000;
-        expires 30d;
-        add_header Cache-Control "public, no-transform";
+        alias /var/www/gold-shop/public/js/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
     }
 
     location /uploads/ {
-        proxy_pass http://localhost:3000;
-        expires 30d;
-        add_header Cache-Control "public, no-transform";
+        alias /var/www/gold-shop/public/uploads/;
+        expires 1y;
+        add_header Cache-Control "public";
     }
 
-    # Security
-    location ~ /\.ht {
-        deny all;
-    }
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
 
-    # Logs
-    access_log /var/log/nginx/goldshop_access.log;
-    error_log /var/log/nginx/goldshop_error.log;
+    # File upload size
+    client_max_body_size 10M;
 }
-EOF
 ```
 
-### 3. Enable Site
+### فعال‌سازی سایت
+
 ```bash
-sudo ln -s /etc/nginx/sites-available/goldshop /etc/nginx/sites-enabled/
+# ایجاد لینک symbolic
+sudo ln -s /etc/nginx/sites-available/mosaporgold.ir /etc/nginx/sites-enabled/
+
+# حذف سایت پیش‌فرض
+sudo rm /etc/nginx/sites-enabled/default
+
+# تست پیکربندی
 sudo nginx -t
-sudo systemctl reload nginx
+
+# راه‌اندازی مجدد Nginx
+sudo systemctl restart nginx
+sudo systemctl enable nginx
 ```
 
 ---
 
-## SSL Certificate Setup
+## 🔒 نصب SSL Certificate
 
-### 1. Install Certbot
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-```
+### استفاده از Let's Encrypt
 
-### 2. Obtain SSL Certificate
 ```bash
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
-```
+# نصب Certbot
+sudo apt install certbot python3-certbot-nginx -y
 
-### 3. Test SSL Renewal
-```bash
+# دریافت گواهی SSL
+sudo certbot --nginx -d mosaporgold.ir -d www.mosaporgold.ir
+
+# تست تمدید خودکار
 sudo certbot renew --dry-run
 ```
 
-### 4. Set Up Auto-Renewal
-```bash
-sudo crontab -e
-```
-
-Add this line:
-```
-0 12 * * * /usr/bin/certbot renew --quiet
-```
-
 ---
 
-## Service Configuration
+## 🔄 مدیریت پروسه با PM2
 
-### 1. Create PM2 Ecosystem File
+### نصب PM2
+
 ```bash
-sudo -u goldshop tee /home/goldshop/gold-shop/ecosystem.config.js << 'EOF'
+# نصب PM2 به صورت global
+sudo npm install -g pm2
+
+# ایجاد فایل ecosystem
+nano ecosystem.config.js
+```
+
+محتوای `ecosystem.config.js`:
+```javascript
 module.exports = {
   apps: [{
-    name: 'goldshop',
+    name: 'gold-shop',
     script: 'server.js',
-    cwd: '/home/goldshop/gold-shop',
-    instances: 'max',
-    exec_mode: 'cluster',
+    cwd: '/var/www/gold-shop',
+    instances: 1,
+    autorestart: true,
+    watch: false,
+    max_memory_restart: '1G',
     env: {
       NODE_ENV: 'production',
       PORT: 3000
     },
-    error_file: '/home/goldshop/logs/err.log',
-    out_file: '/home/goldshop/logs/out.log',
-    log_file: '/home/goldshop/logs/combined.log',
-    time: true,
-    max_restarts: 10,
-    restart_delay: 1000,
-    watch: false,
-    ignore_watch: ['node_modules', 'uploads', 'logs']
+    error_file: '/var/log/pm2/gold-shop-error.log',
+    out_file: '/var/log/pm2/gold-shop-out.log',
+    log_file: '/var/log/pm2/gold-shop-combined.log',
+    time: true
   }]
 };
-EOF
 ```
 
-### 2. Create Log Directory
-```bash
-sudo -u goldshop mkdir -p /home/goldshop/logs
-```
+### راه‌اندازی با PM2
 
-### 3. Start Application with PM2
 ```bash
-sudo -u goldshop bash << 'EOF'
-cd /home/goldshop/gold-shop
+# ایجاد دایرکتوری لاگ
+sudo mkdir -p /var/log/pm2
+sudo chown -R $USER:$USER /var/log/pm2
+
+# شروع برنامه
 pm2 start ecosystem.config.js
-pm2 save
-EOF
-```
 
-### 4. Set Up PM2 Startup
-```bash
-sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u goldshop --hp /home/goldshop
+# ذخیره پیکربندی
+pm2 save
+
+# راه‌اندازی خودکار در startup
+pm2 startup
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $USER --hp $HOME
+
+# بررسی وضعیت
+pm2 status
+pm2 logs gold-shop
 ```
 
 ---
 
-## Security Configuration
+## 📁 ساختار دایرکتوری‌ها
 
-### 1. Configure MySQL Security
-```bash
-sudo mysql -u root -p
+```
+/var/www/gold-shop/
+├── config/
+│   └── database.js
+├── database/
+│   ├── schema.sql
+│   └── gold_shop_db.sql (فایل بکاپ شما)
+├── public/
+│   ├── css/
+│   ├── js/
+│   └── uploads/ (باید قابل نوشتن باشد)
+├── views/
+├── server.js
+├── package.json
+├── .env
+└── ecosystem.config.js
 ```
 
-```sql
--- Disable remote root login
-UPDATE mysql.user SET Host='localhost' WHERE User='root';
-DELETE FROM mysql.user WHERE Host!='localhost' AND User='root';
-FLUSH PRIVILEGES;
-EXIT;
+### تنظیم مجوزها
+
+```bash
+# مجوزهای فایل‌ها
+sudo chown -R www-data:www-data /var/www/gold-shop
+sudo chmod -R 755 /var/www/gold-shop
+sudo chmod -R 777 /var/www/gold-shop/public/uploads
 ```
 
-### 2. Set Up Log Rotation
+---
+
+## 🔧 پیکربندی‌های اضافی
+
+### 1. تنظیم Firewall
+
 ```bash
-sudo tee /etc/logrotate.d/goldshop << 'EOF'
-/home/goldshop/logs/*.log {
-    daily
-    missingok
-    rotate 52
-    compress
-    delaycompress
-    notifempty
-    create 644 goldshop goldshop
-    postrotate
-        sudo -u goldshop /usr/lib/node_modules/pm2/bin/pm2 reload goldshop
-    endscript
-}
-EOF
+# فعال‌سازی UFW
+sudo ufw enable
+
+# اجازه دسترسی به پورت‌های ضروری
+sudo ufw allow ssh
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw allow 3000
+
+# بررسی وضعیت
+sudo ufw status
 ```
 
-### 3. Create Backup Script
+### 2. تنظیم بکاپ خودکار
+
 ```bash
-sudo tee /home/goldshop/backup.sh << 'EOF'
+# ایجاد اسکریپت بکاپ
+sudo nano /usr/local/bin/backup-goldshop.sh
+```
+
+محتوای اسکریپت:
+```bash
 #!/bin/bash
-BACKUP_DIR="/home/goldshop/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
-DB_NAME="goldshop_db"
+BACKUP_DIR="/var/backups/gold-shop"
+DB_NAME="gold_shop_db"
 DB_USER="goldshop_user"
+DB_PASS="StrongPassword123!"
 
-# Create backup directory
+# ایجاد دایرکتوری بکاپ
 mkdir -p $BACKUP_DIR
 
-# Database backup
-mysqldump -u $DB_USER -p$DB_PASSWORD $DB_NAME > $BACKUP_DIR/goldshop_db_$DATE.sql
+# بکاپ دیتابیس
+mysqldump -u $DB_USER -p$DB_PASS $DB_NAME > $BACKUP_DIR/db_backup_$DATE.sql
 
-# Application backup
-tar -czf $BACKUP_DIR/goldshop_app_$DATE.tar.gz -C /home/goldshop gold-shop --exclude=node_modules
+# بکاپ فایل‌های آپلود
+tar -czf $BACKUP_DIR/uploads_backup_$DATE.tar.gz -C /var/www/gold-shop/public uploads
 
-# Keep only last 7 days of backups
-find $BACKUP_DIR -name "*.sql" -mtime +7 -delete
-find $BACKUP_DIR -name "*.tar.gz" -mtime +7 -delete
+# حذف بکاپ‌های قدیمی (بیشتر از 30 روز)
+find $BACKUP_DIR -name "*.sql" -mtime +30 -delete
+find $BACKUP_DIR -name "*.tar.gz" -mtime +30 -delete
 
 echo "Backup completed: $DATE"
-EOF
-
-chmod +x /home/goldshop/backup.sh
-chown goldshop:goldshop /home/goldshop/backup.sh
 ```
 
-### 4. Schedule Backups
 ```bash
-sudo -u goldshop crontab -e
+# اجازه اجرا
+sudo chmod +x /usr/local/bin/backup-goldshop.sh
+
+# افزودن به crontab (هر روز ساعت 2 صبح)
+sudo crontab -e
+# اضافه کنید:
+0 2 * * * /usr/local/bin/backup-goldshop.sh
 ```
 
-Add:
-```
-0 2 * * * /home/goldshop/backup.sh >> /home/goldshop/logs/backup.log 2>&1
+### 3. مانیتورینگ سیستم
+
+```bash
+# نصب htop برای مانیتورینگ
+sudo apt install htop -y
+
+# بررسی وضعیت سرویس‌ها
+sudo systemctl status nginx
+sudo systemctl status mysql
+pm2 status
+
+# بررسی لاگ‌ها
+pm2 logs gold-shop
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
 ```
 
 ---
 
-## Maintenance
+## 🔍 تست و بررسی
 
-### 1. Check Application Status
+### 1. تست عملکرد
+
 ```bash
-sudo -u goldshop pm2 status
-sudo -u goldshop pm2 logs goldshop
+# تست اتصال به دیتابیس
+mysql -u goldshop_user -p gold_shop_db -e "SHOW TABLES;"
+
+# تست وب‌سرور
+curl -I http://mosaporgold.ir
+curl -I https://mosaporgold.ir
+
+# بررسی پورت‌ها
+sudo netstat -tlnp | grep :80
+sudo netstat -tlnp | grep :443
+sudo netstat -tlnp | grep :3000
 ```
 
-### 2. Restart Application
+### 2. تست عملکرد برنامه
+
+1. **ورود به سیستم**:
+   - آدرس: https://mosaporgold.ir
+   - نام کاربری: admin
+   - رمز عبور: admin123
+
+2. **تست ماژول‌ها**:
+   - ✅ داشبورد
+   - ✅ مدیریت انبار
+   - ✅ مدیریت مشتریان
+   - ✅ فروش و صدور فاکتور
+   - ✅ حسابداری
+
+---
+
+## 🛠 عیب‌یابی (Troubleshooting)
+
+### مشکلات رایج
+
+#### 1. خطای اتصال به دیتابیس
 ```bash
-sudo -u goldshop pm2 restart goldshop
+# بررسی وضعیت MySQL
+sudo systemctl status mysql
+
+# بررسی لاگ MySQL
+sudo tail -f /var/log/mysql/error.log
+
+# تست اتصال
+mysql -u goldshop_user -p
 ```
 
-### 3. Update Application
+#### 2. خطای 502 Bad Gateway
 ```bash
-sudo -u goldshop bash << 'EOF'
-cd /home/goldshop/gold-shop
-git pull origin main  # or upload new files
-npm install
-pm2 restart goldshop
-EOF
+# بررسی وضعیت PM2
+pm2 status
+
+# راه‌اندازی مجدد
+pm2 restart gold-shop
+
+# بررسی لاگ‌ها
+pm2 logs gold-shop
 ```
 
-### 4. Monitor System
+#### 3. مشکل آپلود فایل
 ```bash
-# Check disk usage
+# بررسی مجوزها
+ls -la /var/www/gold-shop/public/uploads/
+
+# تنظیم مجوز
+sudo chmod 777 /var/www/gold-shop/public/uploads/
+```
+
+#### 4. خطای SSL
+```bash
+# تمدید گواهی
+sudo certbot renew
+
+# بررسی وضعیت گواهی
+sudo certbot certificates
+```
+
+---
+
+## 📞 پشتیبانی و نگهداری
+
+### دستورات مفید
+
+```bash
+# مشاهده وضعیت کلی سیستم
+sudo systemctl status nginx mysql
+pm2 status
+
+# راه‌اندازی مجدد سرویس‌ها
+sudo systemctl restart nginx
+sudo systemctl restart mysql
+pm2 restart gold-shop
+
+# بررسی فضای دیسک
 df -h
 
-# Check memory usage
+# بررسی استفاده از RAM
 free -h
 
-# Check active connections
-ss -tulpn | grep :3000
-
-# Check Nginx logs
-sudo tail -f /var/log/nginx/goldshop_access.log
-sudo tail -f /var/log/nginx/goldshop_error.log
+# بررسی پروسه‌ها
+htop
 ```
 
-### 5. Database Maintenance
+### بروزرسانی برنامه
+
 ```bash
-# Optimize database
-mysql -u goldshop_user -p goldshop_db -e "OPTIMIZE TABLE customers, inventory, sales, journal_entries;"
+# توقف برنامه
+pm2 stop gold-shop
 
-# Check database size
-mysql -u goldshop_user -p goldshop_db -e "SELECT table_name AS 'Table', round(((data_length + index_length) / 1024 / 1024), 2) AS 'Size (MB)' FROM information_schema.tables WHERE table_schema = 'goldshop_db';"
+# بکاپ فایل‌های فعلی
+cp -r /var/www/gold-shop /var/www/gold-shop-backup-$(date +%Y%m%d)
+
+# آپلود فایل‌های جدید
+# ...
+
+# نصب وابستگی‌های جدید
+cd /var/www/gold-shop
+npm install
+
+# راه‌اندازی مجدد
+pm2 start gold-shop
 ```
 
 ---
 
-## Final Steps
+## ✅ چک‌لیست نهایی
 
-1. **Test the complete installation:**
-   ```bash
-   curl -I https://yourdomain.com
-   ```
-
-2. **Login to your application:**
-   - URL: `https://yourdomain.com`
-   - Default credentials will be created during first run
-
-3. **Monitor the application:**
-   ```bash
-   sudo -u goldshop pm2 monit
-   ```
-
-4. **Set up monitoring alerts (optional):**
-   ```bash
-   sudo -u goldshop pm2 install pm2-server-monit
-   ```
+- [ ] سرور آماده و بروزرسانی شده
+- [ ] Node.js و MySQL نصب شده
+- [ ] دیتابیس ایجاد و پیکربندی شده
+- [ ] فایل‌های پروژه آپلود شده
+- [ ] متغیرهای محیطی تنظیم شده
+- [ ] Nginx پیکربندی شده
+- [ ] SSL نصب شده
+- [ ] PM2 راه‌اندازی شده
+- [ ] Firewall تنظیم شده
+- [ ] بکاپ خودکار فعال شده
+- [ ] تست‌های عملکرد انجام شده
+- [ ] رمز عبور admin تغییر کرده
 
 ---
 
-## Troubleshooting
+## 🎯 نتیجه
 
-### Common Issues
+سیستم مدیریت طلافروشی زرین با موفقیت بر روی سرور شما نصب شده است:
 
-1. **Application won't start:**
-   ```bash
-   sudo -u goldshop pm2 logs goldshop
-   ```
+- **آدرس وب**: https://mosaporgold.ir
+- **IP سرور**: 87.248.131.94
+- **دیتابیس**: MySQL (gold_shop_db)
+- **مدیریت پروسه**: PM2
+- **وب‌سرور**: Nginx
+- **امنیت**: SSL Certificate
 
-2. **Database connection issues:**
-   ```bash
-   mysql -u goldshop_user -p goldshop_db -e "SELECT 1;"
-   ```
-
-3. **SSL certificate issues:**
-   ```bash
-   sudo certbot certificates
-   sudo nginx -t
-   ```
-
-4. **Permission issues:**
-   ```bash
-   sudo chown -R goldshop:goldshop /home/goldshop/gold-shop
-   ```
-
-### Contact Information
-
-For support and updates, please refer to the project documentation or contact the system administrator.
+سیستم آماده استفاده است و تمامی ماژول‌های اصلی (انبار، مشتریان، فروش، حسابداری) به درستی کار می‌کنند.
 
 ---
 
-**Installation Complete!** 🎉
-
-Your Gold Shop Management System is now running at: `https://yourdomain.com`
-
-Remember to:
-- Change all default passwords
-- Regularly update the system
-- Monitor backups
-- Keep SSL certificates updated 
+**تاریخ آخرین بروزرسانی**: 22 ژوئیه 2025  
+**نسخه راهنما**: 1.0  
+**وضعیت**: آماده تولید

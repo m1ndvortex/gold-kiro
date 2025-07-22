@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>فاکتور شماره <%= invoice.invoice_number %></title>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment-jalaali@0.10.0/index.js"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
         
@@ -244,7 +246,15 @@
                 </div>
                 <div class="info-row">
                     <span class="info-label">تاریخ:</span>
-                    <span class="info-value"><%= moment(invoice.invoice_date).format('YYYY/MM/DD') %></span>
+                    <span class="info-value">
+                        <% if (invoice.invoice_date_shamsi) { %>
+                            <%= invoice.invoice_date_shamsi %>
+                        <% } else { %>
+                            <span class="shamsi-date" data-gregorian="<%= invoice.invoice_date %>">
+                                <%= moment(invoice.invoice_date).format('YYYY/MM/DD') %>
+                            </span>
+                        <% } %>
+                    </span>
                 </div>
             </div>
         </div>
@@ -362,8 +372,31 @@
     </div>
 
     <script>
+        // Convert Gregorian dates to Persian for old records
+        function convertGregorianToPersian() {
+            const shamsiElements = document.querySelectorAll('.shamsi-date');
+            
+            shamsiElements.forEach(function(element) {
+                const gregorianDate = element.getAttribute('data-gregorian');
+                if (gregorianDate && typeof moment !== 'undefined') {
+                    try {
+                        // Use moment-jalaali to convert to Persian date
+                        const persianDate = moment(gregorianDate).format('jYYYY/jMM/jDD');
+                        element.textContent = persianDate;
+                    } catch (error) {
+                        console.log('Error converting date:', error);
+                        // Fallback to original date if conversion fails
+                    }
+                }
+            });
+        }
+
         // Auto print when page loads
         window.onload = function() {
+            // Convert dates first
+            convertGregorianToPersian();
+            
+            // Then print after a short delay
             setTimeout(function() {
                 window.print();
             }, 500);

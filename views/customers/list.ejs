@@ -121,12 +121,12 @@
                 <tr>
                     <th>وضعیت</th>
                     <th>کد مشتری</th>
-                    <th>اطلاعات شخصی</th>
-                    <th>تماس</th>
-                    <th>نوع</th>
-                    <th>سن</th>
-                    <th>حساب مالی</th>
-                    <th>آخرین خرید</th>
+                    <th>نام مشتری</th>
+                    <th>تلفن</th>
+                    <th>کل خرید (ریال)</th>
+                    <th>کل پرداخت (ریال)</th>
+                    <th>مانده حساب (ریال)</th>
+                    <th>وضعیت</th>
                     <th>عملیات</th>
                 </tr>
             </thead>
@@ -158,99 +158,70 @@
                                 </div>
                             </td>
                             
-                            <!-- اطلاعات شخصی -->
-                            <td class="info-cell">
-                                <div class="customer-info">
+                            <!-- نام مشتری -->
+                            <td class="name-cell">
+                                <div class="customer-name">
                                     <div class="name"><%= customer.full_name %></div>
-                                    <% if (customer.email) { %>
-                                        <div class="email">📧 <%= customer.email %></div>
-                                    <% } %>
                                     <% if (customer.national_id) { %>
-                                        <div class="national-id">🆔 <%= customer.national_id %></div>
+                                        <div class="national-id">کد ملی: <%= customer.national_id %></div>
                                     <% } %>
                                 </div>
                             </td>
                             
-                            <!-- تماس -->
-                            <td class="contact-cell">
-                                <div class="contact-info">
-                                    <% if (customer.phone) { %>
-                                        <div class="phone">📱 <%= customer.phone %></div>
-                                    <% } %>
-                                    <% if (customer.emergency_phone) { %>
-                                        <div class="emergency">🚨 <%= customer.emergency_phone %></div>
-                                    <% } %>
-                                </div>
-                            </td>
-                            
-                            <!-- نوع مشتری -->
-                            <td class="type-cell">
-                                <% if (customer.customer_type === 'vip') { %>
-                                    <span class="type-badge vip">⭐ VIP</span>
-                                <% } else if (customer.customer_type === 'wholesale') { %>
-                                    <span class="type-badge wholesale">🏢 عمده</span>
-                                <% } else if (customer.customer_type === 'regular') { %>
-                                    <span class="type-badge regular">🔄 ثابت</span>
-                                <% } else { %>
-                                    <span class="type-badge normal">👤 عادی</span>
-                                <% } %>
-                            </td>
-                            
-                            <!-- سن -->
-                            <td class="age-cell">
-                                <% if (customer.birth_date) { %>
-                                    <% const age = Math.floor((new Date() - new Date(customer.birth_date)) / (365.25 * 24 * 60 * 60 * 1000)) %>
-                                    <div class="age-info">
-                                        <span class="age"><%= age %> سال</span>
-                                        <% if (customer.gender === 'male') { %>
-                                            <span class="gender">👨</span>
-                                        <% } else if (customer.gender === 'female') { %>
-                                            <span class="gender">👩</span>
-                                        <% } %>
-                                    </div>
+                            <!-- تلفن -->
+                            <td class="phone-cell">
+                                <% if (customer.phone) { %>
+                                    <%= customer.phone %>
                                 <% } else { %>
                                     <span class="no-data">-</span>
                                 <% } %>
                             </td>
                             
-                            <!-- حساب مالی -->
+                            <!-- کل خرید -->
+                            <td class="purchases-cell">
+                                <% if (customer.total_purchases && customer.total_purchases > 0) { %>
+                                    <span class="amount-positive">
+                                        <%= Number(customer.total_purchases).toLocaleString() %>
+                                    </span>
+                                <% } else { %>
+                                    <span class="amount-zero">0</span>
+                                <% } %>
+                            </td>
+                            
+                            <!-- کل پرداخت -->
+                            <td class="payments-cell">
+                                <% if (customer.total_payments && customer.total_payments > 0) { %>
+                                    <span class="amount-positive">
+                                        <%= Number(customer.total_payments).toLocaleString() %>
+                                    </span>
+                                <% } else { %>
+                                    <span class="amount-zero">0</span>
+                                <% } %>
+                            </td>
+                            
+                            <!-- مانده حساب -->
                             <td class="balance-cell">
                                 <% if (customer.current_balance > 0) { %>
-                                    <div class="balance debt">
-                                        <span class="icon">💸</span>
-                                        <span class="amount"><%= formatNumber(customer.current_balance) %></span>
-                                        <span class="label">بدهکار</span>
-                                    </div>
+                                    <span class="amount-debt">
+                                        <%= Number(customer.current_balance).toLocaleString() %>
+                                    </span>
                                 <% } else if (customer.current_balance < 0) { %>
-                                    <div class="balance credit">
-                                        <span class="icon">💰</span>
-                                        <span class="amount"><%= formatNumber(Math.abs(customer.current_balance)) %></span>
-                                        <span class="label">بستانکار</span>
-                                    </div>
+                                    <span class="amount-credit">
+                                        <%= Number(Math.abs(customer.current_balance)).toLocaleString() %>
+                                    </span>
                                 <% } else { %>
-                                    <div class="balance clear">
-                                        <span class="icon">✅</span>
-                                        <span class="label">تسویه</span>
-                                    </div>
+                                    <span class="amount-zero">0</span>
                                 <% } %>
                             </td>
                             
-                            <!-- آخرین خرید -->
-                            <td class="purchase-cell">
-                                <% if (customer.last_purchase_date) { %>
-                                    <% const daysSince = Math.floor((new Date() - new Date(customer.last_purchase_date)) / (24 * 60 * 60 * 1000)) %>
-                                    <div class="purchase-info">
-                                        <span class="date"><%= moment(customer.last_purchase_date).format('YYYY/MM/DD') %></span>
-                                        <% if (daysSince > 90) { %>
-                                            <span class="days old">⚠️ <%= daysSince %> روز پیش</span>
-                                        <% } else if (daysSince > 30) { %>
-                                            <span class="days warning">⏰ <%= daysSince %> روز پیش</span>
-                                        <% } else { %>
-                                            <span class="days recent">🆕 <%= daysSince %> روز پیش</span>
-                                        <% } %>
-                                    </div>
+                            <!-- وضعیت -->
+                            <td class="status-simple-cell">
+                                <% if (customer.current_balance > 0) { %>
+                                    <span class="badge debt">بدهکار</span>
+                                <% } else if (customer.current_balance < 0) { %>
+                                    <span class="badge credit">بستانکار</span>
                                 <% } else { %>
-                                    <span class="no-data">-</span>
+                                    <span class="badge clear">تسویه</span>
                                 <% } %>
                             </td>
                             
@@ -597,6 +568,49 @@ body {
 .badge.active { background: #d4edda; color: #155724; }
 .badge.inactive { background: #f8d7da; color: #721c24; }
 .badge.vip { background: #fff3cd; color: #856404; }
+.badge.debt { background: #f8d7da; color: #721c24; }
+.badge.credit { background: #d4edda; color: #155724; }
+.badge.clear { background: #e2e3e5; color: #495057; }
+
+/* Financial Amount Styles */
+.amount-positive {
+    color: #28a745;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.amount-debt {
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.amount-credit {
+    color: #28a745;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.amount-zero {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.customer-name .name {
+    font-weight: bold;
+    color: #2d3436;
+    margin-bottom: 3px;
+}
+
+.customer-name .national-id {
+    font-size: 0.8em;
+    color: #636e72;
+}
+
+.phone-cell {
+    font-weight: 600;
+    color: #00b894;
+}
 
 .customer-code {
     font-weight: bold;

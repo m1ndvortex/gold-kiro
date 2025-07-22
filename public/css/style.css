@@ -1,17 +1,36 @@
 /* RTL Persian Gold Shop Management System */
+/* Import Persian fonts */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: 'Vazirmatn', 'Tahoma', 'Arial Unicode MS', sans-serif !important;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Vazirmatn', 'Tahoma', 'Arial Unicode MS', sans-serif !important;
     direction: rtl;
     text-align: right;
     background-color: #f8f9fa;
     color: #333;
     line-height: 1.6;
+}
+
+/* Fix Persian text rendering */
+div, span, p, h1, h2, h3, h4, h5, h6, 
+input, textarea, select, button, label,
+table, th, td, tr, a {
+    font-family: 'Vazirmatn', 'Tahoma', 'Arial Unicode MS', sans-serif !important;
+}
+
+/* Bootstrap overrides for Persian */
+.btn, .form-control, .form-select, .form-label,
+.card, .card-body, .card-title, .card-text,
+.table, .table th, .table td,
+.nav, .nav-link, .navbar-brand {
+    font-family: 'Vazirmatn', 'Tahoma', 'Arial Unicode MS', sans-serif !important;
 }
 
 /* Container */
@@ -60,6 +79,59 @@ body {
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
+/* Force clear any cached styles */
+/* Navigation Links - Final Version */
+body nav.nav ul.nav-list li.nav-item a.nav-link {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 10px 6px !important;
+    color: #555 !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    border-left: 1px solid #eee !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    gap: 4px !important;
+    min-height: 60px !important;
+    box-sizing: border-box !important;
+}
+
+body nav.nav ul.nav-list li.nav-item a.nav-link .nav-icon {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+    order: 1 !important;
+    line-height: 1 !important;
+}
+
+body nav.nav ul.nav-list li.nav-item a.nav-link .nav-icon i {
+    display: block !important;
+    font-size: 16px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    line-height: 1 !important;
+}
+
+body nav.nav ul.nav-list li.nav-item a.nav-link .nav-text {
+    display: block !important;
+    font-size: 11px !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    order: 2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+}
+
 .nav-list {
     list-style: none;
     display: flex;
@@ -72,14 +144,35 @@ body {
 }
 
 .nav-link {
-    display: block;
-    padding: 15px 20px;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 12px 8px !important;
     color: #555;
     text-decoration: none;
     text-align: center;
     border-left: 1px solid #eee;
     transition: all 0.3s ease;
     position: relative;
+    font-size: 12px;
+    line-height: 1.2;
+    gap: 4px !important;
+}
+
+.nav-link i {
+    display: block !important;
+    font-size: 18px !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.nav-link span {
+    display: block !important;
+    font-size: 12px !important;
+    line-height: 1.1 !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
 }
 
 .nav-link:hover,
@@ -425,8 +518,19 @@ body {
     }
     
     .nav-link {
-        border-left: none;
-        border-bottom: 1px solid #eee;
+        border-left: none !important;
+        border-bottom: 1px solid #eee !important;
+        padding: 10px 8px !important;
+        font-size: 11px !important;
+        gap: 3px !important;
+    }
+    
+    .nav-link i {
+        font-size: 16px !important;
+    }
+    
+    .nav-link span {
+        font-size: 11px !important;
     }
     
     .stats-grid {
@@ -439,6 +543,22 @@ body {
     
     .container {
         padding: 0 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-link {
+        padding: 8px 5px !important;
+        font-size: 10px !important;
+        gap: 2px !important;
+    }
+    
+    .nav-link i {
+        font-size: 14px !important;
+    }
+    
+    .nav-link span {
+        font-size: 10px !important;
     }
 }
 
@@ -581,4 +701,107 @@ select#item_search option {
     color: #856404;
     background-color: #fff3cd;
     border: 1px solid #ffeaa7;
+}
+/* ====
+====================================
+   COMPREHENSIVE PERSIAN FONT FIX
+   ======================================== */
+
+/* Force Persian font on ALL elements EXCEPT FontAwesome icons */
+*:not([class*="fa-"]):not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(.fad):not(.fat) {
+    font-family: 'Vazirmatn', 'Tahoma', 'Arial Unicode MS', sans-serif !important;
+}
+
+/* Specific element targeting */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video,
+input, textarea, select, button, option {
+    font-family: 'Vazirmatn', 'Tahoma', 'Arial Unicode MS', sans-serif !important;
+}
+
+/* Bootstrap specific overrides */
+.btn, .btn-primary, .btn-secondary, .btn-success, .btn-danger, .btn-warning, .btn-info, .btn-light, .btn-dark,
+.form-control, .form-select, .form-check-label, .form-label, .form-text,
+.card, .card-header, .card-body, .card-footer, .card-title, .card-subtitle, .card-text,
+.table, .table th, .table td, .table-responsive,
+.nav, .nav-link, .nav-tabs, .nav-pills,
+.navbar, .navbar-brand, .navbar-nav, .navbar-text,
+.dropdown, .dropdown-menu, .dropdown-item,
+.modal, .modal-header, .modal-body, .modal-footer, .modal-title,
+.alert, .badge, .breadcrumb, .pagination,
+.list-group, .list-group-item {
+    font-family: 'Vazirmatn', 'Tahoma', 'Arial Unicode MS', sans-serif !important;
+}
+
+/* Text rendering optimization for Persian */
+body, html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1;
+    font-kerning: normal;
+}
+
+/* Ensure proper RTL direction */
+.container, .container-fluid, .row, .col {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Fix for input placeholders */
+input::placeholder, textarea::placeholder {
+    font-family: 'Vazirmatn', 'Tahoma', 'Arial Unicode MS', sans-serif !important;
+    direction: rtl;
+    text-align: right;
+}
+
+/* Fix for select options */
+select option {
+    font-family: 'Vazirmatn', 'Tahoma', 'Arial Unicode MS', sans-serif !important;
+    direction: rtl;
+}
+
+/* Ensure numbers display correctly in Persian context */
+.persian-numbers {
+    font-feature-settings: "tnum" 1;
+}
+
+/* Fix for any remaining elements */
+[class*="col-"], [class*="btn-"], [class*="form-"], [class*="card-"], 
+[class*="table-"], [class*="nav-"], [class*="modal-"], [class*="alert-"] {
+    font-family: 'Vazirmatn', 'Tahoma', 'Arial Unicode MS', sans-serif !important;
+}
+
+/* FontAwesome icon fixes */
+.fa, .fas, .far, .fab, .fal, .fad, .fat,
+[class*="fa-"], i[class*="fa-"] {
+    font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 6 Brands", "FontAwesome" !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-transform: none !important;
+    line-height: 1 !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Specific FontAwesome brand icons */
+.fab {
+    font-weight: 400 !important;
+}
+
+/* Regular FontAwesome icons */
+.far {
+    font-weight: 400 !important;
 }

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تراکنش‌های بانکی - طلافروشی زرین</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        body {
+            background-color: #f8f9fa;
+            direction: rtl;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .table th {
+            background-color: #f8f9fa;
+            border-top: none;
+            font-weight: 600;
+        }
+        .badge-deposit {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .badge-withdrawal {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .amount-positive {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .amount-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">
+                        <i class="fas fa-university me-2"></i>
+                        تراکنش‌های بانکی
+                    </h2>
+                    <div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
+                            <i class="fas fa-plus me-2"></i>
+                            تراکنش جدید
+                        </button>
+                        <a href="/accounting/bank-accounts" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            بازگشت به حساب‌ها
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="GET" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">حساب بانکی</label>
+                                <select name="bank_account_id" class="form-select">
+                                    <option value="">همه حساب‌ها</option>
+                                    <% if (bankAccounts && bankAccounts.length > 0) { %>
+                                        <% bankAccounts.forEach(account => { %>
+                                            <option value="<%= account.id %>" <%= (query && query.bank_account_id == account.id) ? 'selected' : '' %>>
+                                                <%= account.bank_name %> - <%= account.account_number %>
+                                            </option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">نوع تراکنش</label>
+                                <select name="transaction_type" class="form-select">
+                                    <option value="">همه انواع</option>
+                                    <option value="deposit" <%= (query && query.transaction_type === 'deposit') ? 'selected' : '' %>>واریز</option>
+                                    <option value="withdrawal" <%= (query && query.transaction_type === 'withdrawal') ? 'selected' : '' %>>برداشت</option>
+                                    <option value="transfer_in" <%= (query && query.transaction_type === 'transfer_in') ? 'selected' : '' %>>انتقال ورودی</option>
+                                    <option value="transfer_out" <%= (query && query.transaction_type === 'transfer_out') ? 'selected' : '' %>>انتقال خروجی</option>
+                                    <option value="fee" <%= (query && query.transaction_type === 'fee') ? 'selected' : '' %>>کارمزد</option>
+                                    <option value="interest" <%= (query && query.transaction_type === 'interest') ? 'selected' : '' %>>سود</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">از تاریخ</label>
+                                <input type="date" name="from_date" class="form-control" value="<%= (query && query.from_date) || '' %>">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">تا تاریخ</label>
+                                <input type="date" name="to_date" class="form-control" value="<%= (query && query.to_date) || '' %>">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-2"></i>
+                                        جستجو
+                                    </button>
+                                    <a href="/accounting/bank-transactions" class="btn btn-outline-secondary">
+                                        <i class="fas fa-refresh me-2"></i>
+                                        پاک کردن
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Transactions Table -->
+                <div class="card">
+                    <div class="card-body">
+                        <% if (transactions && transactions.length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>تاریخ</th>
+                                            <th>حساب بانکی</th>
+                                            <th>نوع تراکنش</th>
+                                            <th>مبلغ</th>
+                                            <th>موجودی پس از تراکنش</th>
+                                            <th>شرح</th>
+                                            <th>شماره مرجع</th>
+                                            <th>وضعیت تطبیق</th>
+                                            <th>عملیات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% transactions.forEach(transaction => { %>
+                                            <tr>
+                                                <td>
+                                                    <%= new Date(transaction.transaction_date).toLocaleDateString('fa-IR') %>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-bold"><%= transaction.bank_name %></div>
+                                                    <small class="text-muted"><%= transaction.account_number %></small>
+                                                </td>
+                                                <td>
+                                                    <% 
+                                                    let badgeClass = '';
+                                                    let typeText = '';
+                                                    switch(transaction.transaction_type) {
+                                                        case 'deposit':
+                                                            badgeClass = 'badge-deposit';
+                                                            typeText = 'واریز';
+                                                            break;
+                                                        case 'withdrawal':
+                                                            badgeClass = 'badge-withdrawal';
+                                                            typeText = 'برداشت';
+                                                            break;
+                                                        case 'transfer_in':
+                                                            badgeClass = 'badge-deposit';
+                                                            typeText = 'انتقال ورودی';
+                                                            break;
+                                                        case 'transfer_out':
+                                                            badgeClass = 'badge-withdrawal';
+                                                            typeText = 'انتقال خروجی';
+                                                            break;
+                                                        case 'fee':
+                                                            badgeClass = 'badge-withdrawal';
+                                                            typeText = 'کارمزد';
+                                                            break;
+                                                        case 'interest':
+                                                            badgeClass = 'badge-deposit';
+                                                            typeText = 'سود';
+                                                            break;
+                                                        default:
+                                                            badgeClass = 'bg-secondary';
+                                                            typeText = transaction.transaction_type;
+                                                    }
+                                                    %>
+                                                    <span class="badge <%= badgeClass %>"><%= typeText %></span>
+                                                </td>
+                                                <td>
+                                                    <% if (['deposit', 'transfer_in', 'interest'].includes(transaction.transaction_type)) { %>
+                                                        <span class="amount-positive">
+                                                            +<%= Number(transaction.amount).toLocaleString() %> ریال
+                                                        </span>
+                                                    <% } else { %>
+                                                        <span class="amount-negative">
+                                                            -<%= Number(transaction.amount).toLocaleString() %> ریال
+                                                        </span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-bold">
+                                                        <%= Number(transaction.balance_after).toLocaleString() %> ریال
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <%= transaction.description %>
+                                                </td>
+                                                <td>
+                                                    <% if (transaction.reference_number) { %>
+                                                        <code><%= transaction.reference_number %></code>
+                                                    <% } else { %>
+                                                        <span class="text-muted">-</span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (transaction.reconciled) { %>
+                                                        <span class="badge bg-success">تطبیق شده</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-warning">در انتظار تطبیق</span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary btn-sm" 
+                                                                onclick="viewTransaction(<%= transaction.id %>)">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <% if (!transaction.reconciled) { %>
+                                                            <button class="btn btn-outline-success btn-sm" 
+                                                                    onclick="reconcileTransaction(<%= transaction.id %>)">
+                                                                <i class="fas fa-check"></i>
+                                                            </button>
+                                                        <% } %>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Summary -->
+                            <div class="row mt-4">
+                                <div class="col-md-4">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body text-center">
+                                            <h5>مجموع واریزها</h5>
+                                            <h3><%= Number(summary?.total_deposits || 0).toLocaleString() %> ریال</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-danger text-white">
+                                        <div class="card-body text-center">
+                                            <h5>مجموع برداشت‌ها</h5>
+                                            <h3><%= Number(summary?.total_withdrawals || 0).toLocaleString() %> ریال</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body text-center">
+                                            <h5>تعداد تراکنش‌ها</h5>
+                                            <h3><%= transactions.length %></h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <div class="text-center py-5">
+                                <i class="fas fa-university fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">هیچ تراکنش بانکی یافت نشد</h5>
+                                <p class="text-muted">برای شروع، یک تراکنش جدید اضافه کنید.</p>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTransactionModal">
+                                    <i class="fas fa-plus me-2"></i>
+                                    تراکنش جدید
+                                </button>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div class="modal fade" id="addTransactionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">تراکنش بانکی جدید</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/accounting/bank-transactions" method="POST">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">حساب بانکی *</label>
+                                <select name="bank_account_id" class="form-select" required>
+                                    <option value="">انتخاب حساب بانکی</option>
+                                    <% if (bankAccounts && bankAccounts.length > 0) { %>
+                                        <% bankAccounts.forEach(account => { %>
+                                            <option value="<%= account.id %>">
+                                                <%= account.bank_name %> - <%= account.account_number %>
+                                            </option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">نوع تراکنش *</label>
+                                <select name="transaction_type" class="form-select" required>
+                                    <option value="">انتخاب نوع تراکنش</option>
+                                    <option value="deposit">واریز</option>
+                                    <option value="withdrawal">برداشت</option>
+                                    <option value="transfer_in">انتقال ورودی</option>
+                                    <option value="transfer_out">انتقال خروجی</option>
+                                    <option value="fee">کارمزد</option>
+                                    <option value="interest">سود</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">مبلغ (ریال) *</label>
+                                <input type="number" name="amount" class="form-control" required min="0" step="1000">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">تاریخ تراکنش *</label>
+                                <input type="date" name="transaction_date" class="form-control" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">شرح تراکنش *</label>
+                                <textarea name="description" class="form-control" rows="3" required></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">شماره مرجع</label>
+                                <input type="text" name="reference_number" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                        <button type="submit" class="btn btn-primary">ثبت تراکنش</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
+    <script>
+        function viewTransaction(id) {
+            // Implementation for viewing transaction details
+            alert('مشاهده جزئیات تراکنش ' + id);
+        }
+
+        function reconcileTransaction(id) {
+            if (confirm('آیا از تطبیق این تراکنش اطمینان دارید؟')) {
+                fetch(`/accounting/bank-transactions/${id}/reconcile`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('خطا در تطبیق تراکنش');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('خطا در تطبیق تراکنش');
+                });
+            }
+        }
+
+        // Set today's date as default
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.querySelector('input[name="transaction_date"]');
+            if (dateInput && !dateInput.value) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+        });
+    </script>
+</body>
+</html>

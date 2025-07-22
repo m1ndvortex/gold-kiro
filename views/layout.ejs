@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %> - طلافروشی موسی پور</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
     <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -22,7 +22,7 @@
                         <h1>طلافروشی موسی پور</h1>
                     </div>
                     <div class="user-info">
-                        <span>خوش آمدید، <%= user.full_name %></span>
+                        <span>خوش آمدید، <%= user.full_name || user.username %></span>
                         <a href="/logout" class="btn btn-secondary btn-sm">خروج</a>
                     </div>
                 </div>
@@ -35,32 +35,38 @@
                 <ul class="nav-list">
                     <li class="nav-item">
                         <a href="/dashboard" class="nav-link <%= title.includes('داشبورد') ? 'active' : '' %>">
-                            داشبورد
+                            <div class="nav-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            <div class="nav-text">داشبورد</div>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/inventory" class="nav-link <%= title.includes('انبار') ? 'active' : '' %>">
-                            انبار
+                            <div class="nav-icon"><i class="fas fa-warehouse"></i></div>
+                            <div class="nav-text">انبار</div>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/customers" class="nav-link <%= title.includes('مشتریان') ? 'active' : '' %>">
-                            مشتریان
+                            <div class="nav-icon"><i class="fas fa-users"></i></div>
+                            <div class="nav-text">مشتریان</div>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/sales" class="nav-link <%= title.includes('فروش') ? 'active' : '' %>">
-                            فروش و فاکتور
+                            <div class="nav-icon"><i class="fas fa-receipt"></i></div>
+                            <div class="nav-text">فروش و فاکتور</div>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/accounting" class="nav-link <%= title.includes('حسابداری') ? 'active' : '' %>">
-                            حسابداری
+                            <div class="nav-icon"><i class="fas fa-calculator"></i></div>
+                            <div class="nav-text">حسابداری</div>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/settings" class="nav-link <%= title.includes('تنظیمات') ? 'active' : '' %>">
-                            تنظیمات
+                            <div class="nav-icon"><i class="fas fa-cogs"></i></div>
+                            <div class="nav-text">تنظیمات</div>
                         </a>
                     </li>
                 </ul>

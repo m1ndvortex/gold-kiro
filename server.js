@@ -2842,6 +2842,7 @@ app.post('/accounting/bank-accounts/add', requireAuth, async (req, res) => {
 app.get('/accounting/bank-accounts/:id/transactions', requireAuth, async (req, res) => {
     try {
         const bankAccountId = req.params.id;
+        const { transaction_type, from_date, to_date } = req.query;
         
         const [bankAccount] = await db.execute(`
             SELECT * FROM bank_accounts WHERE id = ? AND is_active = true
@@ -2851,19 +2852,134 @@ app.get('/accounting/bank-accounts/:id/transactions', requireAuth, async (req, r
             return res.status(404).send('حساب بانکی یافت نشد');
         }
         
+        // Get all bank accounts for the filter dropdown
+        const [bankAccounts] = await db.execute(`
+            SELECT id, bank_name, account_number FROM bank_accounts WHERE is_active = true ORDER BY bank_name
+        `);
+        
+        // Build dynamic query for filtering
+        let whereClause = 'bt.bank_account_id = ?';
+        let params = [bankAccountId];
+        
+        if (transaction_type) {
+            whereClause += ' AND bt.transaction_type = ?';
+            params.push(transaction_type);
+        }
+        
+        if (from_date) {
+            whereClause += ' AND DATE(bt.transaction_date) >= ?';
+            params.push(from_date);
+        }
+        
+        if (to_date) {
+            whereClause += ' AND DATE(bt.transaction_date) <= ?';
+            params.push(to_date);
+        }
+        
         const [transactions] = await db.execute(`
-            SELECT bt.*, je.description as journal_description
+            SELECT bt.*, ba.bank_name, ba.account_number, je.description as journal_description
             FROM bank_transactions bt
+            LEFT JOIN bank_accounts ba ON bt.bank_account_id = ba.id
             LEFT JOIN journal_entries je ON bt.related_journal_entry_id = je.id
-            WHERE bt.bank_account_id = ?
+            WHERE ${whereClause}
             ORDER BY bt.transaction_date DESC, bt.created_at DESC
-        `, [bankAccountId]);
+        `, params);
+        
+        // Calculate summary
+        const summary = {
+            total_deposits: 0,
+            total_withdrawals: 0
+        };
+        
+        transactions.forEach(transaction => {
+            if (['deposit', 'transfer_in', 'interest'].includes(transaction.transaction_type)) {
+                summary.total_deposits += parseFloat(transaction.amount || 0);
+            } else {
+                summary.total_withdrawals += parseFloat(transaction.amount || 0);
+            }
+        });
         
         res.render('accounting/bank-transactions', {
             title: `حسابداری - تراکنش‌های ${bankAccount[0].bank_name}`,
             user: req.session.user,
             bankAccount: bankAccount[0],
-            transactions: transactions
+            bankAccounts: bankAccounts,
+            transactions: transactions,
+            summary: summary,
+            query: req.query
+        });
+    } catch (error) {
+        console.error('Bank transactions error:', error);
+        res.status(500).send('خطا در بارگذاری تراکنش‌های بانکی');
+    }
+});
+
+// General Bank Transactions (all accounts)
+app.get('/accounting/bank-transactions', requireAuth, async (req, res) => {
+    try {
+        const { bank_account_id, transaction_type, from_date, to_date } = req.query;
+        
+        // Get all bank accounts for the filter dropdown
+        const [bankAccounts] = await db.execute(`
+            SELECT id, bank_name, account_number FROM bank_accounts WHERE is_active = true ORDER BY bank_name
+        `);
+        
+        // Build dynamic query for filtering
+        let whereClause = '1=1';
+        let params = [];
+        
+        if (bank_account_id) {
+            whereClause += ' AND bt.bank_account_id = ?';
+            params.push(bank_account_id);
+        }
+        
+        if (transaction_type) {
+            whereClause += ' AND bt.transaction_type = ?';
+            params.push(transaction_type);
+        }
+        
+        if (from_date) {
+            whereClause += ' AND DATE(bt.transaction_date) >= ?';
+            params.push(from_date);
+        }
+        
+        if (to_date) {
+            whereClause += ' AND DATE(bt.transaction_date) <= ?';
+            params.push(to_date);
+        }
+        
+        const [transactions] = await db.execute(`
+            SELECT bt.*, ba.bank_name, ba.account_number, je.description as journal_description
+            FROM bank_transactions bt
+            LEFT JOIN bank_accounts ba ON bt.bank_account_id = ba.id
+            LEFT JOIN journal_entries je ON bt.related_journal_entry_id = je.id
+            WHERE ${whereClause}
+            ORDER BY bt.transaction_date DESC, bt.created_at DESC
+            LIMIT 1000
+        `, params);
+        
+        // Calculate summary
+        const summary = {
+            total_deposits: 0,
+            total_withdrawals: 0
+        };
+        
+        transactions.forEach(transaction => {
+            if (['deposit', 'transfer_in', 'interest'].includes(transaction.transaction_type)) {
+                summary.total_deposits += parseFloat(transaction.amount || 0);
+            } else {
+                summary.total_withdrawals += parseFloat(transaction.amount || 0);
+            }
+        });
+        
+        res.render('accounting/bank-transactions', {
+            title: 'حسابداری - تراکنش‌های بانکی',
+            user: req.session.user,
+            bankAccount: null,
+            bankAccounts: bankAccounts,
+            transactions: transactions,
+            summary: summary,
+            query: req.query
         });
     } catch (error) {
         console.error('Bank transactions error:', error);
