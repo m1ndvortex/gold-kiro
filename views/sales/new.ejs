@@ -141,7 +141,7 @@
                                         <th>تعداد</th>
                                         <th>وزن (گرم)</th>
                                         <th>اجرت (%)</th>
-                                        <th>سود (ریال)</th>
+                                        <th>سود (%)</th>
                                         <th>مالیات (%)</th>
                                         <th>قیمت نهایی</th>
                                         <th>عملیات</th>
@@ -324,7 +324,7 @@
                 quantity: 1,
                 weight: 0, // Manual input
                 laborPercentage: 0, // Percentage-based labor cost
-                profit: 0, // Manual input in Rials
+                profitPercentage: 0, // Percentage-based profit
                 taxPercentage: 0, // Percentage-based tax
                 totalPrice: 0,
                 tableId: ++itemCounter
@@ -364,9 +364,10 @@
                     <small style="display: block; color: #666;">درصد</small>
                 </td>
                 <td>
-                    <input type="number" min="0" value="${item.profit}" 
-                           onchange="updateProfit(${item.tableId}, this.value)"
-                           class="profit-input" style="width: 100px;" placeholder="0">
+                    <input type="number" min="0" max="100" step="0.1" value="${item.profitPercentage}" 
+                           onchange="updateProfitPercentage(${item.tableId}, this.value)"
+                           class="profit-input" style="width: 80px;" placeholder="0">
+                    <small style="display: block; color: #666;">درصد</small>
                 </td>
                 <td>
                     <input type="number" min="0" max="100" step="0.1" value="${item.taxPercentage}" 
@@ -419,10 +420,10 @@
             }
         }
 
-        function updateProfit(tableId, newProfit) {
+        function updateProfitPercentage(tableId, newProfitPercentage) {
             const item = selectedItems.find(i => i.tableId === tableId);
             if (item) {
-                item.profit = parseFloat(newProfit) || 0;
+                item.profitPercentage = parseFloat(newProfitPercentage) || 0;
                 calculateItemPrice(tableId);
                 updateTotals();
             }
@@ -445,25 +446,21 @@
                 if (item.weight <= 0) {
                     item.totalPrice = 0;
                 } else {
-                    // Base price: weight × daily gold rate
-                    let basePrice = item.weight * dailyGoldRate;
+                    // Calculate per-gram costs based on percentages of gold rate
+                    const laborCostPerGram = dailyGoldRate * (item.laborPercentage / 100);
+                    const profitCostPerGram = dailyGoldRate * (item.profitPercentage / 100);
+                    const taxCostPerGram = dailyGoldRate * (item.taxPercentage / 100);
                     
-                    // Add labor cost as percentage
-                    const laborCost = basePrice * (item.laborPercentage / 100);
+                    // Total cost per gram = gold rate + labor + profit + tax
+                    const totalCostPerGram = dailyGoldRate + laborCostPerGram + profitCostPerGram + taxCostPerGram;
                     
-                    // Add tax as percentage of (base price + labor cost)
-                    const priceWithLabor = basePrice + laborCost;
-                    const taxCost = priceWithLabor * (item.taxPercentage / 100);
-                    
-                    // Total per unit = base price + labor + fixed profit + tax
-                    const unitPrice = basePrice + laborCost + (item.profit || 0) + taxCost;
-                    
-                    // Final total price
-                    item.totalPrice = unitPrice * item.quantity;
+                    // Final price = weight × total cost per gram × quantity
+                    item.totalPrice = item.weight * totalCostPerGram * item.quantity;
                     
                     // Store calculated values for database
-                    item.calculatedLaborCost = laborCost * item.quantity;
-                    item.calculatedTaxCost = taxCost * item.quantity;
+                    item.calculatedLaborCost = laborCostPerGram * item.weight * item.quantity;
+                    item.calculatedProfitCost = profitCostPerGram * item.weight * item.quantity;
+                    item.calculatedTaxCost = taxCostPerGram * item.weight * item.quantity;
                 }
                 
                 const totalCell = document.getElementById(`total-${tableId}`);
@@ -502,7 +499,7 @@
             selectedItems.forEach(item => {
                 totalWeight += (item.weight || 0) * item.quantity;
                 totalLabor += (item.calculatedLaborCost || 0);
-                totalProfit += (item.profit || 0) * item.quantity;
+                totalProfit += (item.calculatedProfitCost || 0);
                 totalTax += (item.calculatedTaxCost || 0);
                 subtotal += item.totalPrice || 0;
             });
