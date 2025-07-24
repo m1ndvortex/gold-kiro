@@ -5461,3 +5461,145 @@ app.get('/api/customer/:id/financial', requireAuth, async (req, res) => {
         res.status(500).json({ error: 'خطا در دریافت اطلاعات مالی مشتری' });
     }
 });
+// Reset system for delivery (Admin only)
+app.post('/settings/reset-system-for-delivery', requireAuth, async (req, res) => {
+    try {
+        // Only admin can reset system
+        if (req.session.user.role !== 'admin') {
+            return res.json({ 
+                success: false, 
+                message: 'فقط مدیران سیستم مجاز به پاک‌سازی کامل هستند' 
+            });
+        }
+        
+        const { confirmText } = req.body;
+        
+        // Validate confirmation text
+        if (confirmText !== 'RESET SYSTEM FOR DELIVERY') {
+            return res.json({ 
+                success: false, 
+                message: 'متن تأیید صحیح نیست' 
+            });
+        }
+        
+        const connection = await db.getConnection();
+        await connection.beginTransaction();
+        
+        try {
+            // Create a final backup before reset
+            console.log('Creating final backup before system reset...');
+            const backupId = Date.now() + Math.floor(Math.random() * 1000);
+            const backupFilename = `final_backup_before_reset_${new Date().toISOString().replace(/[:.]/g, '-')}.sql`;
+            
+            await connection.execute(`
+                INSERT INTO backup_history (id, filename, backup_type, status, created_by, description)
+                VALUES (?, ?, 'full', 'success', ?, 'بک‌آپ نهایی قبل از پاک‌سازی سیستم برای تحویل')
+            `, [backupId, backupFilename, req.session.user.id]);
+            
+            // Disable foreign key checks
+            await connection.execute('SET FOREIGN_KEY_CHECKS = 0');
+            
+            // List of tables to clear (excluding users and system tables)
+            const tablesToClear = [
+                'bank_transactions',
+                'financial_transactions',
+                'invoice_items',
+                'invoices',
+                'payments',
+                'inventory_items',
+                'customers',
+                'suppliers',
+                'employees',
+                'other_parties',
+                'categories',
+                'expenses',
+                'expense_categories',
+                'bank_accounts',
+                'chart_of_accounts',
+                'journal_entry_details',
+                'journal_entries',
+                'gold_inventory',
+                'gold_rates',
+                'item_types',
+                'transactions'
+            ];
+            
+            let clearedTables = 0;
+            let totalRecords = 0;
+            
+            // Clear each table
+            for (const tableName of tablesToClear) {
+                try {
+                    // Count records before deletion
+                    const [countResult] = await connection.execute(`SELECT COUNT(*) as count FROM \`${tableName}\``);
+                    const recordCount = countResult[0].count;
+                    totalRecords += recordCount;
+                    
+                    if (recordCount > 0) {
+                        // Clear the table
+                        await connection.execute(`DELETE FROM \`${tableName}\``);
+                        await connection.execute(`ALTER TABLE \`${tableName}\` AUTO_INCREMENT = 1`);
+                        clearedTables++;
+                        console.log(`Cleared ${tableName}: ${recordCount} records`);
+                    }
+                } catch (tableError) {
+                    console.warn(`Could not clear table ${tableName}:`, tableError.message);
+                }
+            }
+            
+            // Reset system settings (keep only essential ones)
+            await connection.execute(`DELETE FROM system_settings WHERE setting_key NOT IN ('max_backup_files', 'backup_retention_days')`);
+            
+            // Keep only the backup history for this reset operation
+            await connection.execute(`DELETE FROM backup_history WHERE id != ?`, [backupId]);
+            
+            // Re-enable foreign key checks
+            await connection.execute('SET FOREIGN_KEY_CHECKS = 1');
+            
+            // Insert default item types
+            await connection.execute(`
+                INSERT INTO item_types (name, name_persian) VALUES
+                ('ring', 'انگشتر'),
+                ('necklace', 'گردنبند'),
+                ('bracelet', 'دستبند'),
+                ('earring', 'گوشواره'),
+                ('coin', 'سکه'),
+                ('melted_gold', 'طلای آب‌شده')
+            `);
+            
+            // Insert default gold rate
+            await connection.execute(`
+                INSERT INTO gold_rates (date, rate_per_gram) VALUES (CURDATE(), 3500000)
+            `);
+            
+            await connection.commit();
+            
+            // Log the reset operation
+            console.log(`System reset completed by user ${req.session.user.username} (${req.session.user.full_name})`);
+            console.log(`Cleared ${clearedTables} tables with total ${totalRecords} records`);
+            
+            const summary = `- ${clearedTables} جدول پاک شد\n- ${totalRecords} رکورد حذف شد\n- کاربران حفظ شدند\n- بک‌آپ نهایی ایجاد شد`;
+            
+            res.json({
+                success: true,
+                message: 'سیستم با موفقیت برای تحویل پاک‌سازی شد',
+                summary: summary,
+                clearedTables: clearedTables,
+                totalRecords: totalRecords
+            });
+            
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+        
+    } catch (error) {
+        console.error('System reset error:', error);
+        res.json({ 
+            success: false, 
+            message: 'خطا در پاک‌سازی سیستم: ' + error.message 
+        });
+    }
+});

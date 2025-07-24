@@ -469,6 +469,63 @@ body {
             </div>
         </div>
     </div>
+
+    <!-- پاک‌سازی سیستم برای تحویل -->
+    <div class="settings-card">
+        <div class="card-header">
+            <div class="card-icon" style="background: linear-gradient(135deg, #dc3545, #e83e8c);">
+                <i class="fas fa-broom"></i>
+            </div>
+            <div>
+                <h3 class="card-title">پاک‌سازی سیستم برای تحویل</h3>
+                <p class="card-subtitle">حذف تمام اطلاعات برای تحویل سیستم خام به مشتری</p>
+            </div>
+        </div>
+
+        <div class="section-content">
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>هشدار بحرانی:</strong> این عملیات تمام اطلاعات زیر را حذف می‌کند:
+                <ul style="margin-top: 10px;">
+                    <li>تمام مشتریان و اطلاعات آن‌ها</li>
+                    <li>کلیه کالاها و موجودی انبار</li>
+                    <li>فاکتورها و تراکنش‌های مالی</li>
+                    <li>گزارش‌ها و آمار</li>
+                    <li>تنظیمات سیستم</li>
+                </ul>
+                <strong>نکته مهم:</strong> کاربران سیستم (admin و crystalah) حفظ می‌شوند.
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">برای تأیید، عبارت زیر را تایپ کنید:</label>
+                <input type="text" id="resetConfirmText" class="form-control" placeholder="RESET SYSTEM FOR DELIVERY">
+                <small class="form-text text-muted">دقیقاً همین عبارت را با حروف بزرگ انگلیسی تایپ کنید</small>
+            </div>
+
+            <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="confirmSystemReset">
+                    <label class="custom-control-label" for="confirmSystemReset">
+                        <strong>تأیید می‌کنم</strong> که از حذف کامل اطلاعات آگاه هستم و مسئولیت آن را می‌پذیرم
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="confirmBackupTaken">
+                    <label class="custom-control-label" for="confirmBackupTaken">
+                        <strong>تأیید می‌کنم</strong> که از اطلاعات مهم بک‌آپ گرفته‌ام
+                    </label>
+                </div>
+            </div>
+
+            <button type="button" onclick="resetSystemForDelivery()" class="btn btn-danger btn-lg" style="width: 100%;" id="resetSystemBtn" disabled>
+                <i class="fas fa-broom"></i>
+                پاک‌سازی کامل سیستم برای تحویل
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- Modal برای بازیابی -->
@@ -760,8 +817,80 @@ function optimizeDatabase() {
     }
 }
 
+// System Reset Functions
+function checkResetForm() {
+    const confirmText = document.getElementById('resetConfirmText').value;
+    const confirmReset = document.getElementById('confirmSystemReset').checked;
+    const confirmBackup = document.getElementById('confirmBackupTaken').checked;
+    const resetBtn = document.getElementById('resetSystemBtn');
+    
+    if (confirmText === 'RESET SYSTEM FOR DELIVERY' && confirmReset && confirmBackup) {
+        resetBtn.disabled = false;
+        resetBtn.style.background = 'linear-gradient(135deg, #dc3545, #e83e8c)';
+    } else {
+        resetBtn.disabled = true;
+        resetBtn.style.background = '#6c757d';
+    }
+}
+
+function resetSystemForDelivery() {
+    if (!confirm('آیا از پاک‌سازی کامل سیستم اطمینان دارید؟\n\nاین عملیات قابل برگشت نیست!\n\nتمام اطلاعات به جز کاربران حذف خواهد شد.')) {
+        return;
+    }
+    
+    if (!confirm('آخرین هشدار!\n\nآیا واقعاً می‌خواهید تمام اطلاعات را حذف کنید؟\n\nاین عملیات برای تحویل سیستم خام به مشتری است.')) {
+        return;
+    }
+    
+    const resetBtn = document.getElementById('resetSystemBtn');
+    const originalText = resetBtn.innerHTML;
+    resetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال پاک‌سازی...';
+    resetBtn.disabled = true;
+    
+    fetch('/settings/reset-system-for-delivery', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            confirmText: document.getElementById('resetConfirmText').value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`سیستم با موفقیت پاک‌سازی شد!\n\nآمار عملیات:\n${data.summary}`);
+            
+            // Reset form
+            document.getElementById('resetConfirmText').value = '';
+            document.getElementById('confirmSystemReset').checked = false;
+            document.getElementById('confirmBackupTaken').checked = false;
+            
+            // Refresh page after 2 seconds
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            alert('خطا در پاک‌سازی سیستم:\n' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('خطا در ارتباط با سرور');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        resetBtn.innerHTML = originalText;
+        resetBtn.disabled = false;
+    });
+}
+
 // Load system info on page load
 document.addEventListener('DOMContentLoaded', function() {
+    // Setup reset form validation
+    document.getElementById('resetConfirmText').addEventListener('input', checkResetForm);
+    document.getElementById('confirmSystemReset').addEventListener('change', checkResetForm);
+    document.getElementById('confirmBackupTaken').addEventListener('change', checkResetForm);
+    
     // Load last backup info
     fetch('/settings/last-backup-info')
     .then(response => response.json())
