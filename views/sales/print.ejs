@@ -219,7 +219,7 @@
     <div class="invoice-container">
         <!-- Header -->
         <div class="invoice-header">
-            <div class="shop-name">طلافروشی موسی پور</div>
+            <div class="shop-name">طلای موسی پور</div>
         </div>
 
         <!-- Invoice Info -->
@@ -232,6 +232,10 @@
                 <div class="info-row">
                     <span class="info-label">شماره تماس:</span>
                     <span class="info-value">09106307746</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">شماره سند:</span>
+                    <span class="info-value"><%= invoice.invoice_number %></span>
                 </div>
             </div>
             
@@ -269,20 +273,21 @@
                     </div>
                 </div>
                 <div style="flex: 1; text-align: center;">
-                    <strong>صورتحساب آقای فروش نور محمد <%=invoice.customer_code%></strong>
+                    <!-- خالی -->
                 </div>
                 <div style="flex: 1; text-align: left;">
-                    <div class="info-row">
-                        <span class="info-label">شماره سند:</span>
-                        <span class="info-value"><%= invoice.invoice_number %></span>
-                    </div>
+                    <!-- خالی شده -->
                 </div>
             </div>
             
             <div style="margin-top: 10px;">
                 <div class="info-row">
                     <span class="info-label">توسط:</span>
-                    <span class="info-value">نوع سند: فروش</span>
+                    <span class="info-value">طلای موسی پور</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">نام مشتری:</span>
+                    <span class="info-value"><%= invoice.customer_name %></span>
                 </div>
             </div>
         </div>
@@ -340,12 +345,8 @@
                     <span class="total-value"><%= formatNumber(invoice.subtotal) %></span>
                 </div>
                 <div class="total-row">
-                    <span class="total-label">حساب قبلی:</span>
-                    <span class="total-value"><%= formatNumber(invoice.customer_balance || 0) %></span>
-                </div>
-                <div class="total-row">
-                    <span class="total-label">حساب نهایی:</span>
-                    <span class="total-value"><%= formatNumber((parseFloat(invoice.grand_total) || 0) + (parseFloat(invoice.customer_balance) || 0)) %></span>
+                    <span class="total-label">وزن پولاستیک:</span>
+                    <span class="total-value"><%= formatNumber(invoice.plastic_weight || 0) %></span>
                 </div>
             </div>
             
@@ -360,10 +361,6 @@
                 <div class="total-row">
                     <span class="total-label">جمع وزن کل:</span>
                     <span class="total-value"><%= formatNumber(invoice.total_weight) %></span>
-                </div>
-                <div class="total-row">
-                    <span class="total-label">وزن پولاستیک:</span>
-                    <span class="total-value"><%= formatNumber(invoice.plastic_weight || 0) %></span>
                 </div>
             </div>
         </div>
