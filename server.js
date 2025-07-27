@@ -3023,6 +3023,18 @@ app.get('/accounting/customer/:id', requireAuth, async (req, res) => {
         
         const summary = summaryData[0] || { total_purchases: 0, total_payments: 0, current_balance: 0 };
 
+        // Get gold transactions summary
+        const [goldTransactions] = await db.execute(`
+            SELECT 
+                SUM(CASE WHEN transaction_type = 'credit' THEN amount_grams ELSE 0 END) as total_credit,
+                SUM(CASE WHEN transaction_type = 'debit' THEN amount_grams ELSE 0 END) as total_debit
+            FROM customer_gold_transactions 
+            WHERE customer_id = ?
+        `, [req.params.id]);
+
+        const goldSummary = goldTransactions[0] || { total_credit: 0, total_debit: 0 };
+        const goldBalance = (goldSummary.total_credit || 0) - (goldSummary.total_debit || 0);
+
         res.render('accounting/customer-detail', {
             title: `حسابداری - ${customer[0].full_name}`,
             user: req.session.user,
@@ -3039,6 +3051,11 @@ app.get('/accounting/customer/:id', requireAuth, async (req, res) => {
                 totalPurchases: summary.total_purchases,
                 totalPayments: summary.total_payments,
                 currentBalance: summary.current_balance
+            },
+            goldSummary: {
+                balance: goldBalance,
+                totalCredit: goldSummary.total_credit || 0,
+                totalDebit: goldSummary.total_debit || 0
             }
         });
     } catch (error) {

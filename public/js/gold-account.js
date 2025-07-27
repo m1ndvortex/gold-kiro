@@ -703,29 +703,109 @@ class GoldAccountManager {
         const dateInput = document.getElementById('transactionDate');
         if (dateInput) {
             dateInput.value = persianDate;
+            console.log('تاریخ امروز (شمسی):', persianDate);
         }
     }
 
     convertToPersianDate(date) {
-        // Simple Persian date conversion (approximation)
-        const year = date.getFullYear() - 621;
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
+        // Simple but accurate Persian date conversion
+        // Using approximation: Persian year = Gregorian year - 621/622
+        const gYear = date.getFullYear();
+        const gMonth = date.getMonth() + 1;
+        const gDay = date.getDate();
+        
+        // Approximate Persian year (will be adjusted)
+        let pYear = gYear - 621;
+        
+        // Create Persian new year date for this year
+        let persianNewYear = new Date(gYear, 2, 21); // March 21st approximation
+        
+        // Adjust for leap years and exact new year date
+        if (date < persianNewYear) {
+            pYear--;
+            persianNewYear = new Date(gYear - 1, 2, 21);
+        }
+        
+        // Calculate days since Persian new year
+        const daysSinceNewYear = Math.floor((date - persianNewYear) / (1000 * 60 * 60 * 24)) + 1;
+        
+        let pMonth, pDay;
+        
+        if (daysSinceNewYear <= 186) {
+            // First 6 months (31 days each)
+            pMonth = Math.ceil(daysSinceNewYear / 31);
+            pDay = daysSinceNewYear - (pMonth - 1) * 31;
+        } else {
+            // Last 6 months
+            const remainingDays = daysSinceNewYear - 186;
+            if (remainingDays <= 150) { // Months 7-11 (30 days each)
+                pMonth = 6 + Math.ceil(remainingDays / 30);
+                pDay = remainingDays - (pMonth - 7) * 30;
+            } else { // Month 12
+                pMonth = 12;
+                pDay = remainingDays - 150;
+            }
+        }
+        
+        // Ensure valid day
+        if (pDay <= 0) {
+            pMonth--;
+            if (pMonth <= 0) {
+                pMonth = 12;
+                pYear--;
+            }
+            pDay = (pMonth <= 6) ? 31 : (pMonth < 12 ? 30 : 29);
+        }
+        
+        const year = String(pYear).padStart(4, '0');
+        const month = String(pMonth).padStart(2, '0');
+        const day = String(pDay).padStart(2, '0');
+        
         return `${year}/${month}/${day}`;
     }
 
     convertPersianToGregorian(persianDateStr) {
-        // Simple conversion back to Gregorian (approximation)
         try {
             const parts = persianDateStr.split('/');
             if (parts.length !== 3) return null;
             
-            const year = parseInt(parts[0]) + 621;
-            const month = parseInt(parts[1]) - 1;
-            const day = parseInt(parts[2]);
+            const pYear = parseInt(parts[0]);
+            const pMonth = parseInt(parts[1]);
+            const pDay = parseInt(parts[2]);
             
-            return new Date(year, month, day);
+            // Validate Persian date ranges
+            if (pYear < 1 || pMonth < 1 || pMonth > 12 || pDay < 1 || pDay > 31) {
+                return null;
+            }
+            
+            // Approximate Gregorian year
+            const gYear = pYear + 621;
+            
+            // Persian new year is approximately March 21st
+            const persianNewYear = new Date(gYear, 2, 21); // March 21st
+            
+            // Calculate days to add
+            let daysToAdd = 0;
+            
+            // Add days for complete months
+            for (let m = 1; m < pMonth; m++) {
+                if (m <= 6) {
+                    daysToAdd += 31; // First 6 months have 31 days
+                } else {
+                    daysToAdd += 30; // Next 5 months have 30 days
+                }
+            }
+            
+            // Add days in current month
+            daysToAdd += pDay - 1;
+            
+            // Create the Gregorian date
+            const gregorianDate = new Date(persianNewYear);
+            gregorianDate.setDate(gregorianDate.getDate() + daysToAdd);
+            
+            return gregorianDate;
         } catch (error) {
+            console.error('Error converting Persian date:', error);
             return null;
         }
     }
@@ -751,9 +831,50 @@ class GoldAccountManager {
         const month = parseInt(parts[1]);
         const day = parseInt(parts[2]);
         
-        return year >= 1300 && year <= 1500 && 
-               month >= 1 && month <= 12 && 
-               day >= 1 && day <= 31;
+        // Basic range validation
+        if (year < 1300 || year > 1500 || month < 1 || month > 12 || day < 1) {
+            return false;
+        }
+        
+        // Persian calendar specific validation
+        if (month <= 6 && day > 31) return false; // First 6 months have 31 days
+        if (month > 6 && month <= 11 && day > 30) return false; // Months 7-11 have 30 days
+        if (month === 12 && day > 29) {
+            // Month 12 (Esfand) has 29 days in normal years, 30 in leap years
+            const isLeapYear = this.isPersianLeapYear(year);
+            if (!isLeapYear || day > 30) return false;
+        }
+        
+        return true;
+    }
+
+    isPersianLeapYear(year) {
+        // Persian leap year calculation
+        const breaks = [
+            -61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210,
+            1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178
+        ];
+        
+        const gy = year + 1595;
+        let leap = -14;
+        let jp = breaks[0];
+        
+        let jump = 0;
+        for (let j = 1; j <= 19; j++) {
+            const jm = breaks[j];
+            jump = jm - jp;
+            if (year < jm) break;
+            leap += Math.floor(jump / 33) * 8 + Math.floor(((jump % 33) + 3) / 4);
+            jp = jm;
+        }
+        
+        let n = year - jp;
+        if (n < jump) {
+            leap += Math.floor(n / 33) * 8 + Math.floor(((n % 33) + 3) / 4);
+            if ((jump % 33) === 4 && (jump - n) === 4) leap++;
+        }
+        
+        return (leap + 4) % 33 < 5;
     }
 
     // Enhanced Network Request Handler with Retry Logic and Better Error Handling
