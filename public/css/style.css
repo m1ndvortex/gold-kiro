@@ -702,6 +702,1174 @@ select#item_search option {
     background-color: #fff3cd;
     border: 1px solid #ffeaa7;
 }
+
+/* ====================================
+   GOLD ACCOUNT SPECIFIC STYLES
+   ==================================== */
+
+/* Gold Account Section */
+.gold-account-section {
+    background: #fff;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    border: 2px solid #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.gold-account-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    border-color: #b8860b;
+}
+
+/* Gold Balance Display */
+.gold-balance-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 2px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.gold-balance-display.positive {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: #28a745;
+    color: #155724;
+}
+
+.gold-balance-display.negative {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.gold-balance-display.neutral {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    border-color: #17a2b8;
+    color: #0c5460;
+}
+
+.gold-balance-icon {
+    font-size: 2.5em;
+    margin-left: 10px;
+    animation: goldShine 2s ease-in-out infinite alternate;
+}
+
+@keyframes goldShine {
+    0% { opacity: 0.8; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1.05); }
+}
+
+.gold-balance-amount {
+    font-size: 2.2em;
+    font-weight: bold;
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.gold-balance-unit {
+    font-size: 1.1em;
+    font-weight: 600;
+    opacity: 0.8;
+    margin-right: 5px;
+}
+
+.gold-balance-status {
+    font-size: 0.9em;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.3);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Gold Transaction Table */
+.gold-transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.gold-transactions-table th {
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+    color: #fff;
+    padding: 15px 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.95em;
+    border: none;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.gold-transactions-table td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #f8f9fa;
+    vertical-align: middle;
+    transition: all 0.3s ease;
+}
+
+.gold-transactions-table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.gold-transactions-table tbody tr:hover {
+    background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(184, 134, 11, 0.1);
+}
+
+.gold-transactions-table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.gold-transactions-table tbody tr:nth-child(even):hover {
+    background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+}
+
+/* Gold Transaction Types */
+.gold-transaction-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.gold-transaction-type.credit {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    border: 1px solid #28a745;
+}
+
+.gold-transaction-type.debit {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    border: 1px solid #dc3545;
+}
+
+.gold-transaction-type:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Gold Amount Display */
+.gold-amount {
+    font-weight: bold;
+    font-size: 1.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.gold-amount.positive {
+    color: #28a745;
+}
+
+.gold-amount.negative {
+    color: #dc3545;
+}
+
+.gold-amount::after {
+    content: '🥇';
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+/* Gold Action Buttons */
+.gold-action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+}
+
+.gold-action-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    min-width: 80px;
+    justify-content: center;
+}
+
+.gold-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.gold-action-btn.edit {
+    background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+    color: #2c2c2c;
+    border: 1px solid #ffc107;
+}
+
+.gold-action-btn.edit:hover {
+    background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+}
+
+.gold-action-btn.delete {
+    background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+    color: #fff;
+    border: 1px solid #dc3545;
+}
+
+.gold-action-btn.delete:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+}
+
+.gold-action-btn.add {
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+    color: #fff;
+    border: 1px solid #b8860b;
+    padding: 12px 20px;
+    font-size: 1em;
+}
+
+.gold-action-btn.add:hover {
+    background: linear-gradient(135deg, #9a7209 0%, #b8941f 100%);
+}
+
+.gold-action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Gold Modal Styles */
+.gold-modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(3px);
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(3px);
+    }
+}
+
+.gold-modal-content {
+    background: #fff;
+    border-radius: 20px;
+    padding: 0;
+    width: 90%;
+    max-width: 550px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: modalSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 3px solid #b8860b;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.gold-modal-header {
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+    color: #fff;
+    padding: 25px;
+    border-radius: 17px 17px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.gold-modal-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+}
+
+.gold-modal-title {
+    margin: 0;
+    font-size: 1.4em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.gold-modal-close {
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.3s ease;
+    padding: 5px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gold-modal-close:hover {
+    background: rgba(255,255,255,0.2);
+    transform: rotate(90deg);
+}
+
+/* Gold Form Styles */
+.gold-form {
+    padding: 30px;
+}
+
+.gold-form-group {
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.gold-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c2c2c;
+    font-size: 1em;
+    position: relative;
+}
+
+.gold-form-label::after {
+    content: '*';
+    color: #dc3545;
+    margin-right: 3px;
+    font-weight: bold;
+}
+
+.gold-form-control {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+    transition: all 0.3s ease;
+    direction: rtl;
+    background: #fff;
+    position: relative;
+}
+
+.gold-form-control:focus {
+    outline: none;
+    border-color: #b8860b;
+    box-shadow: 0 0 0 4px rgba(184, 134, 11, 0.1);
+    background: #fffef7;
+}
+
+.gold-form-control.error {
+    border-color: #dc3545;
+    background: #fff5f5;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.gold-form-control:valid {
+    border-color: #28a745;
+    background: #f8fff8;
+}
+
+/* Gold Form Helper Text */
+.gold-form-helper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 0.85em;
+}
+
+.gold-form-helper small {
+    color: #6c757d;
+}
+
+.gold-today-btn {
+    background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.gold-today-btn:hover {
+    background: linear-gradient(135deg, #138496 0%, #1e7e34 100%);
+    transform: translateY(-1px);
+}
+
+/* Gold Form Actions */
+.gold-form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 2px solid #f8f9fa;
+}
+
+.gold-form-btn {
+    padding: 15px 25px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1em;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.gold-form-btn.primary {
+    background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+    color: #fff;
+    border: 2px solid #b8860b;
+}
+
+.gold-form-btn.primary:hover {
+    background: linear-gradient(135deg, #9a7209 0%, #b8941f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(184, 134, 11, 0.3);
+}
+
+.gold-form-btn.secondary {
+    background: #fff;
+    color: #6c757d;
+    border: 2px solid #6c757d;
+}
+
+.gold-form-btn.secondary:hover {
+    background: #6c757d;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+}
+
+.gold-form-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Gold Error Messages */
+.gold-error-message {
+    color: #dc3545;
+    font-size: 0.85em;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    display: none;
+    animation: errorSlideIn 0.3s ease-out;
+}
+
+@keyframes errorSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.gold-form-group.has-error .gold-error-message {
+    display: block;
+}
+
+/* Gold Loading States */
+.gold-loading {
+    position: relative;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.gold-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.gold-loading::before {
+    content: '⏳ در حال پردازش...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 11;
+    color: #b8860b;
+    font-weight: bold;
+    font-size: 1.1em;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* Gold Success Messages */
+.gold-success-message {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    padding: 15px 20px;
+    border-radius: 10px;
+    border: 1px solid #28a745;
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: successSlideIn 0.5s ease-out;
+}
+
+@keyframes successSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Gold No Data State */
+.gold-no-data {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+    font-style: italic;
+    font-size: 1.2em;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    border: 2px dashed #dee2e6;
+    margin: 20px 0;
+}
+
+.gold-no-data::before {
+    content: '🥇';
+    display: block;
+    font-size: 3em;
+    margin-bottom: 15px;
+    opacity: 0.5;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Optimistic Update Styles */
+.optimistic-update {
+    opacity: 0.7;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%) !important;
+    animation: optimisticPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes optimisticPulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 0.9; }
+}
+
+.gold-balance-display.optimistic-update {
+    border-color: #ffc107;
+    animation: optimisticGlow 2s ease-in-out infinite;
+}
+
+@keyframes optimisticGlow {
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(255, 193, 7, 0.6); }
+}
+
+/* Responsive Design for Gold Account */
+@media (max-width: 768px) {
+    .gold-balance-display {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+    }
+    
+    .gold-balance-amount {
+        font-size: 1.8em;
+    }
+    
+    .gold-balance-icon {
+        font-size: 2em;
+        margin: 0;
+    }
+    
+    .gold-transactions-table {
+        font-size: 0.85em;
+    }
+    
+    .gold-transactions-table th,
+    .gold-transactions-table td {
+        padding: 8px 4px;
+    }
+    
+    .gold-action-buttons {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .gold-action-btn {
+        min-width: 60px;
+        padding: 6px 8px;
+        font-size: 0.8em;
+    }
+    
+    .gold-modal-content {
+        width: 95%;
+        margin: 10px;
+        border-radius: 15px;
+    }
+    
+    .gold-form {
+        padding: 20px;
+    }
+    
+    .gold-form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .gold-form-btn {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .gold-form-helper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .gold-account-section {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .gold-balance-display {
+        padding: 12px;
+    }
+    
+    .gold-balance-amount {
+        font-size: 1.5em;
+    }
+    
+    .gold-transactions-table {
+        font-size: 0.8em;
+    }
+    
+    .gold-transactions-table th,
+    .gold-transactions-table td {
+        padding: 6px 3px;
+    }
+    
+    .gold-transaction-type {
+        font-size: 0.75em;
+        padding: 4px 8px;
+    }
+    
+    .gold-modal-header {
+        padding: 20px 15px;
+    }
+    
+    .gold-modal-title {
+        font-size: 1.2em;
+    }
+    
+    .gold-form {
+        padding: 15px;
+    }
+    
+    .gold-form-control {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .gold-form-btn {
+        padding: 12px 20px;
+        font-size: 0.9em;
+    }
+}
+
+/* Print Styles for Gold Account */
+@media print {
+    .gold-action-buttons,
+    .gold-action-btn,
+    .gold-modal {
+        display: none !important;
+    }
+    
+    .gold-account-section {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .gold-balance-display {
+        background: #f8f9fa !important;
+        border: 1px solid #ddd;
+    }
+    
+    .gold-transactions-table {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .gold-transactions-table th {
+        background: #f8f9fa !important;
+        color: #000 !important;
+    }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .gold-balance-display {
+        border-width: 3px;
+    }
+    
+    .gold-form-control:focus {
+        box-shadow: 0 0 0 3px #000;
+    }
+    
+    .gold-action-btn {
+        border-width: 2px;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .gold-account-section,
+    .gold-balance-display,
+    .gold-action-btn,
+    .gold-modal-content,
+    .gold-form-control {
+        transition: none;
+        animation: none;
+    }
+    
+    .gold-balance-icon {
+        animation: none;
+    }
+    
+    .optimistic-update {
+        animation: none;
+    }
+}
+
+/* Additional Gold Account Enhancements */
+
+/* Gold Section Header */
+.gold-account-section .section-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.gold-account-section .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.4em;
+    color: #2c2c2c;
+    margin: 0;
+    font-weight: bold;
+}
+
+/* Enhanced Gold Transaction Animations */
+.gold-transactions-table tbody tr {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Gold Form Focus Enhancements */
+.gold-form-control:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(184, 134, 11, 0.15), 0 0 0 4px rgba(184, 134, 11, 0.1);
+}
+
+/* Gold Modal Backdrop Blur */
+.gold-modal {
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+/* Gold Success Animation */
+.gold-success-flash {
+    animation: successFlash 0.6s ease-out;
+}
+
+@keyframes successFlash {
+    0% { background-color: transparent; }
+    50% { background-color: rgba(40, 167, 69, 0.2); }
+    100% { background-color: transparent; }
+}
+
+/* Gold Error Animation */
+.gold-error-flash {
+    animation: errorFlash 0.6s ease-out;
+}
+
+@keyframes errorFlash {
+    0% { background-color: transparent; }
+    50% { background-color: rgba(220, 53, 69, 0.2); }
+    100% { background-color: transparent; }
+}
+
+/* Gold Tooltip Styles */
+.gold-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.gold-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.gold-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 115%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.gold-tooltip:hover::after,
+.gold-tooltip:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Gold Progress Bar for Loading */
+.gold-progress {
+    width: 100%;
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.gold-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #b8860b, #daa520, #b8860b);
+    background-size: 200% 100%;
+    animation: goldProgress 1.5s ease-in-out infinite;
+}
+
+@keyframes goldProgress {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Gold Skeleton Loading */
+.gold-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: goldSkeleton 1.5s ease-in-out infinite;
+    border-radius: 4px;
+}
+
+@keyframes goldSkeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Gold Connection Status */
+.gold-connection-status {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    z-index: 1001;
+    transition: all 0.3s ease;
+    transform: translateY(-100px);
+}
+
+.gold-connection-status.online {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #28a745;
+    transform: translateY(0);
+}
+
+.gold-connection-status.offline {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #dc3545;
+    transform: translateY(0);
+}
+
+/* Gold Notification Toast */
+.gold-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    z-index: 1002;
+    transform: translateX(400px);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.gold-toast.show {
+    transform: translateX(0);
+}
+
+.gold-toast.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #28a745;
+}
+
+.gold-toast.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #dc3545;
+}
+
+.gold-toast.warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+}
+
+/* Enhanced Mobile Responsiveness */
+@media (max-width: 576px) {
+    .gold-account-section .section-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .gold-balance-display {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .gold-balance-amount {
+        font-size: 1.8em;
+    }
+    
+    .gold-transactions-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    .gold-transactions-table th,
+    .gold-transactions-table td {
+        min-width: 100px;
+        padding: 8px 6px;
+    }
+    
+    .gold-action-buttons {
+        flex-direction: column;
+        gap: 4px;
+        min-width: 80px;
+    }
+    
+    .gold-action-btn {
+        padding: 6px 10px;
+        font-size: 0.75em;
+        min-width: 70px;
+    }
+    
+    .gold-modal-content {
+        width: 98%;
+        margin: 5px;
+        max-height: 95vh;
+    }
+    
+    .gold-form {
+        padding: 15px;
+    }
+    
+    .gold-form-control {
+        padding: 10px;
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+    
+    .gold-toast {
+        right: 10px;
+        left: 10px;
+        transform: translateY(-100px);
+    }
+    
+    .gold-toast.show {
+        transform: translateY(0);
+    }
+}
+
+/* Dark Mode Support (if implemented) */
+@media (prefers-color-scheme: dark) {
+    .gold-account-section {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .gold-balance-display {
+        background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        border-color: #718096;
+        color: #e2e8f0;
+    }
+    
+    .gold-transactions-table {
+        background: #2d3748;
+        color: #e2e8f0;
+    }
+    
+    .gold-transactions-table th {
+        background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+    }
+    
+    .gold-transactions-table td {
+        border-bottom-color: #4a5568;
+    }
+    
+    .gold-modal-content {
+        background: #2d3748;
+        color: #e2e8f0;
+    }
+    
+    .gold-form-control {
+        background: #4a5568;
+        border-color: #718096;
+        color: #e2e8f0;
+    }
+    
+    .gold-form-control:focus {
+        background: #2d3748;
+        border-color: #b8860b;
+    }
+}
 /* ====
 ====================================
    COMPREHENSIVE PERSIAN FONT FIX
@@ -804,4 +1972,785 @@ select option {
 /* Regular FontAwesome icons */
 .far {
     font-weight: 400 !important;
+}
+/* ======
+============== ENHANCED VALIDATION AND ERROR HANDLING STYLES ==================== */
+
+/* Gold Account Messages */
+.gold-message {
+    position: relative;
+    margin: 15px 0;
+    padding: 12px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    animation: slideInDown 0.3s ease-out;
+    z-index: 1000;
+}
+
+.gold-message.success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border: 1px solid #b8dacc;
+    color: #155724;
+}
+
+.gold-message.error {
+    background: linear-gradient(135deg, #f8d7da, #f1b0b7);
+    border: 1px solid #f1b0b7;
+    color: #721c24;
+}
+
+.gold-message.info {
+    background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+.gold-message-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.gold-message-content i {
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.message-text {
+    flex: 1;
+    font-weight: 500;
+    white-space: pre-line;
+}
+
+.gold-message-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+}
+
+.gold-message-close:hover {
+    background-color: rgba(0,0,0,0.1);
+}
+
+.gold-message.fade-out {
+    animation: fadeOut 0.3s ease-out forwards;
+}
+
+/* Clean Form Validation Styles */
+.gold-form-group.has-error .gold-form-control {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+    background-color: #ffffff;
+}
+
+.gold-form-group.has-error .gold-form-label {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.gold-error-message {
+    display: none;
+    color: #dc3545;
+    font-size: 0.875em;
+    margin-top: 5px;
+    padding: 8px 12px;
+    background-color: #f8d7da;
+    border: 1px solid #dc3545;
+    border-radius: 4px;
+    animation: slideInUp 0.2s ease-out;
+}
+
+.gold-error-message i {
+    margin-left: 5px;
+    color: #dc3545;
+}
+
+.gold-error-message .error-text {
+    font-weight: 500;
+}
+
+/* Shake animation for invalid fields */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Loading states */
+.gold-form.gold-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.gold-form.gold-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.gold-form.gold-loading::before {
+    content: 'در حال پردازش...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    color: #666;
+    font-weight: 500;
+    z-index: 11;
+}
+
+/* Enhanced button states */
+.gold-form-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.gold-form-btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.gold-form-btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Network status indicator */
+.network-status {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.875em;
+    font-weight: 500;
+    z-index: 9999;
+    transition: all 0.3s ease;
+}
+
+.network-status.online {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.network-status.offline {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f1b0b7;
+    animation: pulse 2s infinite;
+}
+
+/* Retry button */
+.retry-button {
+    background: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 0.875em;
+    font-weight: 500;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: all 0.2s;
+}
+
+.retry-button:hover {
+    background: #e0a800;
+    transform: translateY(-1px);
+}
+
+/* Enhanced transaction list error states */
+.gold-transactions-error {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.gold-transactions-error i {
+    font-size: 3em;
+    color: #dc3545;
+    margin-bottom: 15px;
+}
+
+.gold-transactions-error h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.gold-transactions-error p {
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+/* Validation tooltip */
+.validation-tooltip {
+    position: absolute;
+    background: #333;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.875em;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+.validation-tooltip.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.validation-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #333;
+}
+
+/* Animations */
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Responsive adjustments for error handling */
+@media (max-width: 768px) {
+    .gold-message {
+        margin: 10px 0;
+        padding: 10px 12px;
+        font-size: 0.9em;
+    }
+    
+    .gold-message-content {
+        gap: 8px;
+    }
+    
+    .gold-error-message {
+        font-size: 0.8em;
+        padding: 6px 10px;
+    }
+    
+    .network-status {
+        top: 10px;
+        left: 10px;
+        font-size: 0.8em;
+        padding: 6px 12px;
+    }
+    
+    .validation-tooltip {
+        font-size: 0.8em;
+        padding: 6px 10px;
+    }
+}
+
+/* Dark mode support for error handling */
+@media (prefers-color-scheme: dark) {
+    .gold-message.success {
+        background: linear-gradient(135deg, #1e4d2b, #2d5a3d);
+        border-color: #2d5a3d;
+        color: #a3d9a5;
+    }
+    
+    .gold-message.error {
+        background: linear-gradient(135deg, #4d1e1e, #5a2d2d);
+        border-color: #5a2d2d;
+        color: #f1a3a3;
+    }
+    
+    .gold-error-message {
+        background-color: #2d1b1b;
+        border-color: #4d2d2d;
+        color: #f1a3a3;
+    }
+    
+    .gold-form-group.has-error .gold-form-control {
+        background-color: #2d1b1b;
+        border-color: #dc3545;
+    }
+}
+
+/* ==================== CLEAN GOLD ACCOUNT UI STYLES ==================== */
+
+/* Gold Account Modal - Clean and Simple */
+.gold-modal {
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(3px);
+}
+
+.gold-modal .modal-content {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    width: 90%;
+    margin: auto;
+}
+
+.gold-modal .modal-header {
+    background: #f8f9fa;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 12px 12px 0 0;
+    padding: 20px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+.gold-modal .modal-body {
+    padding: 25px;
+    color: #333;
+    background: #ffffff;
+}
+
+/* Clean Form Styling */
+.gold-form-group {
+    margin-bottom: 20px;
+}
+
+.gold-form-label {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    font-size: 0.95em;
+}
+
+.gold-form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #495057;
+    font-size: 1em;
+    transition: all 0.3s ease;
+}
+
+.gold-form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    background: #ffffff;
+}
+
+.gold-form-control::placeholder {
+    color: #6c757d;
+}
+
+/* Select Styling */
+.gold-form-control select {
+    cursor: pointer;
+}
+
+.gold-form-control option {
+    background: #ffffff;
+    color: #495057;
+}
+
+/* Clean Button Styling */
+.gold-form-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.gold-form-btn.primary {
+    background: #007bff;
+    color: #ffffff;
+}
+
+.gold-form-btn.primary:hover:not(:disabled) {
+    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.gold-form-btn.secondary {
+    background: #6c757d;
+    color: #ffffff;
+}
+
+.gold-form-btn.secondary:hover:not(:disabled) {
+    background: #545b62;
+    transform: translateY(-1px);
+}
+
+.gold-form-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.gold-form-btn.loading {
+    pointer-events: none;
+}
+
+/* Clean Action Buttons */
+.gold-action-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0 3px;
+}
+
+.gold-action-btn.add {
+    background: #28a745;
+    color: #ffffff;
+}
+
+.gold-action-btn.add:hover:not(:disabled) {
+    background: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
+}
+
+.gold-action-btn.edit {
+    background: #ffc107;
+    color: #212529;
+}
+
+.gold-action-btn.edit:hover:not(:disabled) {
+    background: #e0a800;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(255, 193, 7, 0.3);
+}
+
+.gold-action-btn.delete {
+    background: #dc3545;
+    color: #ffffff;
+}
+
+.gold-action-btn.delete:hover:not(:disabled) {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Clean Balance Display */
+.gold-balance-display {
+    background: #ffffff;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    margin: 20px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.gold-balance-display.positive {
+    border-color: #28a745;
+    background: #f8fff9;
+}
+
+.gold-balance-display.negative {
+    border-color: #dc3545;
+    background: #fff8f8;
+}
+
+.gold-balance-display.neutral {
+    border-color: #6c757d;
+    background: #f8f9fa;
+}
+
+.gold-balance-icon {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+}
+
+.gold-balance-amount {
+    font-size: 3em;
+    font-weight: bold;
+    margin: 15px 0;
+    color: #495057;
+}
+
+.gold-balance-display.positive .gold-balance-amount {
+    color: #28a745;
+}
+
+.gold-balance-display.negative .gold-balance-amount {
+    color: #dc3545;
+}
+
+.gold-balance-unit {
+    font-size: 1.3em;
+    color: #6c757d;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.gold-balance-status {
+    font-size: 1.1em;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.gold-balance-display.positive .gold-balance-status {
+    background: #28a745;
+    color: #ffffff;
+}
+
+.gold-balance-display.negative .gold-balance-status {
+    background: #dc3545;
+    color: #ffffff;
+}
+
+.gold-balance-display.neutral .gold-balance-status {
+    background: #6c757d;
+    color: #ffffff;
+}
+
+/* Clean Transaction List */
+.gold-transactions-table {
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 25px 0;
+    border: 1px solid #dee2e6;
+}
+
+.gold-transactions-table thead {
+    background: #f8f9fa;
+}
+
+.gold-transactions-table thead th {
+    color: #495057;
+    font-weight: 600;
+    padding: 15px 12px;
+    text-align: center;
+    border-bottom: 2px solid #dee2e6;
+    font-size: 0.95em;
+}
+
+.gold-transactions-table tbody tr {
+    background: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    transition: background-color 0.2s ease;
+}
+
+.gold-transactions-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.gold-transactions-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.gold-transactions-table tbody td {
+    padding: 12px;
+    text-align: center;
+    color: #495057;
+    border: none;
+    font-size: 0.9em;
+}
+
+/* Clean Transaction Type Badges */
+.gold-transaction-type {
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.85em;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.gold-transaction-type.credit {
+    background: #28a745;
+    color: #ffffff;
+}
+
+.gold-transaction-type.debit {
+    background: #dc3545;
+    color: #ffffff;
+}
+
+/* Clean Amount Display */
+.gold-amount {
+    font-weight: 600;
+    font-size: 1em;
+}
+
+.gold-amount.positive {
+    color: #28a745;
+}
+
+.gold-amount.negative {
+    color: #dc3545;
+}
+
+/* Clean Message Styling */
+.gold-message {
+    position: relative;
+    margin: 15px 0;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    animation: slideInDown 0.3s ease-out;
+    z-index: 1000;
+    border-left: 4px solid;
+}
+
+.gold-message.success {
+    background: #d4edda;
+    border-left-color: #28a745;
+    color: #155724;
+}
+
+.gold-message.error {
+    background: #f8d7da;
+    border-left-color: #dc3545;
+    color: #721c24;
+}
+
+.gold-message.info {
+    background: #d1ecf1;
+    border-left-color: #17a2b8;
+    color: #0c5460;
+}
+
+/* Loading Animation Improvements */
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Responsive Improvements */
+@media (max-width: 768px) {
+    .gold-modal .modal-content {
+        width: 95%;
+        margin: 10px auto;
+    }
+    
+    .gold-balance-display {
+        padding: 20px 15px;
+    }
+    
+    .gold-balance-amount {
+        font-size: 2.5em;
+    }
+    
+    .gold-transactions-table {
+        font-size: 0.9em;
+    }
+    
+    .gold-action-btn {
+        padding: 6px 10px;
+        font-size: 0.8em;
+    }
+}
+
+/* Print styles - hide error messages when printing */
+@media print {
+    .gold-message,
+    .gold-error-message,
+    .network-status,
+    .validation-tooltip {
+        display: none !important;
+    }
 }

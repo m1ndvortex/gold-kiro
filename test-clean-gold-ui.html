@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست طراحی جدید حساب طلا</title>
+    <link rel="stylesheet" href="public/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: #f8f9fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; color: #495057; margin-bottom: 30px;">تست طراحی جدید حساب طلا</h1>
+        
+        <!-- Header Section -->
+        <div style="background: #ffffff; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
+            <button class="gold-action-btn add">
+                <i class="fas fa-plus"></i>
+                افزودن تراکنش طلا
+            </button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0; color: #495057;">حساب طلا</h2>
+                <div style="background: #ffc107; color: #212529; padding: 5px 10px; border-radius: 15px; font-size: 0.9em; font-weight: 600;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    1
+                </div>
+            </div>
+        </div>
+
+        <!-- Balance Display - Positive -->
+        <div class="gold-balance-display positive">
+            <div class="gold-balance-icon">💰</div>
+            <div class="gold-balance-amount">2.500</div>
+            <div class="gold-balance-unit">گرم</div>
+            <div class="gold-balance-status">بستانکار</div>
+        </div>
+
+        <!-- Balance Display - Negative -->
+        <div class="gold-balance-display negative">
+            <div class="gold-balance-icon">⚠️</div>
+            <div class="gold-balance-amount">1.000</div>
+            <div class="gold-balance-unit">گرم</div>
+            <div class="gold-balance-status">بدهکار</div>
+        </div>
+
+        <!-- Balance Display - Neutral -->
+        <div class="gold-balance-display neutral">
+            <div class="gold-balance-icon">⚖️</div>
+            <div class="gold-balance-amount">0.000</div>
+            <div class="gold-balance-unit">گرم</div>
+            <div class="gold-balance-status">تسویه</div>
+        </div>
+
+        <!-- Transaction Table -->
+        <table class="gold-transactions-table" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>تاریخ</th>
+                    <th>نوع تراکنش</th>
+                    <th>مقدار (گرم)</th>
+                    <th>توضیحات</th>
+                    <th>ثبت‌کننده</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1404/07/26</td>
+                    <td>
+                        <span class="gold-transaction-type credit">
+                            <i class="fas fa-arrow-up"></i>
+                            بستانکار
+                        </span>
+                    </td>
+                    <td>
+                        <span class="gold-amount positive">
+                            + 2.000
+                        </span>
+                    </td>
+                    <td>خرید طلا از مشتری</td>
+                    <td>admin</td>
+                    <td>
+                        <div style="display: flex; gap: 5px; justify-content: center;">
+                            <button class="gold-action-btn edit">
+                                <i class="fas fa-edit"></i>
+                                ویرایش
+                            </button>
+                            <button class="gold-action-btn delete">
+                                <i class="fas fa-trash"></i>
+                                حذف
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>1404/07/25</td>
+                    <td>
+                        <span class="gold-transaction-type debit">
+                            <i class="fas fa-arrow-down"></i>
+                            بدهکار
+                        </span>
+                    </td>
+                    <td>
+                        <span class="gold-amount negative">
+                            - 1.500
+                        </span>
+                    </td>
+                    <td>فروش طلا به مشتری</td>
+                    <td>admin</td>
+                    <td>
+                        <div style="display: flex; gap: 5px; justify-content: center;">
+                            <button class="gold-action-btn edit">
+                                <i class="fas fa-edit"></i>
+                                ویرایش
+                            </button>
+                            <button class="gold-action-btn delete">
+                                <i class="fas fa-trash"></i>
+                                حذف
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Messages -->
+        <div class="gold-message success">
+            <div class="gold-message-content">
+                <i class="fas fa-check-circle"></i>
+                <span class="message-text">تراکنش طلا با موفقیت ثبت شد</span>
+                <button class="gold-message-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="gold-message error">
+            <div class="gold-message-content">
+                <i class="fas fa-exclamation-circle"></i>
+                <span class="message-text">خطا در ثبت تراکنش: مقدار طلا باید عدد مثبت باشد</span>
+                <button class="gold-message-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="gold-modal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <i class="fas fa-plus"></i>
+                    افزودن تراکنش طلا
+                </div>
+                <div class="modal-body">
+                    <form id="goldTransactionForm">
+                        <div class="gold-form-group">
+                            <label class="gold-form-label">تاریخ تراکنش *</label>
+                            <input type="text" class="gold-form-control" value="1404/07/26" placeholder="1403/01/15">
+                        </div>
+
+                        <div class="gold-form-group">
+                            <label class="gold-form-label">نوع تراکنش *</label>
+                            <select class="gold-form-control">
+                                <option value="">انتخاب کنید</option>
+                                <option value="credit">بستانکار (دریافت طلا)</option>
+                                <option value="debit">بدهکار (پرداخت طلا)</option>
+                            </select>
+                        </div>
+
+                        <div class="gold-form-group">
+                            <label class="gold-form-label">مقدار (گرم) *</label>
+                            <input type="number" class="gold-form-control" step="0.001" min="0.001" placeholder="0.001">
+                            <small style="color: #6c757d; font-size: 0.85em;">حداقل 0.001 گرم</small>
+                        </div>
+
+                        <div class="gold-form-group has-error">
+                            <label class="gold-form-label">توضیحات *</label>
+                            <textarea class="gold-form-control" rows="3" placeholder="حداقل 5 کاراکتر"></textarea>
+                            <div class="gold-error-message" style="display: block;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span class="error-text">توضیحات باید حداقل 5 کاراکتر باشد</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
+                            <button type="button" class="gold-form-btn secondary">
+                                <i class="fas fa-times"></i>
+                                لغو
+                            </button>
+                            <button type="submit" class="gold-form-btn primary">
+                                <i class="fas fa-save"></i>
+                                ذخیره تراکنش
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Close modal on background click
+        document.querySelector('.gold-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+
+        // Close message buttons
+        document.querySelectorAll('.gold-message-close').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.gold-message').remove();
+            });
+        });
+    </script>
+</body>
+</html>

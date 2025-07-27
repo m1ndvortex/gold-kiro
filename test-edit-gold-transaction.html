@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست ویرایش تراکنش طلا</title>
+    <style>
+        body {
+            font-family: Tahoma, sans-serif;
+            direction: rtl;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 تست ویرایش تراکنش طلا</h1>
+        
+        <div class="test-section">
+            <h3>1️⃣ تست دریافت تراکنش برای ویرایش</h3>
+            <button onclick="testGetTransaction()">دریافت تراکنش</button>
+            <div id="getResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>2️⃣ تست ویرایش تراکنش</h3>
+            <button onclick="testEditTransaction()">ویرایش تراکنش</button>
+            <div id="editResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>3️⃣ تست کامل workflow ویرایش</h3>
+            <button onclick="testCompleteEditWorkflow()">تست کامل</button>
+            <div id="workflowResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const CUSTOMER_ID = 1; // Test customer ID
+        let testTransactionId = null;
+
+        // Helper function to make API calls
+        async function makeApiCall(method, url, data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(url, options);
+                const result = await response.json();
+                
+                return {
+                    success: response.ok,
+                    status: response.status,
+                    data: result
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        // Test 1: Get transaction for editing
+        async function testGetTransaction() {
+            const resultDiv = document.getElementById('getResult');
+            resultDiv.textContent = 'در حال تست...';
+            resultDiv.className = 'result info';
+            
+            try {
+                // First, get list of transactions to find one to edit
+                const listResult = await makeApiCall('GET', `/customers/${CUSTOMER_ID}/gold-transactions`);
+                
+                if (!listResult.success) {
+                    resultDiv.textContent = `❌ خطا در دریافت لیست تراکنش‌ها: ${JSON.stringify(listResult.data)}`;
+                    resultDiv.className = 'result error';
+                    return;
+                }
+                
+                if (!listResult.data.transactions || listResult.data.transactions.length === 0) {
+                    resultDiv.textContent = '❌ هیچ تراکنشی برای تست یافت نشد';
+                    resultDiv.className = 'result error';
+                    return;
+                }
+                
+                // Get the first transaction
+                const firstTransaction = listResult.data.transactions[0];
+                testTransactionId = firstTransaction.id;
+                
+                // Now test getting single transaction
+                const getResult = await makeApiCall('GET', `/customers/${CUSTOMER_ID}/gold-transactions/${testTransactionId}`);
+                
+                if (getResult.success) {
+                    resultDiv.textContent = `✅ تراکنش با موفقیت دریافت شد:
+ID: ${getResult.data.transaction.id}
+تاریخ: ${getResult.data.transaction.transaction_date}
+نوع: ${getResult.data.transaction.transaction_type}
+مقدار: ${getResult.data.transaction.amount_grams} گرم
+توضیحات: ${getResult.data.transaction.description}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ خطا در دریافت تراکنش: ${JSON.stringify(getResult.data)}`;
+                    resultDiv.className = 'result error';
+                }
+                
+            } catch (error) {
+                resultDiv.textContent = `❌ خطا: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Test 2: Edit transaction
+        async function testEditTransaction() {
+            const resultDiv = document.getElementById('editResult');
+            resultDiv.textContent = 'در حال تست...';
+            resultDiv.className = 'result info';
+            
+            if (!testTransactionId) {
+                resultDiv.textContent = '❌ ابتدا تراکنشی را برای ویرایش انتخاب کنید (تست 1)';
+                resultDiv.className = 'result error';
+                return;
+            }
+            
+            try {
+                const updateData = {
+                    transaction_date: '2024-01-15',
+                    transaction_type: 'credit',
+                    amount_grams: 5.500,
+                    description: 'تست ویرایش تراکنش طلا - بروزرسانی شده'
+                };
+                
+                const editResult = await makeApiCall('PUT', `/customers/${CUSTOMER_ID}/gold-transactions/${testTransactionId}`, updateData);
+                
+                if (editResult.success) {
+                    resultDiv.textContent = `✅ تراکنش با موفقیت ویرایش شد:
+ID: ${editResult.data.transaction.id}
+تاریخ جدید: ${editResult.data.transaction.transaction_date}
+نوع جدید: ${editResult.data.transaction.transaction_type}
+مقدار جدید: ${editResult.data.transaction.amount_grams} گرم
+توضیحات جدید: ${editResult.data.transaction.description}
+پیام: ${editResult.data.message}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ خطا در ویرایش تراکنش: ${JSON.stringify(editResult.data)}`;
+                    resultDiv.className = 'result error';
+                }
+                
+            } catch (error) {
+                resultDiv.textContent = `❌ خطا: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Test 3: Complete edit workflow
+        async function testCompleteEditWorkflow() {
+            const resultDiv = document.getElementById('workflowResult');
+            resultDiv.textContent = 'در حال تست workflow کامل...';
+            resultDiv.className = 'result info';
+            
+            try {
+                let log = '';
+                
+                // Step 1: Create a test transaction
+                log += '1️⃣ ایجاد تراکنش تست...\n';
+                const createData = {
+                    transaction_date: '2024-01-10',
+                    transaction_type: 'debit',
+                    amount_grams: 2.000,
+                    description: 'تراکنش تست برای ویرایش'
+                };
+                
+                const createResult = await makeApiCall('POST', `/customers/${CUSTOMER_ID}/gold-transactions`, createData);
+                
+                if (!createResult.success) {
+                    resultDiv.textContent = `❌ خطا در ایجاد تراکنش تست: ${JSON.stringify(createResult.data)}`;
+                    resultDiv.className = 'result error';
+                    return;
+                }
+                
+                const createdTransactionId = createResult.data.transaction.id;
+                log += `✅ تراکنش ایجاد شد (ID: ${createdTransactionId})\n\n`;
+                
+                // Step 2: Get the transaction for editing
+                log += '2️⃣ دریافت تراکنش برای ویرایش...\n';
+                const getResult = await makeApiCall('GET', `/customers/${CUSTOMER_ID}/gold-transactions/${createdTransactionId}`);
+                
+                if (!getResult.success) {
+                    log += `❌ خطا در دریافت تراکنش: ${JSON.stringify(getResult.data)}\n`;
+                    resultDiv.textContent = log;
+                    resultDiv.className = 'result error';
+                    return;
+                }
+                
+                log += `✅ تراکنش دریافت شد\n`;
+                log += `   مقدار فعلی: ${getResult.data.transaction.amount_grams} گرم\n`;
+                log += `   نوع فعلی: ${getResult.data.transaction.transaction_type}\n\n`;
+                
+                // Step 3: Edit the transaction
+                log += '3️⃣ ویرایش تراکنش...\n';
+                const updateData = {
+                    transaction_date: '2024-01-12',
+                    transaction_type: 'credit',
+                    amount_grams: 3.500,
+                    description: 'تراکنش تست - ویرایش شده در workflow'
+                };
+                
+                const editResult = await makeApiCall('PUT', `/customers/${CUSTOMER_ID}/gold-transactions/${createdTransactionId}`, updateData);
+                
+                if (!editResult.success) {
+                    log += `❌ خطا در ویرایش تراکنش: ${JSON.stringify(editResult.data)}\n`;
+                    resultDiv.textContent = log;
+                    resultDiv.className = 'result error';
+                    return;
+                }
+                
+                log += `✅ تراکنش ویرایش شد\n`;
+                log += `   مقدار جدید: ${editResult.data.transaction.amount_grams} گرم\n`;
+                log += `   نوع جدید: ${editResult.data.transaction.transaction_type}\n\n`;
+                
+                // Step 4: Verify the changes
+                log += '4️⃣ تأیید تغییرات...\n';
+                const verifyResult = await makeApiCall('GET', `/customers/${CUSTOMER_ID}/gold-transactions/${createdTransactionId}`);
+                
+                if (!verifyResult.success) {
+                    log += `❌ خطا در تأیید تغییرات: ${JSON.stringify(verifyResult.data)}\n`;
+                    resultDiv.textContent = log;
+                    resultDiv.className = 'result error';
+                    return;
+                }
+                
+                const updatedTransaction = verifyResult.data.transaction;
+                log += `✅ تغییرات تأیید شد\n`;
+                log += `   تاریخ: ${updatedTransaction.transaction_date}\n`;
+                log += `   نوع: ${updatedTransaction.transaction_type}\n`;
+                log += `   مقدار: ${updatedTransaction.amount_grams} گرم\n`;
+                log += `   توضیحات: ${updatedTransaction.description}\n\n`;
+                
+                // Step 5: Clean up - delete test transaction
+                log += '5️⃣ پاک‌سازی تراکنش تست...\n';
+                const deleteResult = await makeApiCall('DELETE', `/customers/${CUSTOMER_ID}/gold-transactions/${createdTransactionId}`);
+                
+                if (deleteResult.success) {
+                    log += `✅ تراکنش تست حذف شد\n\n`;
+                } else {
+                    log += `⚠️ خطا در حذف تراکنش تست: ${JSON.stringify(deleteResult.data)}\n\n`;
+                }
+                
+                log += '🎉 تست workflow کامل با موفقیت انجام شد!';
+                resultDiv.textContent = log;
+                resultDiv.className = 'result success';
+                
+            } catch (error) {
+                resultDiv.textContent = `❌ خطا در workflow: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

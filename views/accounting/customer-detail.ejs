@@ -284,6 +284,52 @@
     color: #721c24;
 }
 
+/* Gold Account Styles */
+.gold-balance-display {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.gold-balance-amount {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.gold-balance-positive {
+    color: #28a745;
+}
+
+.gold-balance-negative {
+    color: #dc3545;
+}
+
+.gold-balance-neutral {
+    color: #6c757d;
+}
+
+.gold-balance-status {
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+.gold-transaction-type {
+    padding: 4px 8px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.gold-type-credit {
+    background: #d4edda;
+    color: #155724;
+}
+
+.gold-type-debit {
+    background: #f8d7da;
+    color: #721c24;
+}
+
 @media (max-width: 768px) {
     .summary-cards {
         grid-template-columns: 1fr;
@@ -373,6 +419,86 @@
                 <div style="color: #6c757d; font-size: 0.9em;">تسویه</div>
             <% } %>
         </div>
+    </div>
+
+    <!-- حساب طلا -->
+    <div class="gold-account-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <span class="gold-balance-icon">🥇</span>
+                حساب طلا
+            </h3>
+            <button class="gold-action-btn add" onclick="showAddGoldTransactionModal()">
+                <i class="fas fa-plus"></i>
+                افزودن تراکنش طلا
+            </button>
+        </div>
+        
+        <!-- Gold Balance Display -->
+        <div class="gold-balance-display <%= goldSummary.balance > 0 ? 'positive' : goldSummary.balance < 0 ? 'negative' : 'neutral' %>">
+            <div class="gold-balance-icon">
+                <%= goldSummary.balance > 0 ? '💰' : goldSummary.balance < 0 ? '⚠️' : '⚖️' %>
+            </div>
+            <div class="gold-balance-amount">
+                <%= Math.abs(goldSummary.balance).toFixed(3) %>
+            </div>
+            <div class="gold-balance-unit">گرم</div>
+            <div class="gold-balance-status">
+                <%= goldSummary.balance > 0 ? 'بستانکار' : goldSummary.balance < 0 ? 'بدهکار' : 'تسویه' %>
+            </div>
+        </div>
+        
+        <% if (goldTransactions && goldTransactions.length > 0) { %>
+        <table class="gold-transactions-table">
+            <thead>
+                <tr>
+                    <th>تاریخ</th>
+                    <th>نوع تراکنش</th>
+                    <th>مقدار (گرم)</th>
+                    <th>توضیحات</th>
+                    <th>ثبت‌کننده</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody class="gold-transactions-list">
+                <% goldTransactions.forEach(transaction => { %>
+                <tr>
+                    <td><%= transaction.formatted_date %></td>
+                    <td>
+                        <span class="gold-transaction-type <%= transaction.transaction_type %>">
+                            <i class="fas fa-<%= transaction.transaction_type === 'credit' ? 'arrow-up' : 'arrow-down' %>"></i>
+                            <%= transaction.transaction_type === 'credit' ? 'بستانکار' : 'بدهکار' %>
+                        </span>
+                    </td>
+                    <td>
+                        <span class="gold-amount <%= transaction.transaction_type === 'credit' ? 'positive' : 'negative' %>">
+                            <%= transaction.transaction_type === 'credit' ? '+' : '-' %>
+                            <%= Number(transaction.amount_grams).toFixed(3) %>
+                        </span>
+                    </td>
+                    <td><%= transaction.description %></td>
+                    <td><%= transaction.created_by_username || '-' %></td>
+                    <td>
+                        <div class="gold-action-buttons">
+                            <button class="gold-action-btn edit" onclick="editGoldTransaction(<%= transaction.id %>)">
+                                <i class="fas fa-edit"></i>
+                                ویرایش
+                            </button>
+                            <button class="gold-action-btn delete" onclick="deleteGoldTransaction(<%= transaction.id %>)">
+                                <i class="fas fa-trash"></i>
+                                حذف
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+        <% } else { %>
+        <div class="gold-no-data">
+            هیچ تراکنش طلایی ثبت نشده است
+        </div>
+        <% } %>
     </div>
 
     <!-- تراکنش‌های مالی -->
@@ -520,6 +646,83 @@
     </div>
 </div>
 
+<!-- Gold Transaction Modal -->
+<div id="goldTransactionModal" class="gold-modal" style="display: none;">
+    <div class="gold-modal-content">
+        <div class="gold-modal-header">
+            <h3 id="modalTitle" class="gold-modal-title">
+                <i class="fas fa-coins"></i>
+                افزودن تراکنش طلا
+            </h3>
+            <span class="gold-modal-close" onclick="closeGoldTransactionModal()">&times;</span>
+        </div>
+        <form id="goldTransactionForm" class="gold-form">
+            <div class="gold-form-group">
+                <label for="transactionDate" class="gold-form-label">تاریخ تراکنش</label>
+                <input type="text" id="transactionDate" name="transaction_date" required 
+                       placeholder="مثال: 1403/01/15" class="gold-form-control persian-date">
+                <div class="gold-form-helper">
+                    <small>تاریخ شمسی - مثال: 1403/01/15</small>
+                    <button type="button" onclick="setTodayDate()" class="gold-today-btn">
+                        <i class="fas fa-calendar-day"></i>
+                        امروز
+                    </button>
+                </div>
+                <div class="gold-error-message"></div>
+            </div>
+            
+            <div class="gold-form-group">
+                <label for="transactionType" class="gold-form-label">نوع تراکنش</label>
+                <select id="transactionType" name="transaction_type" required class="gold-form-control">
+                    <option value="">انتخاب کنید</option>
+                    <option value="credit">
+                        <i class="fas fa-arrow-up"></i>
+                        بستانکار (اضافه شدن طلا)
+                    </option>
+                    <option value="debit">
+                        <i class="fas fa-arrow-down"></i>
+                        بدهکار (کم شدن طلا)
+                    </option>
+                </select>
+                <div class="gold-error-message"></div>
+            </div>
+            
+            <div class="gold-form-group">
+                <label for="amountGrams" class="gold-form-label">مقدار (گرم)</label>
+                <input type="number" id="amountGrams" name="amount_grams" required 
+                       step="0.001" min="0.001" placeholder="مثال: 2.500" class="gold-form-control">
+                <div class="gold-form-helper">
+                    <small>حداقل 0.001 گرم</small>
+                </div>
+                <div class="gold-error-message"></div>
+            </div>
+            
+            <div class="gold-form-group">
+                <label for="description" class="gold-form-label">توضیحات</label>
+                <textarea id="description" name="description" required 
+                          placeholder="توضیحات تراکنش..." class="gold-form-control" rows="3"></textarea>
+                <div class="gold-form-helper">
+                    <small>حداقل 5 کاراکتر</small>
+                </div>
+                <div class="gold-error-message"></div>
+            </div>
+            
+            <div class="gold-form-actions">
+                <button type="submit" class="gold-form-btn primary">
+                    <i class="fas fa-save"></i>
+                    ذخیره تراکنش
+                </button>
+                <button type="button" onclick="closeGoldTransactionModal()" class="gold-form-btn secondary">
+                    <i class="fas fa-times"></i>
+                    لغو
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Gold Account Modal Styles are now in main CSS file -->
+
 <script>
 // Function to convert Persian numbers to English
 function persianToEnglish(str) {
@@ -619,4 +822,255 @@ function convertToSimplePersian(date) {
 document.addEventListener('DOMContentLoaded', function() {
     convertGregorianToPersian();
 });
-</script> 
+
+// Gold Account Management Functions
+let currentEditingTransactionId = null;
+
+function showAddGoldTransactionModal() {
+    currentEditingTransactionId = null;
+    document.getElementById('modalTitle').textContent = 'افزودن تراکنش طلا';
+    document.getElementById('goldTransactionForm').reset();
+    setTodayDate();
+    document.getElementById('goldTransactionModal').style.display = 'flex';
+}
+
+// These functions are now handled by the GoldAccountManager class
+
+function editGoldTransaction(transactionId) {
+    if (goldAccountManager) {
+        goldAccountManager.editTransaction(transactionId);
+    }
+}
+
+function deleteGoldTransaction(transactionId) {
+    if (goldAccountManager) {
+        goldAccountManager.deleteTransaction(transactionId);
+    } else {
+        // Fallback implementation if goldAccountManager is not available
+        if (confirm('آیا از حذف این تراکنش طلا اطمینان دارید؟')) {
+            fetch(`/customers/<%= customer.id %>/gold-transactions/${transactionId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ تراکنش طلا با موفقیت حذف شد');
+                    location.reload();
+                } else {
+                    alert('❌ خطا در حذف تراکنش: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ خطا در حذف تراکنش طلا');
+            });
+        }
+    }
+}
+
+// Persian Date Functions
+function setTodayDate() {
+    const today = new Date();
+    const persianDate = convertToPersianDate(today);
+    document.getElementById('transactionDate').value = persianDate;
+}
+
+function convertToPersianDate(date) {
+    // Simple Persian date conversion (approximation)
+    const year = date.getFullYear() - 621;
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+}
+
+function convertPersianToGregorian(persianDateStr) {
+    // Simple conversion back to Gregorian (approximation)
+    try {
+        const parts = persianDateStr.split('/');
+        if (parts.length !== 3) return null;
+        
+        const year = parseInt(parts[0]) + 621;
+        const month = parseInt(parts[1]) - 1;
+        const day = parseInt(parts[2]);
+        
+        return new Date(year, month, day);
+    } catch (error) {
+        return null;
+    }
+}
+
+// Form Validation Functions
+function validateForm() {
+    clearFormErrors();
+    let isValid = true;
+    
+    // Validate date
+    const dateInput = document.getElementById('transactionDate');
+    const dateValue = dateInput.value.trim();
+    if (!dateValue) {
+        showFieldError('transactionDate', 'تاریخ الزامی است');
+        isValid = false;
+    } else if (!isValidPersianDate(dateValue)) {
+        showFieldError('transactionDate', 'فرمت تاریخ صحیح نیست (مثال: 1403/01/15)');
+        isValid = false;
+    } else {
+        const gregorianDate = convertPersianToGregorian(dateValue);
+        if (!gregorianDate || gregorianDate > new Date()) {
+            showFieldError('transactionDate', 'تاریخ نمی‌تواند از آینده باشد');
+            isValid = false;
+        }
+    }
+    
+    // Validate transaction type
+    const typeInput = document.getElementById('transactionType');
+    if (!typeInput.value) {
+        showFieldError('transactionType', 'نوع تراکنش الزامی است');
+        isValid = false;
+    }
+    
+    // Validate amount
+    const amountInput = document.getElementById('amountGrams');
+    const amountValue = parseFloat(amountInput.value);
+    if (!amountInput.value || isNaN(amountValue) || amountValue <= 0) {
+        showFieldError('amountGrams', 'مقدار باید عدد مثبت باشد');
+        isValid = false;
+    } else if (amountValue < 0.001) {
+        showFieldError('amountGrams', 'حداقل مقدار 0.001 گرم است');
+        isValid = false;
+    }
+    
+    // Validate description
+    const descInput = document.getElementById('description');
+    const descValue = descInput.value.trim();
+    if (!descValue) {
+        showFieldError('description', 'توضیحات الزامی است');
+        isValid = false;
+    } else if (descValue.length < 5) {
+        showFieldError('description', 'توضیحات باید حداقل 5 کاراکتر باشد');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+function isValidPersianDate(dateStr) {
+    const regex = /^\d{4}\/\d{2}\/\d{2}$/;
+    if (!regex.test(dateStr)) return false;
+    
+    const parts = dateStr.split('/');
+    const year = parseInt(parts[0]);
+    const month = parseInt(parts[1]);
+    const day = parseInt(parts[2]);
+    
+    return year >= 1300 && year <= 1500 && 
+           month >= 1 && month <= 12 && 
+           day >= 1 && day <= 31;
+}
+
+function showFieldError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    const formGroup = field.closest('.form-group');
+    
+    formGroup.classList.add('has-error');
+    
+    let errorDiv = formGroup.querySelector('.error-message');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        formGroup.appendChild(errorDiv);
+    }
+    errorDiv.textContent = message;
+}
+
+function clearFormErrors() {
+    const errorGroups = document.querySelectorAll('.form-group.has-error');
+    errorGroups.forEach(group => {
+        group.classList.remove('has-error');
+        const errorMsg = group.querySelector('.error-message');
+        if (errorMsg) {
+            errorMsg.style.display = 'none';
+        }
+    });
+}
+
+// Form Submission
+document.getElementById('goldTransactionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+        return;
+    }
+    
+    const formData = {
+        transaction_date: document.getElementById('transactionDate').value,
+        transaction_type: document.getElementById('transactionType').value,
+        amount_grams: parseFloat(document.getElementById('amountGrams').value),
+        description: document.getElementById('description').value.trim()
+    };
+    
+    // Convert Persian date to Gregorian for backend
+    const gregorianDate = convertPersianToGregorian(formData.transaction_date);
+    if (gregorianDate) {
+        formData.transaction_date = gregorianDate.toISOString().split('T')[0];
+    }
+    
+    // Show loading state
+    const form = document.getElementById('goldTransactionForm');
+    const submitBtn = form.querySelector('.btn-primary');
+    const originalText = submitBtn.textContent;
+    
+    form.classList.add('loading');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'در حال ذخیره...';
+    
+    if (currentEditingTransactionId) {
+        // Update existing transaction (will be implemented in task 6)
+        updateGoldTransaction(currentEditingTransactionId, formData);
+    } else {
+        // Add new transaction
+        addGoldTransaction(formData);
+    }
+    
+    // Reset loading state
+    setTimeout(() => {
+        form.classList.remove('loading');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }, 1000);
+});
+
+function updateGoldTransaction(transactionId, formData) {
+    // This will be implemented in task 6
+    alert('قابلیت ویرایش در مرحله بعد پیاده‌سازی خواهد شد');
+    closeGoldTransactionModal();
+}
+
+// Close modal when clicking outside
+document.getElementById('goldTransactionModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeGoldTransactionModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('goldTransactionModal').style.display === 'flex') {
+        closeGoldTransactionModal();
+    }
+});
+
+// Initialize form on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    setTodayDate();
+});
+
+// Set customer ID for gold account manager
+window.customerId = '<%= customer.id %>';
+</script>
+
+<!-- Include Gold Account Management Script -->
+<script src="/js/gold-account.js"></script> 

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Delete Gold Transaction</title>
+    <style>
+        body {
+            font-family: 'Tahoma', sans-serif;
+            direction: rtl;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+        }
+        .test-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .transaction-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .transaction-info {
+            flex: 1;
+        }
+        .transaction-actions {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Delete Gold Transaction Functionality</h1>
+        
+        <div class="test-section">
+            <h3>1. Create Test Transaction</h3>
+            <button class="btn btn-primary" onclick="createTestTransaction()">
+                ➕ Create Test Transaction
+            </button>
+            <div id="createLog" class="log"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Test Transactions</h3>
+            <div id="transactionsList"></div>
+            <button class="btn btn-primary" onclick="loadTransactions()">
+                🔄 Refresh Transactions
+            </button>
+            <div id="transactionsLog" class="log"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Test Results</h3>
+            <div id="testResults" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const CUSTOMER_ID = 1; // Test customer ID
+        let testResults = [];
+
+        function log(elementId, message) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString('fa-IR');
+            element.textContent += `[${timestamp}] ${message}\n`;
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function logResult(message) {
+            testResults.push(message);
+            log('testResults', message);
+        }
+
+        async function makeApiCall(method, url, data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(url, options);
+                const result = await response.json();
+                
+                return {
+                    success: response.ok && result.success,
+                    data: result,
+                    status: response.status
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message,
+                    status: 0
+                };
+            }
+        }
+
+        async function createTestTransaction() {
+            log('createLog', 'Creating test transaction...');
+            
+            const testTransaction = {
+                transaction_date: '2025-01-27',
+                transaction_type: 'credit',
+                amount_grams: 1.750,
+                description: 'Test transaction for delete functionality - Frontend'
+            };
+
+            const result = await makeApiCall('POST', `/customers/${CUSTOMER_ID}/gold-transactions`, testTransaction);
+            
+            if (result.success) {
+                log('createLog', `✅ Transaction created successfully with ID: ${result.data.transaction.id}`);
+                logResult(`✅ CREATE: Transaction created with ID ${result.data.transaction.id}`);
+                loadTransactions();
+            } else {
+                log('createLog', `❌ Failed to create transaction: ${result.data?.message || result.error}`);
+                logResult(`❌ CREATE: Failed - ${result.data?.message || result.error}`);
+            }
+        }
+
+        async function loadTransactions() {
+            log('transactionsLog', 'Loading transactions...');
+            
+            const result = await makeApiCall('GET', `/customers/${CUSTOMER_ID}/gold-transactions`);
+            
+            if (result.success && result.data.transactions) {
+                const transactions = result.data.transactions.slice(0, 5); // Show only first 5
+                displayTransactions(transactions);
+                log('transactionsLog', `✅ Loaded ${transactions.length} transactions`);
+            } else {
+                log('transactionsLog', `❌ Failed to load transactions: ${result.data?.message || result.error}`);
+            }
+        }
+
+        function displayTransactions(transactions) {
+            const container = document.getElementById('transactionsList');
+            container.innerHTML = '';
+
+            transactions.forEach(transaction => {
+                const div = document.createElement('div');
+                div.className = 'transaction-item';
+                div.innerHTML = `
+                    <div class="transaction-info">
+                        <strong>ID: ${transaction.id}</strong><br>
+                        نوع: ${transaction.transaction_type === 'credit' ? 'بستانکار' : 'بدهکار'}<br>
+                        مقدار: ${transaction.amount_grams} گرم<br>
+                        توضیحات: ${transaction.description}
+                    </div>
+                    <div class="transaction-actions">
+                        <button class="btn btn-danger" onclick="deleteTransaction(${transaction.id})">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function deleteTransaction(transactionId) {
+            // Test the confirmation dialog
+            if (!confirm('آیا از حذف این تراکنش طلا اطمینان دارید؟')) {
+                logResult(`⏹️ DELETE: User cancelled delete for transaction ${transactionId}`);
+                return;
+            }
+
+            log('transactionsLog', `Deleting transaction ${transactionId}...`);
+            
+            const result = await makeApiCall('DELETE', `/customers/${CUSTOMER_ID}/gold-transactions/${transactionId}`);
+            
+            if (result.success) {
+                log('transactionsLog', `✅ Transaction ${transactionId} deleted successfully`);
+                logResult(`✅ DELETE: Transaction ${transactionId} deleted successfully`);
+                
+                // Test that the transaction is actually gone
+                setTimeout(async () => {
+                    const verifyResult = await makeApiCall('GET', `/customers/${CUSTOMER_ID}/gold-transactions/${transactionId}`);
+                    if (!verifyResult.success || verifyResult.status === 404) {
+                        logResult(`✅ VERIFY: Transaction ${transactionId} confirmed deleted`);
+                    } else {
+                        logResult(`❌ VERIFY: Transaction ${transactionId} still exists after delete`);
+                    }
+                    loadTransactions();
+                }, 500);
+                
+            } else {
+                log('transactionsLog', `❌ Failed to delete transaction ${transactionId}: ${result.data?.message || result.error}`);
+                logResult(`❌ DELETE: Failed to delete transaction ${transactionId} - ${result.data?.message || result.error}`);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            logResult('🧪 Frontend Delete Test Started');
+            loadTransactions();
+        });
+    </script>
+</body>
+</html>

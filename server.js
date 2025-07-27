@@ -8,6 +8,7 @@ const expressLayouts = require('express-ejs-layouts');
 require('dotenv').config();
 
 const db = require('./config/database');
+const GoldTransactionDB = require('./database/gold-transactions-db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -1742,6 +1743,884 @@ app.delete('/sales/delete/:id', requireAuth, async (req, res) => {
     }
 });
 
+// ==================== GOLD TRANSACTIONS API ROUTES ====================
+
+// POST /customers/:id/gold-transactions - Create new gold transaction
+app.post('/customers/:id/gold-transactions', requireAuth, async (req, res) => {
+    const startTime = Date.now();
+    const requestId = `gold-create-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    console.log(`[${requestId}] Starting gold transaction creation for customer ${req.params.id}`);
+    
+    try {
+        const customerId = req.params.id;
+        const { transaction_date, transaction_type, amount_grams, description } = req.body;
+        
+        console.log(`[${requestId}] Request data:`, { 
+            customerId, 
+            transaction_date, 
+            transaction_type, 
+            amount_grams, 
+            description: description ? description.substring(0, 50) + '...' : null,
+            userId: req.session.user.id 
+        });
+        
+        // Enhanced validation with detailed error messages
+        const validationErrors = [];
+        
+        // Validate customer ID
+        if (!customerId || isNaN(parseInt(customerId))) {
+            validationErrors.push({
+                field: 'customer_id',
+                message: 'شناسه مشتری نامعتبر است'
+            });
+        }
+        
+        // Validate transaction date
+        if (!transaction_date) {
+            validationErrors.push({
+                field: 'transaction_date',
+                message: 'تاریخ تراکنش الزامی است'
+            });
+        } else {
+            const transactionDate = new Date(transaction_date);
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+            
+            if (isNaN(transactionDate.getTime())) {
+                validationErrors.push({
+                    field: 'transaction_date',
+                    message: 'فرمت تاریخ نامعتبر است'
+                });
+            } else if (transactionDate > today) {
+                validationErrors.push({
+                    field: 'transaction_date',
+                    message: 'تاریخ تراکنش نمی‌تواند از آینده باشد'
+                });
+            } else if (transactionDate < new Date('2020-01-01')) {
+                validationErrors.push({
+                    field: 'transaction_date',
+                    message: 'تاریخ تراکنش خیلی قدیمی است'
+                });
+            }
+        }
+        
+        // Validate transaction type
+        if (!transaction_type) {
+            validationErrors.push({
+                field: 'transaction_type',
+                message: 'نوع تراکنش الزامی است'
+            });
+        } else if (!['debit', 'credit'].includes(transaction_type)) {
+            validationErrors.push({
+                field: 'transaction_type',
+                message: 'نوع تراکنش باید بدهکار (debit) یا بستانکار (credit) باشد'
+            });
+        }
+        
+        // Validate amount
+        if (!amount_grams) {
+            validationErrors.push({
+                field: 'amount_grams',
+                message: 'مقدار طلا الزامی است'
+            });
+        } else {
+            const amount = parseFloat(amount_grams);
+            if (isNaN(amount)) {
+                validationErrors.push({
+                    field: 'amount_grams',
+                    message: 'مقدار طلا باید عدد باشد'
+                });
+            } else if (amount <= 0) {
+                validationErrors.push({
+                    field: 'amount_grams',
+                    message: 'مقدار طلا باید عدد مثبت باشد'
+                });
+            } else if (amount < 0.001) {
+                validationErrors.push({
+                    field: 'amount_grams',
+                    message: 'حداقل مقدار طلا 0.001 گرم است'
+                });
+            } else if (amount > 10000) {
+                validationErrors.push({
+                    field: 'amount_grams',
+                    message: 'حداکثر مقدار طلا 10000 گرم است'
+                });
+            }
+        }
+        
+        // Validate description
+        if (!description) {
+            validationErrors.push({
+                field: 'description',
+                message: 'توضیحات الزامی است'
+            });
+        } else {
+            const trimmedDescription = description.trim();
+            if (trimmedDescription.length < 5) {
+                validationErrors.push({
+                    field: 'description',
+                    message: 'توضیحات باید حداقل 5 کاراکتر باشد'
+                });
+            } else if (trimmedDescription.length > 500) {
+                validationErrors.push({
+                    field: 'description',
+                    message: 'توضیحات نباید بیشتر از 500 کاراکتر باشد'
+                });
+            }
+        }
+        
+        // Return validation errors if any
+        if (validationErrors.length > 0) {
+            console.log(`[${requestId}] Validation failed:`, validationErrors);
+            return res.status(400).json({
+                success: false,
+                message: 'اطلاعات وارد شده نامعتبر است',
+                errors: validationErrors,
+                error_type: 'validation_error'
+            });
+        }
+        
+        // Check if customer exists and is active
+        const [customer] = await db.execute(
+            'SELECT id, full_name, is_active FROM customers WHERE id = ?', 
+            [customerId]
+        );
+        
+        if (customer.length === 0) {
+            console.log(`[${requestId}] Customer not found: ${customerId}`);
+            return res.status(404).json({
+                success: false,
+                message: 'مشتری یافت نشد',
+                error_type: 'not_found'
+            });
+        }
+        
+        if (!customer[0].is_active) {
+            console.log(`[${requestId}] Customer is inactive: ${customerId}`);
+            return res.status(400).json({
+                success: false,
+                message: 'مشتری غیرفعال است',
+                error_type: 'inactive_customer'
+            });
+        }
+        
+        // Create transaction data
+        const transactionData = {
+            customer_id: parseInt(customerId),
+            transaction_date,
+            transaction_type,
+            amount_grams: parseFloat(amount_grams),
+            description: description.trim(),
+            created_by: req.session.user.id
+        };
+        
+        console.log(`[${requestId}] Creating transaction with data:`, transactionData);
+        
+        // Create transaction with automatic balance update
+        const newTransaction = await GoldTransactionDB.createWithBalanceUpdate(transactionData);
+        
+        const processingTime = Date.now() - startTime;
+        console.log(`[${requestId}] Transaction created successfully in ${processingTime}ms:`, {
+            transactionId: newTransaction.id,
+            customerId: customerId,
+            amount: transactionData.amount_grams,
+            type: transactionData.transaction_type
+        });
+        
+        res.json({
+            success: true,
+            message: 'تراکنش طلا با موفقیت ثبت شد',
+            transaction: newTransaction,
+            processing_time: processingTime
+        });
+        
+    } catch (error) {
+        const processingTime = Date.now() - startTime;
+        console.error(`[${requestId}] Create gold transaction error (${processingTime}ms):`, {
+            error: error.message,
+            stack: error.stack,
+            customerId: req.params.id,
+            userId: req.session.user?.id
+        });
+        
+        // Handle specific database errors
+        let errorMessage = 'خطا در ثبت تراکنش طلا';
+        let errorType = 'server_error';
+        
+        if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+            errorMessage = 'مشتری یا کاربر یافت نشد';
+            errorType = 'reference_error';
+        } else if (error.code === 'ER_DUP_ENTRY') {
+            errorMessage = 'تراکنش تکراری است';
+            errorType = 'duplicate_error';
+        } else if (error.code === 'ECONNREFUSED') {
+            errorMessage = 'خطا در اتصال به پایگاه داده';
+            errorType = 'database_connection_error';
+        } else if (error.message.includes('تمام فیلدهای الزامی')) {
+            errorMessage = error.message;
+            errorType = 'validation_error';
+        }
+        
+        res.status(500).json({
+            success: false,
+            message: errorMessage,
+            error_type: errorType,
+            request_id: requestId,
+            processing_time: processingTime
+        });
+    }
+});
+
+// GET /customers/:id/gold-transactions - Get customer's gold transactions
+app.get('/customers/:id/gold-transactions', requireAuth, async (req, res) => {
+    try {
+        const customerId = req.params.id;
+        const { page = 1, limit = 20, orderBy = 'transaction_date', orderDirection = 'DESC' } = req.query;
+        
+        // Check if customer exists
+        const [customer] = await db.execute('SELECT id FROM customers WHERE id = ?', [customerId]);
+        if (customer.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'مشتری یافت نشد'
+            });
+        }
+        
+        // Calculate pagination
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const offset = (pageNum - 1) * limitNum;
+        
+        // Get transactions
+        const transactions = await GoldTransactionDB.getByCustomer(customerId, {
+            limit: limitNum,
+            offset: offset,
+            orderBy: orderBy,
+            orderDirection: orderDirection
+        });
+        
+        // Get total count for pagination
+        const totalCount = await GoldTransactionDB.getTransactionCount(customerId);
+        
+        // Get customer summary
+        const summary = await GoldTransactionDB.getCustomerSummary(customerId);
+        
+        res.json({
+            success: true,
+            transactions: transactions,
+            summary: summary,
+            pagination: {
+                page: pageNum,
+                limit: limitNum,
+                total: totalCount,
+                totalPages: Math.ceil(totalCount / limitNum)
+            }
+        });
+        
+    } catch (error) {
+        console.error('Get gold transactions error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'خطا در دریافت تراکنش‌های طلا: ' + error.message
+        });
+    }
+});
+
+// GET /customers/:id/gold-transactions/:transactionId - Get single gold transaction
+app.get('/customers/:id/gold-transactions/:transactionId', requireAuth, async (req, res) => {
+    try {
+        const customerId = req.params.id;
+        const transactionId = req.params.transactionId;
+        
+        // Check if customer exists
+        const [customer] = await db.execute('SELECT id FROM customers WHERE id = ?', [customerId]);
+        if (customer.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'مشتری یافت نشد'
+            });
+        }
+        
+        // Get transaction
+        const transaction = await GoldTransactionDB.getById(transactionId);
+        
+        if (!transaction) {
+            return res.status(404).json({
+                success: false,
+                message: 'تراکنش یافت نشد'
+            });
+        }
+        
+        // Check if transaction belongs to this customer
+        if (transaction.customer_id != customerId) {
+            return res.status(403).json({
+                success: false,
+                message: 'دسترسی غیرمجاز'
+            });
+        }
+        
+        res.json({
+            success: true,
+            transaction: transaction
+        });
+        
+    } catch (error) {
+        console.error('Get gold transaction error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'خطا در دریافت تراکنش طلا: ' + error.message
+        });
+    }
+});
+
+// PUT /customers/:id/gold-transactions/:transactionId - Update gold transaction
+app.put('/customers/:id/gold-transactions/:transactionId', requireAuth, async (req, res) => {
+    const startTime = Date.now();
+    const requestId = `gold-update-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    console.log(`[${requestId}] Starting gold transaction update for customer ${req.params.id}, transaction ${req.params.transactionId}`);
+    
+    try {
+        const customerId = req.params.id;
+        const transactionId = req.params.transactionId;
+        const { transaction_date, transaction_type, amount_grams, description } = req.body;
+        
+        console.log(`[${requestId}] Update request data:`, { 
+            customerId, 
+            transactionId,
+            transaction_date, 
+            transaction_type, 
+            amount_grams, 
+            description: description ? description.substring(0, 50) + '...' : null,
+            userId: req.session.user.id 
+        });
+        
+        // Validate IDs
+        if (!customerId || isNaN(parseInt(customerId))) {
+            return res.status(400).json({
+                success: false,
+                message: 'شناسه مشتری نامعتبر است',
+                error_type: 'invalid_customer_id'
+            });
+        }
+        
+        if (!transactionId || isNaN(parseInt(transactionId))) {
+            return res.status(400).json({
+                success: false,
+                message: 'شناسه تراکنش نامعتبر است',
+                error_type: 'invalid_transaction_id'
+            });
+        }
+        
+        // Check if customer exists and is active
+        const [customer] = await db.execute(
+            'SELECT id, full_name, is_active FROM customers WHERE id = ?', 
+            [customerId]
+        );
+        
+        if (customer.length === 0) {
+            console.log(`[${requestId}] Customer not found: ${customerId}`);
+            return res.status(404).json({
+                success: false,
+                message: 'مشتری یافت نشد',
+                error_type: 'customer_not_found'
+            });
+        }
+        
+        if (!customer[0].is_active) {
+            console.log(`[${requestId}] Customer is inactive: ${customerId}`);
+            return res.status(400).json({
+                success: false,
+                message: 'مشتری غیرفعال است',
+                error_type: 'inactive_customer'
+            });
+        }
+        
+        // Check if transaction exists and belongs to this customer
+        const existingTransaction = await GoldTransactionDB.getById(transactionId);
+        if (!existingTransaction) {
+            console.log(`[${requestId}] Transaction not found: ${transactionId}`);
+            return res.status(404).json({
+                success: false,
+                message: 'تراکنش یافت نشد',
+                error_type: 'transaction_not_found'
+            });
+        }
+        
+        if (existingTransaction.customer_id != customerId) {
+            console.log(`[${requestId}] Unauthorized access: transaction ${transactionId} does not belong to customer ${customerId}`);
+            return res.status(403).json({
+                success: false,
+                message: 'دسترسی غیرمجاز - این تراکنش متعلق به مشتری دیگری است',
+                error_type: 'unauthorized_access'
+            });
+        }
+        
+        // Enhanced validation for update data
+        const validationErrors = [];
+        const updateData = {};
+        
+        // Validate transaction date if provided
+        if (transaction_date !== undefined) {
+            if (!transaction_date) {
+                validationErrors.push({
+                    field: 'transaction_date',
+                    message: 'تاریخ تراکنش نمی‌تواند خالی باشد'
+                });
+            } else {
+                const transactionDate = new Date(transaction_date);
+                const today = new Date();
+                today.setHours(23, 59, 59, 999);
+                
+                if (isNaN(transactionDate.getTime())) {
+                    validationErrors.push({
+                        field: 'transaction_date',
+                        message: 'فرمت تاریخ نامعتبر است'
+                    });
+                } else if (transactionDate > today) {
+                    validationErrors.push({
+                        field: 'transaction_date',
+                        message: 'تاریخ تراکنش نمی‌تواند از آینده باشد'
+                    });
+                } else if (transactionDate < new Date('2020-01-01')) {
+                    validationErrors.push({
+                        field: 'transaction_date',
+                        message: 'تاریخ تراکنش خیلی قدیمی است'
+                    });
+                } else {
+                    updateData.transaction_date = transaction_date;
+                }
+            }
+        }
+        
+        // Validate transaction type if provided
+        if (transaction_type !== undefined) {
+            if (!transaction_type) {
+                validationErrors.push({
+                    field: 'transaction_type',
+                    message: 'نوع تراکنش نمی‌تواند خالی باشد'
+                });
+            } else if (!['debit', 'credit'].includes(transaction_type)) {
+                validationErrors.push({
+                    field: 'transaction_type',
+                    message: 'نوع تراکنش باید بدهکار (debit) یا بستانکار (credit) باشد'
+                });
+            } else {
+                updateData.transaction_type = transaction_type;
+            }
+        }
+        
+        // Validate amount if provided
+        if (amount_grams !== undefined) {
+            if (!amount_grams) {
+                validationErrors.push({
+                    field: 'amount_grams',
+                    message: 'مقدار طلا نمی‌تواند خالی باشد'
+                });
+            } else {
+                const amount = parseFloat(amount_grams);
+                if (isNaN(amount)) {
+                    validationErrors.push({
+                        field: 'amount_grams',
+                        message: 'مقدار طلا باید عدد باشد'
+                    });
+                } else if (amount <= 0) {
+                    validationErrors.push({
+                        field: 'amount_grams',
+                        message: 'مقدار طلا باید عدد مثبت باشد'
+                    });
+                } else if (amount < 0.001) {
+                    validationErrors.push({
+                        field: 'amount_grams',
+                        message: 'حداقل مقدار طلا 0.001 گرم است'
+                    });
+                } else if (amount > 10000) {
+                    validationErrors.push({
+                        field: 'amount_grams',
+                        message: 'حداکثر مقدار طلا 10000 گرم است'
+                    });
+                } else {
+                    updateData.amount_grams = amount;
+                }
+            }
+        }
+        
+        // Validate description if provided
+        if (description !== undefined) {
+            if (!description) {
+                validationErrors.push({
+                    field: 'description',
+                    message: 'توضیحات نمی‌تواند خالی باشد'
+                });
+            } else {
+                const trimmedDescription = description.trim();
+                if (trimmedDescription.length < 5) {
+                    validationErrors.push({
+                        field: 'description',
+                        message: 'توضیحات باید حداقل 5 کاراکتر باشد'
+                    });
+                } else if (trimmedDescription.length > 500) {
+                    validationErrors.push({
+                        field: 'description',
+                        message: 'توضیحات نباید بیشتر از 500 کاراکتر باشد'
+                    });
+                } else {
+                    updateData.description = trimmedDescription;
+                }
+            }
+        }
+        
+        // Return validation errors if any
+        if (validationErrors.length > 0) {
+            console.log(`[${requestId}] Validation failed:`, validationErrors);
+            return res.status(400).json({
+                success: false,
+                message: 'اطلاعات وارد شده نامعتبر است',
+                errors: validationErrors,
+                error_type: 'validation_error'
+            });
+        }
+        
+        // Check if there's anything to update
+        if (Object.keys(updateData).length === 0) {
+            console.log(`[${requestId}] No data to update`);
+            return res.status(400).json({
+                success: false,
+                message: 'هیچ اطلاعاتی برای بروزرسانی ارسال نشده است',
+                error_type: 'no_update_data'
+            });
+        }
+        
+        console.log(`[${requestId}] Updating transaction with data:`, updateData);
+        
+        // Update transaction with automatic balance update
+        const updatedTransaction = await GoldTransactionDB.updateWithBalanceUpdate(transactionId, updateData);
+        
+        const processingTime = Date.now() - startTime;
+        console.log(`[${requestId}] Transaction updated successfully in ${processingTime}ms:`, {
+            transactionId: transactionId,
+            customerId: customerId,
+            updatedFields: Object.keys(updateData)
+        });
+        
+        res.json({
+            success: true,
+            message: 'تراکنش طلا با موفقیت بروزرسانی شد',
+            transaction: updatedTransaction,
+            updated_fields: Object.keys(updateData),
+            processing_time: processingTime
+        });
+        
+    } catch (error) {
+        const processingTime = Date.now() - startTime;
+        console.error(`[${requestId}] Update gold transaction error (${processingTime}ms):`, {
+            error: error.message,
+            stack: error.stack,
+            customerId: req.params.id,
+            transactionId: req.params.transactionId,
+            userId: req.session.user?.id
+        });
+        
+        // Handle specific database errors
+        let errorMessage = 'خطا در بروزرسانی تراکنش طلا';
+        let errorType = 'server_error';
+        
+        if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+            errorMessage = 'مشتری یا کاربر یافت نشد';
+            errorType = 'reference_error';
+        } else if (error.code === 'ECONNREFUSED') {
+            errorMessage = 'خطا در اتصال به پایگاه داده';
+            errorType = 'database_connection_error';
+        } else if (error.message.includes('تراکنش یافت نشد')) {
+            errorMessage = error.message;
+            errorType = 'not_found';
+        }
+        
+        res.status(500).json({
+            success: false,
+            message: errorMessage,
+            error_type: errorType,
+            request_id: requestId,
+            processing_time: processingTime
+        });
+    }
+});
+
+// DELETE /customers/:id/gold-transactions/:transactionId - Delete gold transaction
+app.delete('/customers/:id/gold-transactions/:transactionId', requireAuth, async (req, res) => {
+    const startTime = Date.now();
+    const requestId = `gold-delete-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    console.log(`[${requestId}] Starting gold transaction deletion for customer ${req.params.id}, transaction ${req.params.transactionId}`);
+    
+    try {
+        const customerId = req.params.id;
+        const transactionId = req.params.transactionId;
+        
+        // Validate IDs
+        if (!customerId || isNaN(parseInt(customerId))) {
+            console.log(`[${requestId}] Invalid customer ID: ${customerId}`);
+            return res.status(400).json({
+                success: false,
+                message: 'شناسه مشتری نامعتبر است',
+                error_type: 'invalid_customer_id',
+                request_id: requestId
+            });
+        }
+        
+        if (!transactionId || isNaN(parseInt(transactionId))) {
+            console.log(`[${requestId}] Invalid transaction ID: ${transactionId}`);
+            return res.status(400).json({
+                success: false,
+                message: 'شناسه تراکنش نامعتبر است',
+                error_type: 'invalid_transaction_id',
+                request_id: requestId
+            });
+        }
+        
+        // Check if customer exists and is active
+        const [customer] = await db.execute(
+            'SELECT id, full_name, is_active FROM customers WHERE id = ?', 
+            [customerId]
+        );
+        
+        if (customer.length === 0) {
+            console.log(`[${requestId}] Customer not found: ${customerId}`);
+            return res.status(404).json({
+                success: false,
+                message: 'مشتری یافت نشد',
+                error_type: 'customer_not_found',
+                request_id: requestId
+            });
+        }
+        
+        if (!customer[0].is_active) {
+            console.log(`[${requestId}] Customer is inactive: ${customerId}`);
+            return res.status(400).json({
+                success: false,
+                message: 'مشتری غیرفعال است',
+                error_type: 'inactive_customer',
+                request_id: requestId
+            });
+        }
+        
+        // Check if transaction exists and belongs to this customer
+        const existingTransaction = await GoldTransactionDB.getById(transactionId);
+        if (!existingTransaction) {
+            console.log(`[${requestId}] Transaction not found: ${transactionId}`);
+            return res.status(404).json({
+                success: false,
+                message: 'تراکنش یافت نشد',
+                error_type: 'transaction_not_found',
+                request_id: requestId
+            });
+        }
+        
+        if (existingTransaction.customer_id != customerId) {
+            console.log(`[${requestId}] Unauthorized access: transaction ${transactionId} does not belong to customer ${customerId}`);
+            return res.status(403).json({
+                success: false,
+                message: 'دسترسی غیرمجاز - این تراکنش متعلق به مشتری دیگری است',
+                error_type: 'unauthorized_access',
+                request_id: requestId
+            });
+        }
+        
+        // Check if transaction is too old (optional business rule)
+        const transactionDate = new Date(existingTransaction.transaction_date);
+        const daysSinceTransaction = Math.floor((Date.now() - transactionDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysSinceTransaction > 30) {
+            console.log(`[${requestId}] Transaction too old to delete: ${daysSinceTransaction} days`);
+            return res.status(400).json({
+                success: false,
+                message: 'تراکنش‌های بیش از 30 روز قابل حذف نیستند',
+                error_type: 'transaction_too_old',
+                request_id: requestId,
+                days_since_transaction: daysSinceTransaction
+            });
+        }
+        
+        console.log(`[${requestId}] Deleting transaction:`, {
+            transactionId: transactionId,
+            customerId: customerId,
+            amount: existingTransaction.amount_grams,
+            type: existingTransaction.transaction_type,
+            date: existingTransaction.transaction_date
+        });
+        
+        // Delete transaction with automatic balance update
+        const success = await GoldTransactionDB.deleteWithBalanceUpdate(transactionId);
+        
+        const processingTime = Date.now() - startTime;
+        
+        if (success) {
+            console.log(`[${requestId}] Transaction deleted successfully in ${processingTime}ms`);
+            res.json({
+                success: true,
+                message: 'تراکنش طلا با موفقیت حذف شد',
+                deleted_transaction: {
+                    id: existingTransaction.id,
+                    amount_grams: existingTransaction.amount_grams,
+                    transaction_type: existingTransaction.transaction_type,
+                    transaction_date: existingTransaction.transaction_date
+                },
+                processing_time: processingTime,
+                request_id: requestId
+            });
+        } else {
+            console.log(`[${requestId}] Failed to delete transaction in ${processingTime}ms`);
+            res.status(500).json({
+                success: false,
+                message: 'خطا در حذف تراکنش طلا - عملیات ناموفق',
+                error_type: 'delete_failed',
+                processing_time: processingTime,
+                request_id: requestId
+            });
+        }
+        
+    } catch (error) {
+        const processingTime = Date.now() - startTime;
+        console.error(`[${requestId}] Delete gold transaction error (${processingTime}ms):`, {
+            error: error.message,
+            stack: error.stack,
+            customerId: req.params.id,
+            transactionId: req.params.transactionId,
+            userId: req.session.user?.id
+        });
+        
+        // Handle specific database errors
+        let errorMessage = 'خطا در حذف تراکنش طلا';
+        let errorType = 'server_error';
+        
+        if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+            errorMessage = 'این تراکنش قابل حذف نیست زیرا در سایر بخش‌ها استفاده شده است';
+            errorType = 'referenced_transaction';
+        } else if (error.code === 'ECONNREFUSED') {
+            errorMessage = 'خطا در اتصال به پایگاه داده';
+            errorType = 'database_connection_error';
+        } else if (error.message.includes('تراکنش یافت نشد')) {
+            errorMessage = error.message;
+            errorType = 'not_found';
+        }
+        
+        res.status(500).json({
+            success: false,
+            message: errorMessage,
+            error_type: errorType,
+            processing_time: processingTime,
+            request_id: requestId
+        });
+    }
+});
+
+// GET /customers/:id/gold-balance - Get customer's current gold balance
+app.get('/customers/:id/gold-balance', requireAuth, async (req, res) => {
+    const startTime = Date.now();
+    const requestId = `gold-balance-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    try {
+        const customerId = req.params.id;
+        
+        // Validate customer ID
+        if (!customerId || isNaN(parseInt(customerId))) {
+            return res.status(400).json({
+                success: false,
+                message: 'شناسه مشتری نامعتبر است',
+                error_type: 'invalid_customer_id',
+                request_id: requestId
+            });
+        }
+        
+        // Check if customer exists
+        const [customer] = await db.execute(
+            'SELECT id, full_name, is_active FROM customers WHERE id = ?', 
+            [customerId]
+        );
+        
+        if (customer.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'مشتری یافت نشد',
+                error_type: 'customer_not_found',
+                request_id: requestId
+            });
+        }
+        
+        // Get customer's gold balance and summary
+        const summary = await GoldTransactionDB.getCustomerSummary(customerId);
+        
+        const processingTime = Date.now() - startTime;
+        
+        res.json({
+            success: true,
+            balance: summary.balance,
+            balance_status: summary.balance_status,
+            summary: {
+                transaction_count: summary.transaction_count,
+                total_credit: summary.total_credit,
+                total_debit: summary.total_debit,
+                balance: summary.balance
+            },
+            customer: {
+                id: customer[0].id,
+                full_name: customer[0].full_name,
+                is_active: customer[0].is_active
+            },
+            processing_time: processingTime,
+            request_id: requestId
+        });
+        
+    } catch (error) {
+        const processingTime = Date.now() - startTime;
+        console.error(`[${requestId}] Get gold balance error (${processingTime}ms):`, {
+            error: error.message,
+            stack: error.stack,
+            customerId: req.params.id,
+            userId: req.session.user?.id
+        });
+        
+        res.status(500).json({
+            success: false,
+            message: 'خطا در دریافت موجودی طلا',
+            error_type: 'server_error',
+            processing_time: processingTime,
+            request_id: requestId
+        });
+    }
+});
+
+// POST /api/log-client-error - Log client-side errors for debugging
+app.post('/api/log-client-error', requireAuth, async (req, res) => {
+    try {
+        const { component, error } = req.body;
+        
+        // Log client error with additional context
+        console.error('CLIENT ERROR:', {
+            component: component || 'unknown',
+            error: error,
+            user: req.session.user?.id,
+            userAgent: req.headers['user-agent'],
+            ip: req.ip || req.connection.remoteAddress,
+            timestamp: new Date().toISOString(),
+            sessionId: req.sessionID
+        });
+        
+        // Optionally store in database for analysis
+        // await db.execute(
+        //     'INSERT INTO client_errors (user_id, component, error_data, user_agent, ip_address) VALUES (?, ?, ?, ?, ?)',
+        //     [req.session.user.id, component, JSON.stringify(error), req.headers['user-agent'], req.ip]
+        // );
+        
+        res.json({ success: true, message: 'Error logged successfully' });
+        
+    } catch (error) {
+        console.error('Error logging client error:', error);
+        res.status(500).json({ success: false, message: 'Failed to log error' });
+    }
+});
+
 // ==================== CATEGORIES MANAGEMENT ROUTES ====================
 
 // Categories List
@@ -2623,6 +3502,24 @@ app.get('/accounting/customer-detail/:id', requireAuth, async (req, res) => {
             .reduce((sum, payment) => sum + Number(payment.amount), 0);
         const currentBalance = totalPurchases - totalPayments;
 
+        // دریافت اطلاعات حساب طلا
+        
+        // دریافت تراکنش‌های طلا
+        const goldTransactions = await GoldTransactionDB.getByCustomer(customerId, {
+            limit: 50, // محدود کردن به 50 تراکنش اخیر
+            orderBy: 'transaction_date',
+            orderDirection: 'DESC'
+        });
+
+        // فرمت کردن تاریخ برای تراکنش‌های طلا
+        const formattedGoldTransactions = goldTransactions.map(transaction => ({
+            ...transaction,
+            formatted_date: new Date(transaction.transaction_date).toLocaleDateString('fa-IR')
+        }));
+
+        // دریافت خلاصه حساب طلا
+        const goldSummary = await GoldTransactionDB.getCustomerSummary(customerId);
+
         res.render('accounting/customer-detail', {
             title: 'حساب مالی مشتری',
             customer: customer[0],
@@ -2632,7 +3529,9 @@ app.get('/accounting/customer-detail/:id', requireAuth, async (req, res) => {
                 totalPurchases: totalPurchases,
                 totalPayments: totalPayments,
                 currentBalance: currentBalance
-            }
+            },
+            goldTransactions: formattedGoldTransactions,
+            goldSummary: goldSummary
         });
 
     } catch (error) {
@@ -2644,6 +3543,56 @@ app.get('/accounting/customer-detail/:id', requireAuth, async (req, res) => {
         });
     }
 });
+
+// ===============================================
+// GOLD TRANSACTIONS API ENDPOINTS
+// ===============================================
+
+// Create new gold transaction
+app.post('/customers/:id/gold-transactions', requireAuth, async (req, res) => {
+    try {
+        const customerId = req.params.id;
+        const { transaction_type, amount_grams, description, transaction_date } = req.body;
+        
+        // Validate required fields
+        if (!transaction_type || !amount_grams || !description) {
+            return res.status(400).json({
+                success: false,
+                message: 'تمام فیلدهای الزامی باید پر شوند'
+            });
+        }
+
+        const transactionData = {
+            customer_id: customerId,
+            transaction_date: transaction_date || new Date().toISOString().split('T')[0],
+            transaction_type: transaction_type,
+            amount_grams: parseFloat(amount_grams),
+            description: description,
+            created_by: req.session.user.id
+        };
+
+        const newTransaction = await GoldTransactionDB.createWithBalanceUpdate(transactionData);
+        
+        res.json({
+            success: true,
+            message: 'تراکنش طلا با موفقیت ثبت شد',
+            transaction: newTransaction
+        });
+
+    } catch (error) {
+        console.error('Gold transaction creation error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'خطا در ثبت تراکنش طلا'
+        });
+    }
+});
+
+
+
+
+
+
 
 // ===============================================
 // PROFESSIONAL ACCOUNTING SYSTEM ROUTES

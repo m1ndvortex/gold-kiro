@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Gold Transaction Form</title>
+    <style>
+        body {
+            font-family: 'Tahoma', sans-serif;
+            direction: rtl;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .test-button {
+            background: #b8860b;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px;
+        }
+        
+        .test-button:hover {
+            background: #9a7209;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>تست فرم تراکنش طلا</h1>
+        <p>این صفحه برای تست عملکرد فرم تراکنش طلا ایجاد شده است.</p>
+        
+        <button class="test-button" onclick="showAddGoldTransactionModal()">
+            ➕ افزودن تراکنش طلا
+        </button>
+        
+        <button class="test-button" onclick="testValidation()">
+            🧪 تست اعتبارسنجی
+        </button>
+        
+        <div id="test-results" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+            <h3>نتایج تست:</h3>
+            <ul id="results-list"></ul>
+        </div>
+    </div>
+
+    <!-- Gold Transaction Modal -->
+    <div id="goldTransactionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">افزودن تراکنش طلا</h3>
+                <span class="close" onclick="closeGoldTransactionModal()">&times;</span>
+            </div>
+            <form id="goldTransactionForm">
+                <div class="form-group">
+                    <label for="transactionDate">تاریخ تراکنش:</label>
+                    <input type="text" id="transactionDate" name="transaction_date" required 
+                           placeholder="مثال: 1403/01/15" class="form-control persian-date">
+                    <div class="date-helper">
+                        <small>تاریخ شمسی - مثال: 1403/01/15</small>
+                        <button type="button" onclick="setTodayDate()" class="btn-today">امروز</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="transactionType">نوع تراکنش:</label>
+                    <select id="transactionType" name="transaction_type" required class="form-control">
+                        <option value="">انتخاب کنید</option>
+                        <option value="credit">بستانکار (اضافه شدن طلا)</option>
+                        <option value="debit">بدهکار (کم شدن طلا)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="amountGrams">مقدار (گرم):</label>
+                    <input type="number" id="amountGrams" name="amount_grams" required 
+                           step="0.001" min="0.001" placeholder="مثال: 2.500" class="form-control">
+                    <small>حداقل 0.001 گرم</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">توضیحات:</label>
+                    <textarea id="description" name="description" required 
+                              placeholder="توضیحات تراکنش..." class="form-control" rows="3"></textarea>
+                    <small>حداقل 5 کاراکتر</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">ذخیره تراکنش</button>
+                    <button type="button" onclick="closeGoldTransactionModal()" class="btn-secondary">لغو</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Include styles from the main CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+    
+    <style>
+        /* Modal Styles - copied from customer-detail.ejs */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 15px;
+            padding: 0;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #b8860b 0%, #daa520 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.3em;
+        }
+
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #f0f0f0;
+        }
+
+        #goldTransactionForm {
+            padding: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c2c2c;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Tahoma', sans-serif;
+            transition: border-color 0.3s ease;
+            direction: rtl;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #b8860b;
+            box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
+        }
+
+        .form-control.error {
+            border-color: #dc3545;
+        }
+
+        .date-helper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .date-helper small {
+            color: #6c757d;
+        }
+
+        .btn-today {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-today:hover {
+            background: #138496;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .btn-primary {
+            background: #b8860b;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #9a7209;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .form-group.has-error .error-message {
+            display: block;
+        }
+
+        .form-group.has-error .form-control {
+            border-color: #dc3545;
+        }
+    </style>
+
+    <script>
+        // Set test customer ID
+        window.customerId = '1';
+        
+        // Test functions
+        function testValidation() {
+            const results = document.getElementById('results-list');
+            results.innerHTML = '';
+            
+            // Test Persian date validation
+            const testDates = [
+                { date: '1403/01/15', expected: true, desc: 'تاریخ معتبر' },
+                { date: '1403/1/15', expected: false, desc: 'فرمت نادرست (ماه یک رقمی)' },
+                { date: '1403/13/15', expected: false, desc: 'ماه نامعتبر' },
+                { date: '1403/01/32', expected: false, desc: 'روز نامعتبر' },
+                { date: '1200/01/15', expected: false, desc: 'سال نامعتبر' }
+            ];
+            
+            testDates.forEach(test => {
+                const result = isValidPersianDate(test.date);
+                const status = result === test.expected ? '✅' : '❌';
+                const li = document.createElement('li');
+                li.innerHTML = `${status} ${test.desc}: "${test.date}" - نتیجه: ${result}`;
+                results.appendChild(li);
+            });
+            
+            // Test amount validation
+            const testAmounts = [
+                { amount: '2.500', expected: true, desc: 'مقدار معتبر' },
+                { amount: '0.001', expected: true, desc: 'حداقل مقدار' },
+                { amount: '0.0001', expected: false, desc: 'کمتر از حداقل' },
+                { amount: '-1', expected: false, desc: 'مقدار منفی' },
+                { amount: 'abc', expected: false, desc: 'متن به جای عدد' }
+            ];
+            
+            testAmounts.forEach(test => {
+                const value = parseFloat(test.amount);
+                const result = !isNaN(value) && value > 0 && value >= 0.001;
+                const status = result === test.expected ? '✅' : '❌';
+                const li = document.createElement('li');
+                li.innerHTML = `${status} ${test.desc}: "${test.amount}" - نتیجه: ${result}`;
+                results.appendChild(li);
+            });
+        }
+        
+        // Persian date validation function
+        function isValidPersianDate(dateStr) {
+            const regex = /^\d{4}\/\d{2}\/\d{2}$/;
+            if (!regex.test(dateStr)) return false;
+            
+            const parts = dateStr.split('/');
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            const day = parseInt(parts[2]);
+            
+            return year >= 1300 && year <= 1500 && 
+                   month >= 1 && month <= 12 && 
+                   day >= 1 && day <= 31;
+        }
+    </script>
+    
+    <!-- Include Gold Account Management Script -->
+    <script src="/js/gold-account.js"></script>
+</body>
+</html>
